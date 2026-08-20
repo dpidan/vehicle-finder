@@ -16,6 +16,7 @@ Finding a good used vehicle at the lower end of the market requires repeatedly c
 8. Explain ranking through transparent score factors rather than a black-box number.
 9. Highlight new listings, price drops, unusually good value, suspiciously low prices, and likely near-term maintenance costs.
 10. Keep deployment free or very inexpensive for personal/family use.
+11. Provide an MCP interface so ChatGPT can query saved searches, ranked candidates, listing details, score explanations, and user workflow state.
 
 ## Initial users and searches
 
@@ -103,6 +104,12 @@ Each source is implemented behind an adapter and classified by access type, such
 - New-listing and price-drop detection.
 - Search-specific notification thresholds.
 - Digest/reporting options.
+
+### Phase 5 — assistant access
+
+- MCP server exposing read-oriented tools for saved searches, ranked results, listing details, score explanations, and vehicle/listing history.
+- Mutation tools for lightweight workflow updates such as favorite, contacted, inspection, rejected, and rejection reason.
+- Authentication and authorization model suitable for a small trusted family deployment.
 
 ## Open decisions
 

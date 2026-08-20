@@ -9,6 +9,7 @@ Leading candidate:
 ```text
 Cloudflare Worker
   ├── Hono API
+  ├── MCP interface for ChatGPT access
   ├── scheduled collection/orchestration
   └── static application assets
 
@@ -23,6 +24,9 @@ Cloudflare D1
 
 React + Vite
   └── small interactive dashboard
+
+ChatGPT / MCP client
+  └── saved search and listing tools backed by the same domain APIs
 
 Optional later
   ├── Queues for ingestion/enrichment jobs
@@ -47,6 +51,21 @@ Saved Search B ──> Evaluation B
 ```
 
 Facts about a vehicle/listing are global. Preferences and scores are search-specific.
+
+## MCP interface
+
+The system should eventually expose an MCP server so ChatGPT can act as a conversational interface for the family vehicle search. The MCP layer should be a thin adapter over the same domain/API services used by the dashboard, not a separate implementation of search or scoring logic.
+
+Initial MCP tools should focus on:
+
+- Listing saved searches available to the authenticated user.
+- Returning ranked candidates for a saved search.
+- Fetching listing and vehicle details, including source links and attribution.
+- Explaining Vehicle Score, Deal Score, risk flags, and major score factors.
+- Showing listing history such as first seen, last seen, price changes, and mileage changes.
+- Updating user workflow state such as favorite, contacted, inspection, rejected, and rejection reason.
+
+MCP access should respect the same family-user authorization boundaries as the dashboard. Prefer read-only tools first, then add mutations once authentication and audit behavior are clear.
 
 ## Core entities
 

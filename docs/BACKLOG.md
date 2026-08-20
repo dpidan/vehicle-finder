@@ -52,6 +52,14 @@
 33. Score-threshold notifications.
 34. Periodic digest/report.
 
+## Assistant access
+
+35. Define MCP tool surface for saved searches, ranked candidates, listing details, score explanations, and listing history.
+36. Decide where the MCP server runs in the Cloudflare-first architecture.
+37. Implement read-only MCP tools backed by the same domain services as the dashboard/API.
+38. Add authenticated mutation tools for workflow state updates.
+39. Document ChatGPT connection/setup steps for family users.
+
 ## Later research
 
 - Nextdoor marketplace API/access details and limits.
@@ -59,3 +67,4 @@
 - Autotrader/Cars.com/CarGurus permitted alert/API/feed options.
 - Dealer-platform adapter reuse opportunities.
 - Optional paid vehicle-history data and whether it provides enough incremental value.
+- Current MCP hosting/authentication options on Cloudflare.
