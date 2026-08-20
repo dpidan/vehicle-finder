@@ -1,0 +1,22 @@
+# Plan 001 — Domain and Schema Definition
+
+## Objective
+
+Reach a stable enough domain model to scaffold D1 without baking search preferences or reliability assumptions into the wrong layer.
+
+## Deliverables
+
+- Final `SavedSearchConfig` definition.
+- Entity relationship model for User, SavedSearch, Vehicle, Listing, ListingSnapshot, Seller, SearchEvaluation, ScoreFactor, and ListingDisposition.
+- Structured model-year knowledge schema.
+- Source adapter and normalized listing contracts.
+- Initial D1 table proposal and indexes.
+
+## Acceptance criteria
+
+- One canonical listing can be scored differently by multiple searches.
+- One physical VIN can appear on multiple source listings without becoming multiple vehicles.
+- Price history is reconstructable from snapshots.
+- Score results are versioned and explainable.
+- Model-year rules can be edited as data without application-condition changes.
+- No source-specific payload leaks into the core domain model.
