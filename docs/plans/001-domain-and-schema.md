@@ -6,11 +6,12 @@ Reach a stable enough domain model to scaffold D1 without baking search preferen
 
 ## Deliverables
 
-- Final `SavedSearchConfig` definition.
+- Final `SavedSearchConfig` definition. Initial implementation: `src/domain/search-config.ts`.
 - Entity relationship model for User, SavedSearch, Vehicle, Listing, ListingSnapshot, Seller, SearchEvaluation, ScoreFactor, and ListingDisposition.
 - Structured model-year knowledge schema.
 - Source adapter and normalized listing contracts.
 - Initial D1 table proposal and indexes.
+- Domain service boundaries that can later support both dashboard routes and MCP tools.
 
 ## Acceptance criteria
 
@@ -20,3 +21,9 @@ Reach a stable enough domain model to scaffold D1 without baking search preferen
 - Score results are versioned and explainable.
 - Model-year rules can be edited as data without application-condition changes.
 - No source-specific payload leaks into the core domain model.
+- Listing disposition is stored per saved search or user/search context, not on the global listing record.
+- Ranked results, score explanations, listing details, and listing history can be exposed through an API or MCP adapter without duplicating scoring logic.
+
+## Progress
+
+- `SavedSearchConfig` v1 has TypeScript types, initial family defaults, and lightweight validation for ranges, budget ordering, score thresholds, preference weights, and scoring weight totals.

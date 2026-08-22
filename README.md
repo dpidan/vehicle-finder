@@ -39,4 +39,4 @@ The project is intended to aggregate candidate vehicles from multiple sources, d
 
 ## Status
 
-Planning / domain-model definition. No application code has been selected or scaffolded yet.
+Planning / domain-model definition. Initial TypeScript domain code exists for saved search configuration, but no application runtime has been scaffolded yet.
