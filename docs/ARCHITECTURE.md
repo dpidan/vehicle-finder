@@ -2,7 +2,7 @@
 
 ## Current leading approach
 
-A small Cloudflare-first TypeScript application, avoiding a full Next.js stack unless requirements later justify it.
+A small Cloudflare-first TypeScript application, avoiding a full Next.js stack unless requirements later justify it. The first deployment can be personal/family scale, but the architecture should not block a later public multi-user product.
 
 Leading candidate:
 
@@ -19,6 +19,8 @@ Cloudflare D1
   ├── listings
   ├── listing snapshots
   ├── sellers
+  ├── attribute definitions / values
+  ├── evidence records
   ├── model-year knowledge
   └── search evaluations
 
@@ -52,6 +54,8 @@ Saved Search B ──> Evaluation B
 
 Facts about a vehicle/listing are global. Preferences and scores are search-specific.
 
+Make/model affinity, body-style fit, buyer urgency, financing posture, maintenance budget, travel flexibility, and risk tolerance belong to saved-search configuration. They should not leak into canonical vehicle/listing records.
+
 ## MCP interface
 
 The system should eventually expose an MCP server so ChatGPT can act as a conversational interface for the family vehicle search. The MCP layer should be a thin adapter over the same domain/API services used by the dashboard, not a separate implementation of search or scoring logic.
@@ -75,6 +79,9 @@ MCP access should respect the same family-user authorization boundaries as the d
 - Listing
 - ListingSnapshot
 - Seller
+- AttributeDefinition
+- AttributeValue
+- EvidenceRecord
 - VehicleAssessment / model-year knowledge
 - SearchEvaluation
 - ScoreFactor
@@ -103,6 +110,22 @@ type SourceAccess =
 
 Do not make full browser automation a prerequisite for the core architecture.
 
+Manual import should be treated as a source-access path, not a throwaway shortcut. Pasted URLs, VINs, listing text, and source-specific notes should normalize through the same candidate/listing contracts as automated adapters.
+
+## Extensibility
+
+Use first-class schema fields for durable, frequently queried facts and a typed attribute/evidence layer for facts that vary by source, vehicle category, or future enrichment provider.
+
+The attribute layer should support:
+
+- stable keys and value types;
+- ownership by vehicle, listing, seller, or evaluation;
+- source attribution and confidence;
+- versioning or migration when definitions change;
+- promotion of heavily used attributes into first-class columns later.
+
+This keeps the model portable without turning core identity and ranking fields into unqueryable blobs.
+
 ## Canonical identification
 
 VIN should be the preferred canonical vehicle identifier when present. Deduplication needs fallbacks for missing VIN listings using normalized make/model/year/trim, seller stock number, mileage, photos, and other signals.
@@ -113,4 +136,4 @@ Favor services that remain within free-tier limits for a personal/family workloa
 
 ## Authentication
 
-Multi-user support is intended for a small trusted family group, not a public multi-tenant SaaS. Choose the simplest secure authentication model that works well on Cloudflare. Defer final selection until the UI/backend framework is fixed.
+Multi-user support starts as a small trusted family group, but should not paint the project into a corner for public accounts later. Choose the simplest secure authentication model that works well on Cloudflare while preserving clear ownership boundaries for users, saved searches, workflow state, and any future paid features.

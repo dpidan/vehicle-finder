@@ -7,7 +7,7 @@ Maintain two independent 0-100 scores:
 - **Vehicle Score** — how desirable this specific physical vehicle appears for this saved search.
 - **Deal Score** — how attractive this particular listing/opportunity is at its current price and circumstances.
 
-The same listing can receive different scores for different saved searches.
+The same listing can receive different scores for different saved searches. Scoring must remain generic: make/model preferences, risk tolerance, budget preference, financing preference, and optimization goal are saved-search inputs.
 
 ## Initial Vehicle Score weights — family search
 
@@ -50,7 +50,9 @@ effectivePurchaseCost =
   + mandatoryDealerFees
 ```
 
-Taxes/registration can be tracked separately because they are often similar across candidates and jurisdiction-specific.
+Taxes/registration, financing costs, insurance deltas, and travel costs can be tracked separately or included in a broader total-cost view when enough data is available.
+
+For the initial family search, known immediate repairs should be treated seriously when they exceed the configured maintenance reserve of less than $800.
 
 ## Explainability
 
@@ -69,6 +71,19 @@ Deal Score: 92
 ```
 
 A stored evaluation should include a `scoreVersion` so scoring-model changes can be traced and inventory can be recomputed.
+
+Public-facing explanations should be conservative and evidence-based. Prefer wording such as "missing data", "verify before purchase", "listed price may exclude conditions", or "inspection recommended" rather than claims about seller intent or definitive mechanical condition.
+
+## Optimization profiles
+
+Saved searches can choose or approximate different optimization goals using weights:
+
+- Best deal: emphasizes price versus comparable listings, price movement, and effective purchase cost.
+- Lowest risk: emphasizes title/history, maintenance evidence, reliability knowledge, inspection results, and seller transparency.
+- Fastest purchase: emphasizes listing freshness, seller responsiveness, distance, inspection availability, and workflow readiness.
+- Lowest long-term ownership cost: emphasizes reliability, maintenance milestones, fuel/insurance estimates, and expected repairs.
+
+These are profiles over the same scoring factors, not separate scoring systems.
 
 ## Model-year preference levels
 
@@ -98,3 +113,6 @@ Scoring should be supplemented with explicit flags such as:
 - Inconsistent VIN/listing attributes.
 - Potential dealer conditional-price language.
 - Likely near-term major maintenance.
+- Seller refusal of independent inspection.
+- Immediate repairs above saved-search maintenance reserve.
+- Stale listing or uncertain availability.
