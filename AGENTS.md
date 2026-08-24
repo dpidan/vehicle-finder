@@ -28,6 +28,8 @@ Keep durable decisions in files instead of relying on chat context.
 - Avoid scraping approaches that violate source terms or depend on bypassing anti-bot protections.
 - Preserve source attribution/evidence for reliability rules and enrichment claims.
 - Prefer TypeScript unless a documented decision changes this.
+- Avoid unnecessary dependencies, especially on large frameworks or libraries. Ask permission for those first. 
+- Use the Ponytail skill for code generation and refactoring, but review and test all generated code before committing.
 
 ## Working style
 
