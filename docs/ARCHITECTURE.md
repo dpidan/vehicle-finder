@@ -137,3 +137,18 @@ Favor services that remain within free-tier limits for a personal/family workloa
 ## Authentication
 
 Multi-user support starts as a small trusted family group, but should not paint the project into a corner for public accounts later. Choose the simplest secure authentication model that works well on Cloudflare while preserving clear ownership boundaries for users, saved searches, workflow state, and any future paid features.
+
+## Internationalization posture
+
+The system should be i18n-ready without carrying a full translation workflow before there is a public UI.
+
+Persist stable domain codes, numbers, dates, money amounts, and message keys. Render user-facing language at the UI/API edge using the authenticated user's locale. Avoid storing generated English labels in durable records when a code plus parameters can describe the same fact.
+
+Examples:
+
+- Store title status as `clean`, not "Clean title".
+- Store next actions as `request-vin`, not "Ask seller for the VIN".
+- Store score factors as `key`, `messageKey`, `messageParams`, and numeric impact, not a pre-rendered sentence.
+- Preserve imported seller/listing text, source titles, evidence labels, and user-entered notes in their original language because they are source evidence or user content, not product copy.
+
+Default locale can remain `en-US` for the family deployment. Add a translation catalog only when the dashboard or MCP responses need a second supported locale.

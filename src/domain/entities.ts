@@ -3,6 +3,7 @@ import type { SavedSearchConfig, SellerType, TitleStatus } from './search-config
 export type EntityId = string;
 export type IsoDateTime = string;
 export type CurrencyCode = 'USD';
+export type LocaleCode = string;
 
 export type ListingStatus = 'active' | 'pending' | 'sold' | 'removed' | 'unknown';
 export type SourceAccess = 'official-api' | 'structured-web' | 'notification-import' | 'browser-assisted' | 'manual-import';
@@ -29,6 +30,7 @@ export interface User {
   id: EntityId;
   email?: string;
   displayName: string;
+  locale?: LocaleCode;
   createdAt: IsoDateTime;
 }
 
@@ -109,7 +111,8 @@ export interface SearchEvaluation {
 
 export interface ScoreFactor {
   key: string;
-  label: string;
+  messageKey: string;
+  messageParams?: Record<string, string | number | boolean>;
   scoreImpact: number;
   evidenceIds?: EntityId[];
 }

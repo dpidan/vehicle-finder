@@ -40,6 +40,7 @@ Keep JSON columns for configuration, score factors, flexible attributes, and raw
 ### Core ownership
 
 - `users`: `id`, `email`, `display_name`, `created_at`
+- Public-use note: add `locale` before account settings become user-facing beyond the family deployment.
 - `saved_searches`: `id`, `user_id`, `name`, `enabled`, `config_json`, `created_at`, `updated_at`
 
 Indexes:
@@ -66,6 +67,7 @@ Indexes:
 ### Search-specific scoring and workflow
 
 - `search_evaluations`: `id`, `saved_search_id`, `listing_id`, `vehicle_id`, `score_version`, `vehicle_score`, `deal_score`, `factors_json`, `flags_json`, `evaluated_at`
+- `factors_json` and `flags_json` should store stable keys plus interpolation params, not rendered English, so score explanations can be localized at the presentation edge.
 - `listing_dispositions`: `id`, `saved_search_id`, `listing_id`, `state`, `rejection_reason`, `next_action_json`, `updated_at`
 
 Indexes:
