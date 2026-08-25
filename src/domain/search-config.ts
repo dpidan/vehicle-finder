@@ -42,6 +42,7 @@ export interface SavedSearchConfig {
   preferences: SearchPreferences;
   scoring: SearchScoring;
   notifications: SearchNotifications;
+  workflow?: SearchWorkflow;
 }
 
 export interface SearchGeography {
@@ -136,6 +137,15 @@ export interface SearchNotifications {
   minimumPriceDrop?: number;
 }
 
+export interface SearchWorkflow {
+  purchaseDeadline?: string;
+  willingToTravelBeyondRadius?: boolean;
+  privatePartyAllowed?: boolean;
+  financingPreference?: 'avoid' | 'acceptable' | 'preferred';
+  preferredInspectionProviderId?: string;
+  immediateMaintenanceBudget?: number;
+}
+
 export interface ValidationIssue {
   path: string;
   message: string;
@@ -222,6 +232,14 @@ export const familySearchDefaults: SavedSearchConfig = {
     notifyOnNewListing: true,
     notifyOnPriceDrop: true,
     minimumPriceDrop: 500
+  },
+  workflow: {
+    purchaseDeadline: '2026-09-14',
+    willingToTravelBeyondRadius: true,
+    privatePartyAllowed: true,
+    financingPreference: 'acceptable',
+    preferredInspectionProviderId: 'corbs-auto-grand-rd-cypress-tx',
+    immediateMaintenanceBudget: 800
   }
 };
 
@@ -306,6 +324,7 @@ export function validateSavedSearchConfig(config: SavedSearchConfig): Validation
   requireOptionalScore(config.notifications.minimumVehicleScore, 'notifications.minimumVehicleScore', issues);
   requireOptionalScore(config.notifications.minimumDealScore, 'notifications.minimumDealScore', issues);
   requireOptionalPositiveNumber(config.notifications.minimumPriceDrop, 'notifications.minimumPriceDrop', issues);
+  requireOptionalPositiveNumber(config.workflow?.immediateMaintenanceBudget, 'workflow.immediateMaintenanceBudget', issues);
 
   return {
     valid: issues.length === 0,

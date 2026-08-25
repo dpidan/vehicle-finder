@@ -7,6 +7,8 @@ export type LocaleCode = string;
 
 export type ListingStatus = 'active' | 'pending' | 'sold' | 'removed' | 'unknown';
 export type SourceAccess = 'official-api' | 'structured-web' | 'notification-import' | 'browser-assisted' | 'manual-import';
+export type ModelYearRiskCategory = 'engine' | 'transmission' | 'electrical' | 'body' | 'maintenance' | 'safety';
+export type ModelYearRiskRating = 'preferred' | 'good' | 'neutral' | 'caution' | 'avoid-unless-remediated';
 
 export type ListingDispositionState =
   | 'new'
@@ -109,6 +111,63 @@ export interface SearchEvaluation {
   evaluatedAt: IsoDateTime;
 }
 
+export interface ListingSource {
+  name: string;
+  access: SourceAccess;
+  collect(context: CollectionContext): Promise<ListingCandidate[]>;
+}
+
+export interface CollectionContext {
+  search?: SavedSearchConfig;
+  center?: GeoPoint;
+  radiusMiles?: number;
+  sellerSeeds?: SellerSeed[];
+  collectedAt: IsoDateTime;
+}
+
+export interface SellerSeed {
+  name: string;
+  type: SellerType;
+  websiteUrl?: string;
+  inventoryUrl?: string;
+  location?: GeoPoint;
+}
+
+export interface ListingCandidate {
+  source: ListingSourceRef;
+  sourceListingId?: string;
+  url: string;
+  title: string;
+  status?: ListingStatus;
+  vehicle: VehicleCandidate;
+  seller?: SellerCandidate;
+  price?: MoneyAmount;
+  mileage?: number;
+  titleStatus?: TitleStatus;
+  location?: GeoPoint;
+  rawDescription?: string;
+  capturedAt: IsoDateTime;
+  evidence?: EvidenceCandidate[];
+}
+
+export interface VehicleCandidate {
+  vin?: string;
+  year?: number;
+  make?: string;
+  model?: string;
+  trim?: string;
+}
+
+export interface SellerCandidate extends SellerSeed {
+  phone?: string;
+}
+
+export interface EvidenceCandidate {
+  url?: string;
+  label?: string;
+  confidence?: number;
+}
+
 export interface ScoreFactor {
   key: string;
   messageKey: string;
@@ -162,6 +221,27 @@ export interface EvidenceRecord {
   label?: string;
   capturedAt: IsoDateTime;
   confidence?: number;
+}
+
+export interface ModelYearRisk {
+  id: EntityId;
+  make: string;
+  model: string;
+  yearStart: number;
+  yearEnd: number;
+  rating: ModelYearRiskRating;
+  trim?: string[];
+  engine?: string[];
+  transmission?: string[];
+  issue: string;
+  category: ModelYearRiskCategory;
+  severity: number;
+  inspectFor: string[];
+  remediation?: {
+    description: string;
+    resolvesRisk: boolean;
+  };
+  evidenceIds: EntityId[];
 }
 
 export interface ListingSourceRef {
