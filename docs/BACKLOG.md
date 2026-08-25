@@ -13,57 +13,58 @@
 ## Next — technical spike
 
 8. Scaffold a minimal Cloudflare Worker + Hono + D1 project.
-9. Add React/Vite only after API/database skeleton is working.
-10. Implement migrations and seed one user + initial family search.
-11. Build a fake/sample source adapter and fixture dataset.
-12. Add manual import for pasted VIN/URL/listing details.
-13. Run scoring against fixtures before connecting live sources.
+9. Define thin domain services behind the Hono routes so API, MCP, and future clients share behavior.
+10. Add React/Vite only after API/database skeleton is working, using regular API calls for data.
+11. Implement migrations and seed one user + initial family search.
+12. Build a fake/sample source adapter and fixture dataset.
+13. Add manual import for pasted VIN/URL/listing details.
+14. Run scoring against fixtures before connecting live sources.
 
 ## First live data
 
-14. Research local dealer platforms around Cypress, TX.
-15. Pick one structured dealer platform with several nearby dealers.
-16. Implement one compliant dealer adapter.
-17. Add canonicalization and VIN-based deduplication.
-18. Add listing snapshots and price history.
+15. Research local dealer platforms around Cypress, TX.
+16. Pick one structured dealer platform with several nearby dealers.
+17. Implement one compliant dealer adapter.
+18. Add canonicalization and VIN-based deduplication.
+19. Add listing snapshots and price history.
 
 ## Enrichment
 
-19. Add cached VIN decoding.
-20. Add recall lookup where appropriate.
-21. Add structured model/year risk rules.
-22. Add estimated immediate-maintenance items.
-23. Add effective-purchase-cost calculation.
-24. Add anomaly / "why is this cheap?" flags.
-25. Add inspection guidance and verification questions.
+20. Add cached VIN decoding.
+21. Add recall lookup where appropriate.
+22. Add structured model/year risk rules.
+23. Add estimated immediate-maintenance items.
+24. Add effective-purchase-cost calculation.
+25. Add anomaly / "why is this cheap?" flags.
+26. Add inspection guidance and verification questions.
 
 ## Dashboard
 
-26. Search selector / user selector.
-27. Ranked result list.
-28. Vehicle vs Deal Score explanation.
-29. Listing details and photos.
-30. Favorites / contacted / inspection / rejected states.
-31. Next action and follow-up tracking.
-32. Rejection reasons.
-33. Candidate comparison.
+27. Search selector / user selector.
+28. Ranked result list.
+29. Vehicle vs Deal Score explanation.
+30. Listing details and photos.
+31. Favorites / contacted / inspection / rejected states.
+32. Next action and follow-up tracking.
+33. Rejection reasons.
+34. Candidate comparison.
 
 ## Monitoring
 
-34. Scheduled collection.
-35. New-listing alerts.
-36. Price-drop alerts.
-37. Score-threshold notifications.
-38. Stale-listing alerts.
-39. Periodic digest/report.
+35. Scheduled collection.
+36. New-listing alerts.
+37. Price-drop alerts.
+38. Score-threshold notifications.
+39. Stale-listing alerts.
+40. Periodic digest/report.
 
 ## Assistant access
 
-40. Define MCP tool surface for saved searches, ranked candidates, listing details, score explanations, and listing history.
-41. Decide where the MCP server runs in the Cloudflare-first architecture.
-42. Implement read-only MCP tools backed by the same domain services as the dashboard/API.
-43. Add authenticated mutation tools for workflow state updates.
-44. Document ChatGPT connection/setup steps for family users.
+41. Define MCP tool surface for saved searches, ranked candidates, listing details, score explanations, and listing history.
+42. Implement a Streamable HTTP `/mcp` endpoint backed by the same domain services as the dashboard/API.
+43. Implement read-only MCP tools.
+44. Add authenticated mutation tools for workflow state updates.
+45. Document ChatGPT connection/setup steps for family users.
 
 ## Later research
 
@@ -72,7 +73,8 @@
 - Autotrader/Cars.com/CarGurus permitted alert/API/feed options.
 - Dealer-platform adapter reuse opportunities.
 - Optional paid vehicle-history data and whether it provides enough incremental value.
-- Current MCP hosting/authentication options on Cloudflare.
+- MCP authentication options on Cloudflare.
+- Whether Waku, TanStack Start, RedwoodSDK, Astro, or another lightweight framework becomes useful for richer dashboard needs.
 - pnpm workspace transition once multiple independently built apps/packages exist.
 - Public-account authentication, authorization, abuse prevention, and rate limits.
 - Monetization options and which features, if any, belong behind payment.

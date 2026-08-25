@@ -1,10 +1,10 @@
 # Architecture Direction
 
-## Current leading approach
+## Current approach
 
 A small Cloudflare-first TypeScript application, avoiding a full Next.js stack unless requirements later justify it. The first deployment can be personal/family scale, but the architecture should not block a later public multi-user product.
 
-Leading candidate:
+Initial stack:
 
 ```text
 Cloudflare Worker
@@ -35,7 +35,11 @@ Optional later
   └── R2 only if image caching/storage proves worthwhile
 ```
 
-Astro remains a possible lightweight alternative. A Solid-based frontend is an experimental option, but adopting a new backend/runtime and a new frontend paradigm at the same time is not currently necessary.
+React + Vite is the initial dashboard choice because React is ubiquitous and keeps the UI easy to staff, search, and replace later if needed. The dashboard should fetch data through regular API calls rather than depending on React Server Components or server actions as the main data boundary. This preserves a clean contract for future clients such as MCP tools, scripts, or a companion mobile app.
+
+Hono is the initial server framework because it is lightweight, TypeScript-friendly, built on web-standard `Request`/`Response`, and portable across Cloudflare Workers, Node.js, Bun, Deno, and other compatible hosts. Hono routes should stay thin and delegate durable behavior to domain services that can also back MCP and non-Worker collectors.
+
+Waku, TanStack Start, RedwoodSDK, Astro, and similar frameworks remain revisit candidates if the dashboard grows enough to need richer routing, SSR, streaming, or framework-managed React integration. Avoid making React Server Components or server actions the core data model unless a later product requirement clearly justifies that tradeoff.
 
 ## Repository shape
 
@@ -86,6 +90,8 @@ Make/model affinity, body-style fit, buyer urgency, financing posture, maintenan
 ## MCP interface
 
 The system should eventually expose an MCP server so ChatGPT can act as a conversational interface for the family vehicle search. The MCP layer should be a thin adapter over the same domain/API services used by the dashboard, not a separate implementation of search or scoring logic.
+
+Prefer the official TypeScript MCP SDK when implementation begins. A remote deployment should favor Streamable HTTP at `/mcp`, with a stateless implementation unless session state becomes necessary.
 
 Initial MCP tools should focus on:
 
