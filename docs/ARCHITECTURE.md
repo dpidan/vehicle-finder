@@ -137,6 +137,7 @@ Suggested source-access classifications:
 type SourceAccess =
   | 'official-api'
   | 'structured-web'
+  | 'seed-list'
   | 'notification-import'
   | 'browser-assisted';
 ```
@@ -144,6 +145,8 @@ type SourceAccess =
 Do not make full browser automation a prerequisite for the core architecture.
 
 Manual import should be treated as a source-access path, not a throwaway shortcut. Pasted URLs, VINs, listing text, and source-specific notes should normalize through the same candidate/listing contracts as automated adapters.
+
+Dealer discovery should be modeled separately from listing collection. A saved search can produce seller candidates from its center/radius through a compliant business-search API, public dealer directories, or a user-supplied seed list. Inventory adapters then collect listings from those sellers where permitted.
 
 ## Extensibility
 

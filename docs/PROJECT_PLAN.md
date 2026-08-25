@@ -79,6 +79,7 @@ These should be defaults that can be overridden by search/user configuration:
 
 Planned source categories include:
 
+- Dealer discovery based on a saved search's location and radius, starting with a supplied seed list if automated discovery is not available yet.
 - Local independent dealers.
 - Large/franchise dealers.
 - Dealer-group inventory sites.
@@ -87,7 +88,7 @@ Planned source categories include:
 - Nextdoor, subject to current API/access terms and available marketplace-search capabilities.
 - Manual import workflows for sources that are difficult to automate, including pasted URLs, VINs, listing text, or screenshots where supported.
 
-Each source is implemented behind an adapter and classified by access type, such as official API, structured web data, notification import, or browser-assisted workflow.
+Each source is implemented behind an adapter and classified by access type, such as official API, structured web data, notification import, supplied seed list, or browser-assisted workflow. Dealer discovery should be its own step from inventory collection: first identify candidate sellers within the search radius, then run the appropriate inventory adapter for each seller when permitted.
 
 ## Product phases
 

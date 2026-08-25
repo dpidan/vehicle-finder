@@ -23,55 +23,58 @@
 ## First live data
 
 15. Research local dealer platforms around Cypress, TX.
-16. Pick one structured dealer platform with several nearby dealers.
-17. Implement one compliant dealer adapter.
-18. Add canonicalization and VIN-based deduplication.
-19. Add listing snapshots and price history.
+16. Define a minimal dealer-discovery input: search center/radius plus optional supplied dealer seed list.
+17. Research compliant business/dealer discovery targets for finding franchise and independent dealers within a radius.
+18. Pick one structured dealer platform with several nearby dealers.
+19. Implement one compliant dealer adapter.
+20. Add canonicalization and VIN-based deduplication.
+21. Add listing snapshots and price history.
 
 ## Enrichment
 
-20. Add cached VIN decoding.
-21. Add recall lookup where appropriate.
-22. Add structured model/year risk rules.
-23. Add estimated immediate-maintenance items.
-24. Add effective-purchase-cost calculation.
-25. Add anomaly / "why is this cheap?" flags.
-26. Add inspection guidance and verification questions.
+22. Add cached VIN decoding.
+23. Add recall lookup where appropriate.
+24. Add structured model/year risk rules.
+25. Add estimated immediate-maintenance items.
+26. Add effective-purchase-cost calculation.
+27. Add anomaly / "why is this cheap?" flags.
+28. Add inspection guidance and verification questions.
 
 ## Dashboard
 
-27. Search selector / user selector.
-28. Ranked result list.
-29. Vehicle vs Deal Score explanation.
-30. Listing details and photos.
-31. Favorites / contacted / inspection / rejected states.
-32. Next action and follow-up tracking.
-33. Rejection reasons.
-34. Candidate comparison.
+29. Search selector / user selector.
+30. Ranked result list.
+31. Vehicle vs Deal Score explanation.
+32. Listing details and photos.
+33. Favorites / contacted / inspection / rejected states.
+34. Next action and follow-up tracking.
+35. Rejection reasons.
+36. Candidate comparison.
 
 ## Monitoring
 
-35. Scheduled collection.
-36. New-listing alerts.
-37. Price-drop alerts.
-38. Score-threshold notifications.
-39. Stale-listing alerts.
-40. Periodic digest/report.
+37. Scheduled collection.
+38. New-listing alerts.
+39. Price-drop alerts.
+40. Score-threshold notifications.
+41. Stale-listing alerts.
+42. Periodic digest/report.
 
 ## Assistant access
 
-41. Define MCP tool surface for saved searches, ranked candidates, listing details, score explanations, and listing history.
-42. Implement a Streamable HTTP `/mcp` endpoint backed by the same domain services as the dashboard/API.
-43. Implement read-only MCP tools.
-44. Add authenticated mutation tools for workflow state updates.
-45. Document ChatGPT connection/setup steps for family users.
+43. Define MCP tool surface for saved searches, ranked candidates, listing details, score explanations, and listing history.
+44. Implement a Streamable HTTP `/mcp` endpoint backed by the same domain services as the dashboard/API.
+45. Implement read-only MCP tools.
+46. Add authenticated mutation tools for workflow state updates.
+47. Document ChatGPT connection/setup steps for family users.
 
 ## Later research
 
-- Nextdoor marketplace API/access details and limits.
+- Nextdoor Display Content API access, marketplace-search capabilities, approval requirements, and limits.
 - Facebook Marketplace compliant integration/import options.
 - Autotrader/Cars.com/CarGurus permitted alert/API/feed options.
 - Dealer-platform adapter reuse opportunities.
+- Business-search APIs for automatic dealer discovery within a saved-search radius.
 - Optional paid vehicle-history data and whether it provides enough incremental value.
 - MCP authentication options on Cloudflare.
 - Whether Waku, TanStack Start, RedwoodSDK, Astro, or another lightweight framework becomes useful for richer dashboard needs.
