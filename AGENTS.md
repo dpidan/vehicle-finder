@@ -34,3 +34,9 @@ Keep durable decisions in files instead of relying on chat context.
 ## Working style
 
 Before implementing a substantial feature, update or create a plan under `docs/plans/` if the behavior is not already well specified. When a decision materially changes architecture, add a short ADR under `docs/decisions/` and update the relevant source-of-truth document.
+
+## Responses
+
+When responding to a request, if it is not clear or already part of the plan, first confirm your understanding of the request. If you need more information, ask clarifying questions. Avoid making assumptions about the user's intent.
+
+When a self-encompassed change is complete, provide recommended Git commit messages and a short summary of the change.
