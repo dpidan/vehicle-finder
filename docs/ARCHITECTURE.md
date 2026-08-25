@@ -37,6 +37,33 @@ Optional later
 
 Astro remains a possible lightweight alternative. A Solid-based frontend is an experimental option, but adopting a new backend/runtime and a new frontend paradigm at the same time is not currently necessary.
 
+## Repository shape
+
+Keep the initial implementation as a single TypeScript package until there are at least two independently built or deployed targets. A pnpm workspace may become useful once shared domain/scoring code is consumed by separate apps or runners, such as:
+
+- a Cloudflare Worker API/MCP service;
+- a React/Vite dashboard;
+- source collectors that run outside Cloudflare;
+- reusable adapter, enrichment, fixture, or database packages.
+
+Likely future shape:
+
+```text
+apps/
+  worker/
+  web/
+  mcp/        # only if it cannot stay inside the Worker
+
+packages/
+  domain/
+  scoring/
+  sources/
+  db/
+  fixtures/
+```
+
+Do not introduce monorepo structure only to prepare for possible future split points. Revisit when the dashboard, MCP interface, or non-Worker collector creates real package boundaries.
+
 ## Domain separation
 
 ```text

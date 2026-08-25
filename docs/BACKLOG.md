@@ -73,6 +73,7 @@
 - Dealer-platform adapter reuse opportunities.
 - Optional paid vehicle-history data and whether it provides enough incremental value.
 - Current MCP hosting/authentication options on Cloudflare.
+- pnpm workspace transition once multiple independently built apps/packages exist.
 - Public-account authentication, authorization, abuse prevention, and rate limits.
 - Monetization options and which features, if any, belong behind payment.
 - Conservative public-facing risk language and legal disclaimers.
