@@ -1,0 +1,9 @@
+name = "vehicle-finder"
+main = "src/worker.ts"
+compatibility_date = "2026-08-25"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "vehicle-finder"
+database_id = "local-vehicle-finder"
+migrations_dir = "migrations"

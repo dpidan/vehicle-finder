@@ -36,7 +36,23 @@ The project is intended to aggregate candidate vehicles from multiple sources, d
 - `docs/decisions/` — architecture decision records as the design matures.
 - `docs/research/` — source-specific research and evidence.
 - `docs/plans/` — active implementation plans.
+- `migrations/` — D1/SQLite schema migrations.
+- `seeds/` — local seed data.
+
+## Local API
+
+```sh
+npm run db:migrate:local
+npm run db:seed:local
+npm run dev
+```
+
+Initial endpoints:
+
+- `GET /health`
+- `GET /api/searches`
+- `GET /api/searches/:id`
 
 ## Status
 
-Planning / domain-model definition. Initial TypeScript domain code exists for saved search configuration, but no application runtime has been scaffolded yet.
+Early technical spike. Domain types, the initial D1 schema/seed data, and a minimal Cloudflare Worker + Hono API scaffold exist.

@@ -32,6 +32,9 @@ Reach a stable enough domain model to scaffold D1 without baking search preferen
 
 - `SavedSearchConfig` v1 has TypeScript types, initial family defaults, and lightweight validation for ranges, budget ordering, score thresholds, preference weights, and scoring weight totals.
 - Canonical entity relationships are defined in `src/domain/entities.ts` for users, saved searches, vehicles, sellers, listings, snapshots, evaluations, score factors, dispositions, attributes, and evidence records.
+- Source adapter contracts, normalized listing candidates, and model-year risk records are defined in `src/domain/entities.ts`.
+- Initial D1 schema is implemented in `migrations/0001_initial.sql`.
+- Initial family user and saved-search seed data is implemented in `seeds/0001_family_search.sql`.
 
 ## Initial D1 Table Proposal
 
@@ -83,9 +86,11 @@ Indexes:
 - `attribute_definitions`: `id`, `key`, `label`, `owner_type`, `value_type`, `version`
 - `attribute_values`: `id`, `definition_id`, `owner_type`, `owner_id`, `value_json`, `evidence_ids_json`, `created_at`
 - `evidence_records`: `id`, `source_name`, `source_access`, `url`, `label`, `captured_at`, `confidence`
+- `model_year_risks`: `id`, `make`, `model`, `year_start`, `year_end`, `rating`, `trim_json`, `engine_json`, `transmission_json`, `issue`, `category`, `severity`, `inspect_for_json`, `remediation_json`, `evidence_ids_json`
 
 Indexes:
 
 - `attribute_definitions(key, owner_type)` unique
 - `attribute_values(owner_type, owner_id)`
 - `attribute_values(definition_id)`
+- `model_year_risks(make, model, year_start, year_end)`
