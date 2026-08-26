@@ -55,12 +55,18 @@ describe('worker routes', () => {
   it('returns ranked persisted listings for a saved search', async () => {
     const response = await app.request('/api/searches/family-replacement-vehicle/ranked-listings', {}, env({ persistedListings: true }));
     const body = (await response.json()) as {
-      rankedListings: Array<{ listingId: string; rankedListing: { listing: { title: string }; dealScore: number } }>;
+      rankedListings: Array<{
+        listingId: string;
+        rankedListing: { listing: { title: string }; dealScore: number };
+        disposition: { state: string } | null;
+      }>;
     };
 
     assert.equal(response.status, 200);
     assert.equal(body.rankedListings[0]?.listingId, 'listing-sienna');
     assert.equal(body.rankedListings[0]?.rankedListing.listing.title, '2015 Toyota Sienna XLE');
+    assert.equal(body.rankedListings[0]?.disposition?.state, 'favorite');
+    assert.equal(body.rankedListings[1]?.disposition, null);
     assert.ok(body.rankedListings[0]?.rankedListing.dealScore);
   });
 
@@ -318,7 +324,9 @@ function env(options: { adminToken?: string; persistedListings?: boolean; listin
             },
             all: async () => ({
               results:
-                options.listingDetail && id === 'listing-sienna' && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
+                options.persistedListings && id === savedSearchRow.id && sql.includes('FROM listings') && sql.includes('LEFT JOIN listing_dispositions')
+                  ? [persistedListingRow, betterPersistedListingRow]
+                  : options.listingDetail && id === 'listing-sienna' && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
                   ? snapshotRows
                   : []
             }),
@@ -331,10 +339,8 @@ function env(options: { adminToken?: string; persistedListings?: boolean; listin
         all: async () => ({
           results: sql.includes('FROM saved_searches')
             ? [savedSearchRow]
-            : options.persistedListings && sql.includes('FROM listings') && sql.includes("WHERE listings.status IN ('active', 'pending', 'unknown')")
-              ? [persistedListingRow, betterPersistedListingRow]
-              : options.listingDetail && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
-                ? snapshotRows
+            : options.listingDetail && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
+              ? snapshotRows
               : []
         })
       }),
@@ -370,7 +376,14 @@ const persistedListingRow = {
   seller_website_url: 'https://www.tradelanemotors.com',
   seller_latitude: null,
   seller_longitude: null,
-  seller_location_label: null
+  seller_location_label: null,
+  disposition_id: null,
+  disposition_saved_search_id: null,
+  disposition_listing_id: null,
+  disposition_state: null,
+  disposition_rejection_reason: null,
+  disposition_next_action_json: null,
+  disposition_updated_at: null
 };
 
 const snapshotRows = [
@@ -417,5 +430,12 @@ const betterPersistedListingRow = {
   year: 2015,
   make: 'Toyota',
   model: 'Sienna',
-  seller_phone: '555-0100'
+  seller_phone: '555-0100',
+  disposition_id: 'disposition-sienna',
+  disposition_saved_search_id: 'family-replacement-vehicle',
+  disposition_listing_id: 'listing-sienna',
+  disposition_state: 'favorite',
+  disposition_rejection_reason: null,
+  disposition_next_action_json: null,
+  disposition_updated_at: '2026-08-26T14:00:00.000Z'
 };

@@ -41,6 +41,13 @@ interface PersistedListingRow {
   seller_latitude: number | null;
   seller_longitude: number | null;
   seller_location_label: string | null;
+  disposition_id: string | null;
+  disposition_saved_search_id: string | null;
+  disposition_listing_id: string | null;
+  disposition_state: ListingDispositionState | null;
+  disposition_rejection_reason: string | null;
+  disposition_next_action_json: string | null;
+  disposition_updated_at: string | null;
 }
 
 interface SnapshotRow {
@@ -70,6 +77,7 @@ export interface ListingDetail {
 export interface RankedPersistedListing {
   listingId: string;
   rankedListing: RankedListing;
+  disposition: ListingDisposition | null;
 }
 
 export interface ListingDispositionInput {
@@ -121,16 +129,26 @@ export async function rankSampleListingsForSavedSearch(
 }
 
 export async function rankPersistedListingsForSavedSearch(db: D1Database, search: SavedSearch): Promise<RankedPersistedListing[]> {
-  const candidates = await listPersistedListingCandidates(db);
+  const candidates = await listPersistedListingCandidates(db, search.id);
   const listingIds = new WeakMap<ListingCandidate, string>();
+  const dispositions = new WeakMap<ListingCandidate, ListingDisposition | null>();
 
   for (const candidate of candidates) {
     listingIds.set(candidate, candidate.listingId);
+    dispositions.set(candidate, candidate.disposition);
   }
 
   return rankListingsForSearch(search.config, candidates).flatMap((rankedListing) => {
     const listingId = listingIds.get(rankedListing.listing);
-    return listingId ? [{ listingId, rankedListing: { ...rankedListing, listing: withoutListingId(rankedListing.listing) } }] : [];
+    return listingId
+      ? [
+          {
+            listingId,
+            rankedListing: { ...rankedListing, listing: withoutListingId(rankedListing.listing) },
+            disposition: dispositions.get(rankedListing.listing) ?? null
+          }
+        ]
+      : [];
   });
 }
 
@@ -258,7 +276,7 @@ export async function setListingDisposition(
   };
 }
 
-async function listPersistedListingCandidates(db: D1Database): Promise<Array<ListingCandidate & { listingId: string }>> {
+async function listPersistedListingCandidates(db: D1Database, savedSearchId: string): Promise<Array<ListingCandidate & { listingId: string; disposition: ListingDisposition | null }>> {
   const { results } = await db
     .prepare(
       `SELECT
@@ -288,14 +306,25 @@ async function listPersistedListingCandidates(db: D1Database): Promise<Array<Lis
          sellers.website_url AS seller_website_url,
          sellers.latitude AS seller_latitude,
          sellers.longitude AS seller_longitude,
-         sellers.location_label AS seller_location_label
+         sellers.location_label AS seller_location_label,
+         listing_dispositions.id AS disposition_id,
+         listing_dispositions.saved_search_id AS disposition_saved_search_id,
+         listing_dispositions.listing_id AS disposition_listing_id,
+         listing_dispositions.state AS disposition_state,
+         listing_dispositions.rejection_reason AS disposition_rejection_reason,
+         listing_dispositions.next_action_json AS disposition_next_action_json,
+         listing_dispositions.updated_at AS disposition_updated_at
        FROM listings
        JOIN vehicles ON vehicles.id = listings.vehicle_id
        LEFT JOIN sellers ON sellers.id = listings.seller_id
+       LEFT JOIN listing_dispositions
+         ON listing_dispositions.listing_id = listings.id
+        AND listing_dispositions.saved_search_id = ?
        WHERE listings.status IN ('active', 'pending', 'unknown')
        ORDER BY listings.last_seen_at DESC
        LIMIT 100`
     )
+    .bind(savedSearchId)
     .all<PersistedListingRow>();
 
   return results.map(toListingCandidate);
@@ -313,9 +342,10 @@ function toSavedSearch(row: SavedSearchRow): SavedSearch {
   };
 }
 
-function toListingCandidate(row: PersistedListingRow): ListingCandidate & { listingId: string } {
+function toListingCandidate(row: PersistedListingRow): ListingCandidate & { listingId: string; disposition: ListingDisposition | null } {
   return {
     listingId: row.id,
+    disposition: toNullableListingDisposition(row),
     source: { name: row.source_name, access: row.source_access },
     ...(row.source_listing_id ? { sourceListingId: row.source_listing_id } : {}),
     url: row.url,
@@ -372,8 +402,27 @@ function toSnapshot(row: SnapshotRow): ListingDetail['snapshots'][number] {
 }
 
 function withoutListingId(candidate: ListingCandidate & { listingId?: string }): ListingCandidate {
-  const { listingId: _listingId, ...listing } = candidate;
+  const { listingId: _listingId, disposition: _disposition, ...listing } = candidate as ListingCandidate & {
+    listingId?: string;
+    disposition?: ListingDisposition | null;
+  };
   return listing;
+}
+
+function toNullableListingDisposition(row: PersistedListingRow): ListingDisposition | null {
+  if (!row.disposition_id || !row.disposition_saved_search_id || !row.disposition_listing_id || !row.disposition_state || !row.disposition_updated_at) {
+    return null;
+  }
+
+  return toListingDisposition({
+    id: row.disposition_id,
+    saved_search_id: row.disposition_saved_search_id,
+    listing_id: row.disposition_listing_id,
+    state: row.disposition_state,
+    rejection_reason: row.disposition_rejection_reason,
+    next_action_json: row.disposition_next_action_json,
+    updated_at: row.disposition_updated_at
+  });
 }
 
 function toListingDisposition(row: ListingDispositionRow): ListingDisposition {

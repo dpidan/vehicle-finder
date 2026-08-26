@@ -18,6 +18,7 @@ the database.
 - Expose ranked persisted listings for a saved search.
 - Expose listing detail with recent snapshot history.
 - Expose minimal per-search listing disposition workflow.
+- Include current per-search disposition in ranked persisted results.
 
 ## Deferred
 
