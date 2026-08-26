@@ -16,6 +16,7 @@ the database.
 - Expose a protected Worker import endpoint for the seeded Dealer Car Search
   source.
 - Expose ranked persisted listings for a saved search.
+- Expose listing detail with recent snapshot history.
 
 ## Deferred
 

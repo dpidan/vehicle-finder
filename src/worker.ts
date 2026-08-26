@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { importListingCandidates } from './services/inventory-service.js';
 import {
   getSavedSearch,
+  getListingDetail,
   listSavedSearches,
   rankPersistedListingsForSavedSearch,
   rankSampleListingsForSavedSearch
@@ -67,6 +68,16 @@ app.get('/api/searches/:id/ranked-listings', async (c) => {
     searchId: search.id,
     rankedListings: await rankPersistedListingsForSavedSearch(c.env.DB, search)
   });
+});
+
+app.get('/api/listings/:id', async (c) => {
+  const detail = await getListingDetail(c.env.DB, c.req.param('id'));
+
+  if (!detail) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  return c.json(detail);
 });
 
 app.post('/api/admin/sources/dealer-car-search/collect', async (c) => {

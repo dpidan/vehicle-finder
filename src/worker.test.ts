@@ -54,15 +54,44 @@ describe('worker routes', () => {
 
   it('returns ranked persisted listings for a saved search', async () => {
     const response = await app.request('/api/searches/family-replacement-vehicle/ranked-listings', {}, env({ persistedListings: true }));
-    const body = (await response.json()) as { rankedListings: Array<{ listing: { title: string }; dealScore: number }> };
+    const body = (await response.json()) as {
+      rankedListings: Array<{ listingId: string; rankedListing: { listing: { title: string }; dealScore: number } }>;
+    };
 
     assert.equal(response.status, 200);
-    assert.equal(body.rankedListings[0]?.listing.title, '2015 Toyota Sienna XLE');
-    assert.ok(body.rankedListings[0]?.dealScore);
+    assert.equal(body.rankedListings[0]?.listingId, 'listing-sienna');
+    assert.equal(body.rankedListings[0]?.rankedListing.listing.title, '2015 Toyota Sienna XLE');
+    assert.ok(body.rankedListings[0]?.rankedListing.dealScore);
   });
 
   it('returns 404 for persisted ranking with a missing saved search', async () => {
     const response = await app.request('/api/searches/missing/ranked-listings', {}, env({ persistedListings: true }));
+
+    assert.equal(response.status, 404);
+    assert.deepEqual(await response.json(), { error: 'not-found' });
+  });
+
+  it('returns listing detail with recent snapshots', async () => {
+    const response = await app.request('/api/listings/listing-sienna', {}, env({ listingDetail: true }));
+    const body = (await response.json()) as {
+      listing: { title: string; vehicle: { vin: string }; seller: { phone: string }; price: { amount: number }; mileage: number };
+      snapshots: Array<{ capturedAt: string; price: { amount: number }; mileage: number }>;
+    };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.listing.title, '2015 Toyota Sienna XLE');
+    assert.equal(body.listing.vehicle.vin, '5TDYK3DC0FS000001');
+    assert.equal(body.listing.seller.phone, '555-0100');
+    assert.equal(body.listing.price.amount, 9900);
+    assert.equal(body.listing.mileage, 93000);
+    assert.deepEqual(
+      body.snapshots.map((snapshot) => snapshot.capturedAt),
+      ['2026-08-26T13:00:00.000Z', '2026-08-26T12:00:00.000Z']
+    );
+  });
+
+  it('returns 404 for a missing listing detail', async () => {
+    const response = await app.request('/api/listings/missing', {}, env({ listingDetail: true }));
 
     assert.equal(response.status, 404);
     assert.deepEqual(await response.json(), { error: 'not-found' });
@@ -176,13 +205,23 @@ describe('worker routes', () => {
   });
 });
 
-function env(options: { adminToken?: string; persistedListings?: boolean } = {}): Env {
+function env(options: { adminToken?: string; persistedListings?: boolean; listingDetail?: boolean } = {}): Env {
   return {
     ...(options.adminToken ? { ADMIN_TOKEN: options.adminToken } : {}),
     DB: {
       prepare: (sql: string) => ({
         bind: (id: string) => ({
-          first: async () => (id === savedSearchRow.id ? savedSearchRow : null),
+          first: async () => {
+            if (sql.includes('FROM saved_searches')) return id === savedSearchRow.id ? savedSearchRow : null;
+            if (options.listingDetail && sql.includes('WHERE listings.id = ?')) return id === 'listing-sienna' ? betterPersistedListingRow : null;
+            return null;
+          },
+          all: async () => ({
+            results:
+              options.listingDetail && id === 'listing-sienna' && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
+                ? snapshotRows
+                : []
+          }),
           run: async () => ({ success: true })
         }),
         all: async () => ({
@@ -190,6 +229,8 @@ function env(options: { adminToken?: string; persistedListings?: boolean } = {})
             ? [savedSearchRow]
             : options.persistedListings && sql.includes('FROM listings') && sql.includes("WHERE listings.status IN ('active', 'pending', 'unknown')")
               ? [persistedListingRow, betterPersistedListingRow]
+              : options.listingDetail && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
+                ? snapshotRows
               : []
         })
       })
@@ -226,6 +267,29 @@ const persistedListingRow = {
   seller_longitude: null,
   seller_location_label: null
 };
+
+const snapshotRows = [
+  {
+    id: 'snapshot-new',
+    captured_at: '2026-08-26T13:00:00.000Z',
+    price_amount: 9900,
+    price_currency: 'USD',
+    mileage: 93000,
+    status: 'active',
+    raw_title: '2015 Toyota Sienna XLE',
+    raw_description: null
+  },
+  {
+    id: 'snapshot-old',
+    captured_at: '2026-08-26T12:00:00.000Z',
+    price_amount: 10900,
+    price_currency: 'USD',
+    mileage: 93100,
+    status: 'active',
+    raw_title: '2015 Toyota Sienna XLE',
+    raw_description: null
+  }
+];
 
 const betterPersistedListingRow = {
   ...persistedListingRow,
