@@ -97,6 +97,97 @@ describe('worker routes', () => {
     assert.deepEqual(await response.json(), { error: 'not-found' });
   });
 
+  it('returns null when no listing disposition exists', async () => {
+    const response = await app.request(
+      '/api/searches/family-replacement-vehicle/listings/listing-sienna/disposition',
+      {},
+      env({ disposition: true })
+    );
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { disposition: null });
+  });
+
+  it('returns a saved listing disposition', async () => {
+    const response = await app.request(
+      '/api/searches/family-replacement-vehicle/listings/listing-sienna/disposition',
+      {},
+      env({ disposition: 'existing' })
+    );
+    const body = (await response.json()) as { disposition: { state: string; nextAction: { type: string } } };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.disposition.state, 'favorite');
+    assert.equal(body.disposition.nextAction.type, 'schedule-inspection');
+  });
+
+  it('creates a listing disposition', async () => {
+    const db = env({ disposition: true }).DB as D1Database & { writes: string[] };
+    const response = await app.request(
+      '/api/searches/family-replacement-vehicle/listings/listing-sienna/disposition',
+      {
+        method: 'PUT',
+        body: JSON.stringify({ state: 'interested', nextAction: { type: 'ask-maintenance-records' } }),
+        headers: { 'content-type': 'application/json' }
+      },
+      { DB: db }
+    );
+    const body = (await response.json()) as { disposition: { state: string; nextAction: { type: string } } };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.disposition.state, 'interested');
+    assert.equal(body.disposition.nextAction.type, 'ask-maintenance-records');
+    assert.ok(db.writes.some((sql) => sql.startsWith('INSERT INTO listing_dispositions')));
+  });
+
+  it('updates an existing listing disposition', async () => {
+    const db = env({ disposition: 'existing' }).DB as D1Database & { writes: string[] };
+    const response = await app.request(
+      '/api/searches/family-replacement-vehicle/listings/listing-sienna/disposition',
+      {
+        method: 'PUT',
+        body: JSON.stringify({ state: 'rejected', rejectionReason: 'Too many miles' }),
+        headers: { 'content-type': 'application/json' }
+      },
+      { DB: db }
+    );
+
+    assert.equal(response.status, 200);
+    assert.ok(db.writes.some((sql) => sql.startsWith('UPDATE listing_dispositions')));
+  });
+
+  it('rejects invalid listing dispositions', async () => {
+    const invalidState = await app.request(
+      '/api/searches/family-replacement-vehicle/listings/listing-sienna/disposition',
+      { method: 'PUT', body: JSON.stringify({ state: 'maybe' }), headers: { 'content-type': 'application/json' } },
+      env({ disposition: true })
+    );
+    const rejectedWithoutReason = await app.request(
+      '/api/searches/family-replacement-vehicle/listings/listing-sienna/disposition',
+      { method: 'PUT', body: JSON.stringify({ state: 'rejected' }), headers: { 'content-type': 'application/json' } },
+      env({ disposition: true })
+    );
+
+    assert.equal(invalidState.status, 400);
+    assert.equal(rejectedWithoutReason.status, 400);
+  });
+
+  it('returns 404 when setting a disposition for a missing search or listing', async () => {
+    const missingSearch = await app.request(
+      '/api/searches/missing/listings/listing-sienna/disposition',
+      { method: 'PUT', body: JSON.stringify({ state: 'favorite' }), headers: { 'content-type': 'application/json' } },
+      env({ disposition: true })
+    );
+    const missingListing = await app.request(
+      '/api/searches/family-replacement-vehicle/listings/missing/disposition',
+      { method: 'PUT', body: JSON.stringify({ state: 'favorite' }), headers: { 'content-type': 'application/json' } },
+      env({ disposition: true })
+    );
+
+    assert.equal(missingSearch.status, 404);
+    assert.equal(missingListing.status, 404);
+  });
+
   it('requires a configured admin token for dealer collection', async () => {
     const response = await app.request('/api/admin/sources/dealer-car-search/collect', { method: 'POST' }, env());
 
@@ -205,25 +296,38 @@ describe('worker routes', () => {
   });
 });
 
-function env(options: { adminToken?: string; persistedListings?: boolean; listingDetail?: boolean } = {}): Env {
+function env(options: { adminToken?: string; persistedListings?: boolean; listingDetail?: boolean; disposition?: true | 'existing' } = {}): Env {
+  const writes: string[] = [];
+
   return {
     ...(options.adminToken ? { ADMIN_TOKEN: options.adminToken } : {}),
     DB: {
       prepare: (sql: string) => ({
-        bind: (id: string) => ({
-          first: async () => {
-            if (sql.includes('FROM saved_searches')) return id === savedSearchRow.id ? savedSearchRow : null;
-            if (options.listingDetail && sql.includes('WHERE listings.id = ?')) return id === 'listing-sienna' ? betterPersistedListingRow : null;
-            return null;
-          },
-          all: async () => ({
-            results:
-              options.listingDetail && id === 'listing-sienna' && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
-                ? snapshotRows
-                : []
-          }),
-          run: async () => ({ success: true })
-        }),
+        bind: (...values: string[]) => {
+          const [id, listingId] = values;
+
+          return {
+            first: async () => {
+              if (sql.includes('FROM saved_searches')) return id === savedSearchRow.id ? savedSearchRow : null;
+              if (sql === 'SELECT id FROM listings WHERE id = ?') return id === 'listing-sienna' ? { id } : null;
+              if (options.listingDetail && sql.includes('WHERE listings.id = ?')) return id === 'listing-sienna' ? betterPersistedListingRow : null;
+              if (options.disposition && sql.includes('FROM listing_dispositions')) {
+                return options.disposition === 'existing' && id === savedSearchRow.id && listingId === 'listing-sienna' ? dispositionRow : null;
+              }
+              return null;
+            },
+            all: async () => ({
+              results:
+                options.listingDetail && id === 'listing-sienna' && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
+                  ? snapshotRows
+                  : []
+            }),
+            run: async () => {
+              writes.push(sql.trim());
+              return { success: true };
+            }
+          };
+        },
         all: async () => ({
           results: sql.includes('FROM saved_searches')
             ? [savedSearchRow]
@@ -233,8 +337,9 @@ function env(options: { adminToken?: string; persistedListings?: boolean; listin
                 ? snapshotRows
               : []
         })
-      })
-    } as unknown as D1Database
+      }),
+      writes
+    } as unknown as D1Database & { writes: string[] }
   };
 }
 
@@ -290,6 +395,16 @@ const snapshotRows = [
     raw_description: null
   }
 ];
+
+const dispositionRow = {
+  id: 'disposition-sienna',
+  saved_search_id: 'family-replacement-vehicle',
+  listing_id: 'listing-sienna',
+  state: 'favorite',
+  rejection_reason: null,
+  next_action_json: JSON.stringify({ type: 'schedule-inspection' }),
+  updated_at: '2026-08-26T14:00:00.000Z'
+};
 
 const betterPersistedListingRow = {
   ...persistedListingRow,

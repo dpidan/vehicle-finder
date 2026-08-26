@@ -17,6 +17,7 @@ the database.
   source.
 - Expose ranked persisted listings for a saved search.
 - Expose listing detail with recent snapshot history.
+- Expose minimal per-search listing disposition workflow.
 
 ## Deferred
 
@@ -27,5 +28,6 @@ the database.
 - Source-specific detail-page crawling.
 - Import scheduling and stale-listing detection.
 - Broader authentication/authorization beyond a private admin import token.
+- Rich workflow audit history.
 
 Add those after the live adapter can persist a useful first inventory batch.

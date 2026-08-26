@@ -1,4 +1,4 @@
-import type { ListingCandidate, SavedSearch } from '../domain/entities.js';
+import type { ListingCandidate, ListingDisposition, ListingDispositionState, NextAction, SavedSearch } from '../domain/entities.js';
 import type { SavedSearchConfig } from '../domain/search-config.js';
 import { rankListingsForSearch, type RankedListing } from '../scoring/rank-listings.js';
 import { collectSampleListings } from '../sources/sample-source.js';
@@ -70,6 +70,22 @@ export interface ListingDetail {
 export interface RankedPersistedListing {
   listingId: string;
   rankedListing: RankedListing;
+}
+
+export interface ListingDispositionInput {
+  state: ListingDispositionState;
+  rejectionReason?: string;
+  nextAction?: NextAction;
+}
+
+interface ListingDispositionRow {
+  id: string;
+  saved_search_id: string;
+  listing_id: string;
+  state: ListingDispositionState;
+  rejection_reason: string | null;
+  next_action_json: string | null;
+  updated_at: string;
 }
 
 export async function listSavedSearches(db: D1Database): Promise<SavedSearch[]> {
@@ -175,6 +191,70 @@ export async function getListingDetail(db: D1Database, id: string): Promise<List
   return {
     listing: withoutListingId(toListingCandidate(row)),
     snapshots: results.map(toSnapshot)
+  };
+}
+
+export async function listingExists(db: D1Database, id: string): Promise<boolean> {
+  const row = await db.prepare(`SELECT id FROM listings WHERE id = ?`).bind(id).first<{ id: string }>();
+  return Boolean(row);
+}
+
+export async function getListingDisposition(
+  db: D1Database,
+  savedSearchId: string,
+  listingId: string
+): Promise<ListingDisposition | null> {
+  const row = await db
+    .prepare(
+      `SELECT id, saved_search_id, listing_id, state, rejection_reason, next_action_json, updated_at
+       FROM listing_dispositions
+       WHERE saved_search_id = ? AND listing_id = ?`
+    )
+    .bind(savedSearchId, listingId)
+    .first<ListingDispositionRow>();
+
+  return row ? toListingDisposition(row) : null;
+}
+
+export async function setListingDisposition(
+  db: D1Database,
+  savedSearchId: string,
+  listingId: string,
+  input: ListingDispositionInput,
+  updatedAt: string
+): Promise<ListingDisposition> {
+  const existing = await getListingDisposition(db, savedSearchId, listingId);
+  const id = existing?.id ?? crypto.randomUUID();
+  const nextActionJson = input.nextAction && input.nextAction.type !== 'none' ? JSON.stringify(input.nextAction) : null;
+
+  if (existing) {
+    await db
+      .prepare(
+        `UPDATE listing_dispositions
+         SET state = ?, rejection_reason = ?, next_action_json = ?, updated_at = ?
+         WHERE id = ?`
+      )
+      .bind(input.state, input.rejectionReason ?? null, nextActionJson, updatedAt, id)
+      .run();
+  } else {
+    await db
+      .prepare(
+        `INSERT INTO listing_dispositions
+         (id, saved_search_id, listing_id, state, rejection_reason, next_action_json, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      )
+      .bind(id, savedSearchId, listingId, input.state, input.rejectionReason ?? null, nextActionJson, updatedAt)
+      .run();
+  }
+
+  return {
+    id,
+    savedSearchId,
+    listingId,
+    state: input.state,
+    ...(input.rejectionReason ? { rejectionReason: input.rejectionReason } : {}),
+    ...(input.nextAction && input.nextAction.type !== 'none' ? { nextAction: input.nextAction } : {}),
+    updatedAt
   };
 }
 
@@ -294,4 +374,16 @@ function toSnapshot(row: SnapshotRow): ListingDetail['snapshots'][number] {
 function withoutListingId(candidate: ListingCandidate & { listingId?: string }): ListingCandidate {
   const { listingId: _listingId, ...listing } = candidate;
   return listing;
+}
+
+function toListingDisposition(row: ListingDispositionRow): ListingDisposition {
+  return {
+    id: row.id,
+    savedSearchId: row.saved_search_id,
+    listingId: row.listing_id,
+    state: row.state,
+    ...(row.rejection_reason ? { rejectionReason: row.rejection_reason } : {}),
+    ...(row.next_action_json ? { nextAction: JSON.parse(row.next_action_json) as NextAction } : {}),
+    updatedAt: row.updated_at
+  };
 }

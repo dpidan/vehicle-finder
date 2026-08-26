@@ -3,9 +3,13 @@ import { importListingCandidates } from './services/inventory-service.js';
 import {
   getSavedSearch,
   getListingDetail,
+  getListingDisposition,
+  listingExists,
   listSavedSearches,
   rankPersistedListingsForSavedSearch,
-  rankSampleListingsForSavedSearch
+  rankSampleListingsForSavedSearch,
+  setListingDisposition,
+  type ListingDispositionInput
 } from './services/search-service.js';
 import { manualImportToCandidate, type ManualImportInput } from './sources/manual-import.js';
 import { cypressDealerCarSearchSeeds } from './sources/dealer-car-search-seeds.js';
@@ -80,6 +84,37 @@ app.get('/api/listings/:id', async (c) => {
   return c.json(detail);
 });
 
+app.get('/api/searches/:searchId/listings/:listingId/disposition', async (c) => {
+  const disposition = await getListingDisposition(c.env.DB, c.req.param('searchId'), c.req.param('listingId'));
+  return c.json({ disposition });
+});
+
+app.put('/api/searches/:searchId/listings/:listingId/disposition', async (c) => {
+  const searchId = c.req.param('searchId');
+  const listingId = c.req.param('listingId');
+  const body = (await c.req.json()) as Partial<ListingDispositionInput>;
+
+  if (!isDispositionInput(body)) {
+    return c.json({ error: 'invalid-disposition' }, 400);
+  }
+
+  const search = await getSavedSearch(c.env.DB, searchId);
+
+  if (!search || !(await listingExists(c.env.DB, listingId))) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  const disposition = await setListingDisposition(
+    c.env.DB,
+    searchId,
+    listingId,
+    body,
+    new Date().toISOString()
+  );
+
+  return c.json({ disposition });
+});
+
 app.post('/api/admin/sources/dealer-car-search/collect', async (c) => {
   const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
 
@@ -133,6 +168,27 @@ function requireAdminToken(request: Request, expected: string | undefined): 'adm
   }
 
   return request.headers.get('authorization') === `Bearer ${expected}` ? undefined : 'unauthorized';
+}
+
+function isDispositionInput(value: Partial<ListingDispositionInput>): value is ListingDispositionInput {
+  const nextAction = value.nextAction;
+
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    ['new', 'interested', 'favorite', 'contacted', 'inspection', 'rejected', 'sold'].includes(value.state ?? '') &&
+    (value.state !== 'rejected' || Boolean(value.rejectionReason)) &&
+    (value.state === 'rejected' || value.rejectionReason === undefined) &&
+    (value.rejectionReason === undefined || typeof value.rejectionReason === 'string') &&
+    (nextAction === undefined ||
+      (typeof nextAction === 'object' &&
+        nextAction !== null &&
+        ['request-vin', 'ask-maintenance-records', 'ask-out-the-door-price', 'schedule-inspection', 'follow-up', 'compare', 'none'].includes(
+          nextAction.type
+        ) &&
+        (nextAction.dueAt === undefined || !Number.isNaN(Date.parse(nextAction.dueAt))) &&
+        (nextAction.note === undefined || typeof nextAction.note === 'string')))
+  );
 }
 
 export default app;
