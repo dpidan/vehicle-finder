@@ -151,6 +151,49 @@ describe('worker routes', () => {
     assert.deepEqual(await missingSearch.json(), { error: 'not-found' });
   });
 
+  it('returns stale listings for a saved search', async () => {
+    const db = env({ staleListings: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+    const response = await app.request(
+      '/api/searches/family-replacement-vehicle/stale-listings?before=2026-08-26T12:00:00.000Z',
+      {},
+      { DB: db }
+    );
+    const body = (await response.json()) as {
+      staleListings: Array<{ listingId: string; lastSeenAt: string; price?: { amount: number } }>;
+    };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.staleListings[0]?.listingId, 'listing-odyssey');
+    assert.equal(body.staleListings[0]?.lastSeenAt, '2026-08-25T12:00:00.000Z');
+    assert.equal(body.staleListings[0]?.price?.amount, 7890);
+    assert.equal(db.writes.length, 0);
+  });
+
+  it('validates stale listing requests', async () => {
+    const missingBefore = await app.request(
+      '/api/searches/family-replacement-vehicle/stale-listings',
+      {},
+      env({ staleListings: true })
+    );
+    const invalidBefore = await app.request(
+      '/api/searches/family-replacement-vehicle/stale-listings?before=not-a-date',
+      {},
+      env({ staleListings: true })
+    );
+    const missingSearch = await app.request(
+      '/api/searches/missing/stale-listings?before=2026-08-26T12:00:00.000Z',
+      {},
+      env({ staleListings: true })
+    );
+
+    assert.equal(missingBefore.status, 400);
+    assert.deepEqual(await missingBefore.json(), { error: 'invalid-before' });
+    assert.equal(invalidBefore.status, 400);
+    assert.deepEqual(await invalidBefore.json(), { error: 'invalid-before' });
+    assert.equal(missingSearch.status, 404);
+    assert.deepEqual(await missingSearch.json(), { error: 'not-found' });
+  });
+
   it('returns listing detail with recent snapshots', async () => {
     const response = await app.request('/api/listings/listing-sienna', {}, env({ listingDetail: true }));
     const body = (await response.json()) as {
@@ -534,6 +577,7 @@ function env(
     persistedListings?: boolean;
     listingDetail?: boolean;
     listingChanges?: boolean;
+    staleListings?: boolean;
     disposition?: true | 'existing';
     evaluations?: boolean;
   } = {}
@@ -567,6 +611,8 @@ function env(
                     ? [newListingChangeRow]
                   : options.listingChanges && id === savedSearchRow.id && sql.includes('latest.price_amount < previous.price_amount')
                     ? [priceDropChangeRow]
+                  : options.staleListings && id === savedSearchRow.id && sql.includes('listings.last_seen_at < ?')
+                    ? [staleListingRow]
                   : options.listingDetail && id === 'listing-sienna' && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
                   ? snapshotRows
                   : []
@@ -721,6 +767,15 @@ const priceDropChangeRow = {
   previous_price_amount: 10900,
   current_price_currency: 'USD',
   previous_price_currency: 'USD'
+};
+
+const staleListingRow = {
+  listing_id: 'listing-odyssey',
+  title: '2013 Honda Odyssey',
+  url: 'https://example.test/odyssey',
+  last_seen_at: '2026-08-25T12:00:00.000Z',
+  price_amount: 7890,
+  price_currency: 'USD'
 };
 
 const betterPersistedListingRow = {

@@ -8,6 +8,7 @@ import {
   listLatestSearchEvaluations,
   listListingChanges,
   listSavedSearches,
+  listStaleListings,
   rankPersistedListingsForSavedSearch,
   rankSampleListingsForSavedSearch,
   setListingDisposition,
@@ -98,7 +99,7 @@ app.get('/api/searches/:id/listing-changes', async (c) => {
     return c.json({ error: 'not-found' }, 404);
   }
 
-  if (!since || Number.isNaN(Date.parse(since))) {
+  if (!isIsoDateTime(since)) {
     return c.json({ error: 'invalid-since' }, 400);
   }
 
@@ -106,6 +107,25 @@ app.get('/api/searches/:id/listing-changes', async (c) => {
     searchId: search.id,
     since,
     changes: await listListingChanges(c.env.DB, search.id, since)
+  });
+});
+
+app.get('/api/searches/:id/stale-listings', async (c) => {
+  const search = await getSavedSearch(c.env.DB, c.req.param('id'));
+  const before = c.req.query('before');
+
+  if (!search) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  if (!isIsoDateTime(before)) {
+    return c.json({ error: 'invalid-before' }, 400);
+  }
+
+  return c.json({
+    searchId: search.id,
+    before,
+    staleListings: await listStaleListings(c.env.DB, search.id, before)
   });
 });
 
@@ -258,6 +278,15 @@ function requireAdminToken(request: Request, expected: string | undefined): 'adm
   }
 
   return request.headers.get('authorization') === `Bearer ${expected}` ? undefined : 'unauthorized';
+}
+
+function isIsoDateTime(value: string | undefined): value is string {
+  if (!value) {
+    return false;
+  }
+
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime()) && date.toISOString() === value;
 }
 
 function isDispositionInput(value: Partial<ListingDispositionInput>): value is ListingDispositionInput {

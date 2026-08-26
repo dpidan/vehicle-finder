@@ -167,6 +167,23 @@ export interface ListingChanges {
   priceDrops: ListingChangeSummary[];
 }
 
+interface StaleListingRow {
+  listing_id: string;
+  title: string;
+  url: string;
+  last_seen_at: string;
+  price_amount: number | null;
+  price_currency: 'USD' | null;
+}
+
+export interface StaleListingSummary {
+  listingId: string;
+  title: string;
+  url: string;
+  lastSeenAt: string;
+  price?: { amount: number; currency: 'USD' };
+}
+
 export async function listSavedSearches(db: D1Database): Promise<SavedSearch[]> {
   const { results } = await db
     .prepare(
@@ -300,7 +317,7 @@ export async function listLatestSearchEvaluations(db: D1Database, savedSearchId:
 export async function listListingChanges(db: D1Database, savedSearchId: string, since: string): Promise<ListingChanges> {
   const newListings = await db
     .prepare(
-      `SELECT
+      `SELECT DISTINCT
          listings.id AS listing_id,
          listings.title,
          listings.url,
@@ -315,7 +332,6 @@ export async function listListingChanges(db: D1Database, savedSearchId: string, 
         AND search_evaluations.saved_search_id = ?
        WHERE listings.status IN ('active', 'pending', 'unknown')
          AND listings.first_seen_at > ?
-       GROUP BY listings.id
        ORDER BY detected_at DESC, title
        LIMIT 100`
     )
@@ -324,7 +340,7 @@ export async function listListingChanges(db: D1Database, savedSearchId: string, 
 
   const priceDrops = await db
     .prepare(
-      `SELECT
+      `SELECT DISTINCT
          listings.id AS listing_id,
          listings.title,
          listings.url,
@@ -356,7 +372,6 @@ export async function listListingChanges(db: D1Database, savedSearchId: string, 
            FROM listing_snapshots current
            WHERE current.listing_id = listings.id
          )
-       GROUP BY listings.id
        ORDER BY detected_at DESC, title
        LIMIT 100`
     )
@@ -375,13 +390,44 @@ function toListingChangeSummary(row: ListingChangeRow): ListingChangeSummary {
     title: row.title,
     url: row.url,
     detectedAt: row.detected_at,
-    ...(row.current_price_amount && row.current_price_currency
+    ...(row.current_price_amount !== null && row.current_price_currency
       ? { currentPrice: { amount: row.current_price_amount, currency: row.current_price_currency } }
       : {}),
-    ...(row.previous_price_amount && row.previous_price_currency
+    ...(row.previous_price_amount !== null && row.previous_price_currency
       ? { previousPrice: { amount: row.previous_price_amount, currency: row.previous_price_currency } }
       : {})
   };
+}
+
+export async function listStaleListings(db: D1Database, savedSearchId: string, before: string): Promise<StaleListingSummary[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT DISTINCT
+         listings.id AS listing_id,
+         listings.title,
+         listings.url,
+         listings.last_seen_at,
+         listings.price_amount,
+         listings.price_currency
+       FROM listings
+       JOIN search_evaluations
+         ON search_evaluations.listing_id = listings.id
+        AND search_evaluations.saved_search_id = ?
+       WHERE listings.status IN ('active', 'pending', 'unknown')
+         AND listings.last_seen_at < ?
+       ORDER BY listings.last_seen_at, listings.title
+       LIMIT 100`
+    )
+    .bind(savedSearchId, before)
+    .all<StaleListingRow>();
+
+  return results.map((row) => ({
+    listingId: row.listing_id,
+    title: row.title,
+    url: row.url,
+    lastSeenAt: row.last_seen_at,
+    ...(row.price_amount !== null && row.price_currency ? { price: { amount: row.price_amount, currency: row.price_currency } } : {})
+  }));
 }
 
 export async function getListingDetail(db: D1Database, id: string): Promise<ListingDetail | null> {
