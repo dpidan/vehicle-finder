@@ -65,6 +65,15 @@ npm run score:fixtures
 This prints a ranked JSON report from the sample source using the initial
 family search defaults.
 
+## Seeded live collection
+
+```sh
+npm run collect:carsforsale
+```
+
+This fetches first-page inventory from the explicit Cypress-area
+Carsforsale.com-powered dealer seeds and prints normalized listing candidates.
+
 ## Status
 
 Early technical spike. Domain types, the initial D1 schema/seed data, and a minimal Cloudflare Worker + Hono API scaffold exist.
