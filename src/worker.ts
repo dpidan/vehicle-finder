@@ -170,6 +170,38 @@ app.post('/api/admin/searches/:id/evaluations', async (c) => {
   });
 });
 
+app.post('/api/admin/searches/:id/refresh', async (c) => {
+  const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
+
+  if (unauthorized) {
+    return c.json({ error: unauthorized }, unauthorized === 'admin-token-not-configured' ? 503 : 401);
+  }
+
+  const search = await getSavedSearch(c.env.DB, c.req.param('id'));
+
+  if (!search) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  const refreshedAt = new Date().toISOString();
+  const candidates = await dealerCarSearchSource.collect({
+    sellerSeeds: cypressDealerCarSearchSeeds,
+    collectedAt: refreshedAt
+  });
+  const importResult = await importListingCandidates(c.env.DB, candidates);
+  const rankedListings = await rankPersistedListingsForSavedSearch(c.env.DB, search);
+  const evaluationResult = await writeSearchEvaluations(c.env.DB, search.id, rankedListings, refreshedAt);
+
+  return c.json({
+    searchId: search.id,
+    refreshedAt,
+    source: dealerCarSearchSource.name,
+    collectedCount: candidates.length,
+    import: importResult,
+    evaluation: evaluationResult
+  });
+});
+
 app.post('/api/manual-imports/preview', async (c) => {
   const body = (await c.req.json()) as ManualImportInput & { searchId?: string };
   let candidate;

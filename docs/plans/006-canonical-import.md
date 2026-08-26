@@ -21,6 +21,8 @@ the database.
 - Include current per-search disposition in ranked persisted results.
 - Expose protected persisted search-evaluation writes.
 - Expose latest persisted search evaluations for a saved search.
+- Expose protected saved-search refresh that collects Dealer Car Search,
+  imports candidates, and writes current evaluations.
 
 ## Deferred
 

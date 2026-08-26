@@ -317,6 +317,83 @@ describe('worker routes', () => {
     assert.equal(db.writes.filter((write) => write.sql.startsWith('INSERT INTO search_evaluations')).length, 0);
   });
 
+  it('requires the admin token for saved search refreshes', async () => {
+    const missingToken = await app.request('/api/admin/searches/family-replacement-vehicle/refresh', { method: 'POST' }, env());
+    const wrongToken = await app.request(
+      '/api/admin/searches/family-replacement-vehicle/refresh',
+      { method: 'POST' },
+      env({ adminToken: 'secret', persistedListings: true })
+    );
+
+    assert.equal(missingToken.status, 503);
+    assert.equal(wrongToken.status, 401);
+  });
+
+  it('returns 404 without refreshing a missing saved search', async () => {
+    const originalFetch = globalThis.fetch;
+
+    globalThis.fetch = async () => {
+      throw new Error('fetch should not run');
+    };
+
+    try {
+      const db = env({ adminToken: 'secret', persistedListings: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+      const response = await app.request(
+        '/api/admin/searches/missing/refresh',
+        { method: 'POST', headers: { authorization: 'Bearer secret' } },
+        { DB: db, ADMIN_TOKEN: 'secret' }
+      );
+
+      assert.equal(response.status, 404);
+      assert.equal(db.writes.length, 0);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('refreshes a saved search by collecting, importing, and evaluating', async () => {
+    const originalFetch = globalThis.fetch;
+
+    globalThis.fetch = async () =>
+      new Response(
+        `
+          <div>
+            <a>2013 Honda Odyssey</a>
+            <span>$7,890</span>
+            <span>Mileage:</span><span>163,707</span>
+            <span>VIN: 5FNRL5H95DB028656</span>
+          </div>
+        `
+      );
+
+    try {
+      const db = env({ adminToken: 'secret', persistedListings: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+      const response = await app.request(
+        '/api/admin/searches/family-replacement-vehicle/refresh',
+        { method: 'POST', headers: { authorization: 'Bearer secret' } },
+        { DB: db, ADMIN_TOKEN: 'secret' }
+      );
+      const body = (await response.json()) as {
+        searchId: string;
+        collectedCount: number;
+        import: { candidateCount: number; insertedListings: number; snapshotCount: number };
+        evaluation: { insertedEvaluations: number };
+      };
+
+      assert.equal(response.status, 200);
+      assert.equal(body.searchId, 'family-replacement-vehicle');
+      assert.equal(body.collectedCount, 1);
+      assert.equal(body.import.candidateCount, 1);
+      assert.equal(body.import.insertedListings, 1);
+      assert.equal(body.import.snapshotCount, 1);
+      assert.equal(body.evaluation.insertedEvaluations, 2);
+      assert.ok(db.writes.some((write) => write.sql.startsWith('INSERT INTO listing_snapshots')));
+      assert.equal(db.writes.filter((write) => write.sql.startsWith('INSERT INTO search_evaluations')).length, 2);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('returns a saved search by id', async () => {
     const response = await app.request('/api/searches/family-replacement-vehicle', {}, env());
     const body = (await response.json()) as { search: { config: { userId: string } } };
