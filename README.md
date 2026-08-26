@@ -16,7 +16,7 @@ The project is intended to aggregate candidate vehicles from multiple sources, d
 
 ## Initial family search
 
-- Default search area: 25-mile radius around Kathy Ln, Cypress, Texas.
+- Default search area: 25-mile radius around Happy Ln, Cypress, Texas.
 - Radius must remain configurable.
 - Cash target: up to approximately $10,000.
 - Stretch/financed target: up to approximately $15,000.

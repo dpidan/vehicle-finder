@@ -172,7 +172,7 @@ These values belong to the saved search, not the vehicle model itself.
 
 The code-level defaults currently encode:
 
-- Search center: Kathy Ln, Cypress, TX.
+- Search center: Happy Ln, Cypress, TX.
 - Radius: 25 miles, with willingness to consider a wider radius for a much better candidate.
 - Budget tiers: $10,000 cash target, $15,000 stretch target, $17,000 absolute max.
 - Initial make/model preferences may include Honda Odyssey, Honda Pilot, Toyota Sienna, Honda CR-V, and other reliable/value candidates. These are seed data only, not hard-coded product behavior.

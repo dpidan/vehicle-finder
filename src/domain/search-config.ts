@@ -164,7 +164,7 @@ export const familySearchDefaults: SavedSearchConfig = {
   enabled: true,
   geography: {
     center: {
-      label: 'Kathy Ln, Cypress, TX',
+      label: 'Happy Ln, Cypress, TX',
       latitude: 29.9691,
       longitude: -95.6972
     },

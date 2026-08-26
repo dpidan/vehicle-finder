@@ -23,7 +23,7 @@
 ## First live data
 
 15. Research local dealer platforms around Cypress, TX.
-16. Define a minimal dealer-discovery input: search center/radius plus optional supplied dealer seed list.
+16. Define a minimal dealer-discovery input: explicit dealer seed list first, center/radius later.
 17. Research compliant business/dealer discovery targets for finding franchise and independent dealers within a radius.
 18. Pick one structured dealer platform with several nearby dealers.
 19. Implement one compliant dealer adapter.

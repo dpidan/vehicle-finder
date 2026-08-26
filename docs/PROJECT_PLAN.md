@@ -36,7 +36,7 @@ The first user will have a family replacement-vehicle search. Additional searche
 ### Initial family search
 
 - Purchase timeframe: about 3 weeks.
-- Center: Kathy Ln, Cypress, TX.
+- Center: Happy Ln, Cypress, TX.
 - Default radius: 25 miles; configurable; willing to consider a larger radius for a much better candidate.
 - Cash tier: target <= $10,000.
 - Stretch tier: target <= $15,000.

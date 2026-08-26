@@ -16,7 +16,7 @@ Key decisions and ideas established during the conversation:
   - Honda Pilot
   - Toyota Sienna
   - Honda CR-V as a secondary option
-- Default search area: **25 miles from Kathy Ln in Cypress, TX**, configurable per search.
+- Default search area: **25 miles from Happy Ln in Cypress, TX**, configurable per search.
 - Evaluation priorities:
   - condition
   - maintenance history
@@ -422,7 +422,7 @@ When something suddenly looks *too* good — say a 2016 Odyssey with 72k miles f
 ## User
 
 This sounds like a great start so far. Save all of this in our plan. 
-- Geographic Radius: 25 miles from Kathy Ln in Cypress, TX (but make this configurable)
+- Geographic Radius: 25 miles from Happy Ln in Cypress, TX (but make this configurable)
 - The guidelines you already outlined are a great start for vehicle preferences. Add all those and see any other relevant suggestions.
 - Another source I'd be interested in is Nextdoor. 
 Let's get started on the rest of the definitions.
@@ -440,7 +440,7 @@ I’d start with these defaults:
 
 | Dimension | Default |
 |---|---|
-| Search center | Kathy Ln, Cypress, TX |
+| Search center | Happy Ln, Cypress, TX |
 | Radius | 25 miles, configurable |
 | Cash tier | ≤ $10,000 |
 | Stretch tier | ≤ $15,000 |
