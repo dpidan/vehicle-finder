@@ -9,7 +9,8 @@ import {
   rankPersistedListingsForSavedSearch,
   rankSampleListingsForSavedSearch,
   setListingDisposition,
-  type ListingDispositionInput
+  type ListingDispositionInput,
+  writeSearchEvaluations
 } from './services/search-service.js';
 import { manualImportToCandidate, type ManualImportInput } from './sources/manual-import.js';
 import { cypressDealerCarSearchSeeds } from './sources/dealer-car-search-seeds.js';
@@ -130,6 +131,29 @@ app.post('/api/admin/sources/dealer-car-search/collect', async (c) => {
   const importResult = await importListingCandidates(c.env.DB, candidates);
 
   return c.json({ collectedAt, source: dealerCarSearchSource.name, collectedCount: candidates.length, import: importResult });
+});
+
+app.post('/api/admin/searches/:id/evaluations', async (c) => {
+  const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
+
+  if (unauthorized) {
+    return c.json({ error: unauthorized }, unauthorized === 'admin-token-not-configured' ? 503 : 401);
+  }
+
+  const search = await getSavedSearch(c.env.DB, c.req.param('id'));
+
+  if (!search) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  const evaluatedAt = new Date().toISOString();
+  const rankedListings = await rankPersistedListingsForSavedSearch(c.env.DB, search);
+
+  return c.json({
+    searchId: search.id,
+    evaluatedAt,
+    evaluation: await writeSearchEvaluations(c.env.DB, search.id, rankedListings, evaluatedAt)
+  });
 });
 
 app.post('/api/manual-imports/preview', async (c) => {

@@ -128,7 +128,7 @@ describe('worker routes', () => {
   });
 
   it('creates a listing disposition', async () => {
-    const db = env({ disposition: true }).DB as D1Database & { writes: string[] };
+    const db = env({ disposition: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
     const response = await app.request(
       '/api/searches/family-replacement-vehicle/listings/listing-sienna/disposition',
       {
@@ -143,11 +143,11 @@ describe('worker routes', () => {
     assert.equal(response.status, 200);
     assert.equal(body.disposition.state, 'interested');
     assert.equal(body.disposition.nextAction.type, 'ask-maintenance-records');
-    assert.ok(db.writes.some((sql) => sql.startsWith('INSERT INTO listing_dispositions')));
+    assert.ok(db.writes.some((write) => write.sql.startsWith('INSERT INTO listing_dispositions')));
   });
 
   it('updates an existing listing disposition', async () => {
-    const db = env({ disposition: 'existing' }).DB as D1Database & { writes: string[] };
+    const db = env({ disposition: 'existing' }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
     const response = await app.request(
       '/api/searches/family-replacement-vehicle/listings/listing-sienna/disposition',
       {
@@ -159,7 +159,7 @@ describe('worker routes', () => {
     );
 
     assert.equal(response.status, 200);
-    assert.ok(db.writes.some((sql) => sql.startsWith('UPDATE listing_dispositions')));
+    assert.ok(db.writes.some((write) => write.sql.startsWith('UPDATE listing_dispositions')));
   });
 
   it('rejects invalid listing dispositions', async () => {
@@ -244,6 +244,50 @@ describe('worker routes', () => {
     }
   });
 
+  it('requires the admin token for persisted search evaluation writes', async () => {
+    const missingToken = await app.request('/api/admin/searches/family-replacement-vehicle/evaluations', { method: 'POST' }, env());
+    const wrongToken = await app.request(
+      '/api/admin/searches/family-replacement-vehicle/evaluations',
+      { method: 'POST' },
+      env({ adminToken: 'secret', persistedListings: true })
+    );
+
+    assert.equal(missingToken.status, 503);
+    assert.equal(wrongToken.status, 401);
+  });
+
+  it('writes persisted search evaluations with the admin token', async () => {
+    const db = env({ adminToken: 'secret', persistedListings: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+    const response = await app.request(
+      '/api/admin/searches/family-replacement-vehicle/evaluations',
+      { method: 'POST', headers: { authorization: 'Bearer secret' } },
+      { DB: db, ADMIN_TOKEN: 'secret' }
+    );
+    const body = (await response.json()) as { evaluation: { insertedEvaluations: number } };
+    const evaluationWrites = db.writes.filter((write) => write.sql.startsWith('INSERT INTO search_evaluations'));
+
+    assert.equal(response.status, 200);
+    assert.equal(body.evaluation.insertedEvaluations, 2);
+    assert.equal(evaluationWrites.length, 2);
+    assert.equal(evaluationWrites[0]?.values[1], 'family-replacement-vehicle');
+    assert.equal(evaluationWrites[0]?.values[2], 'sample-v1');
+    assert.equal(evaluationWrites[0]?.values[8], 'listing-sienna');
+    assert.match(String(evaluationWrites[0]?.values[5]), /model-preference|mileage-fit|budget-fit/);
+    assert.match(String(evaluationWrites[0]?.values[6]), /^\[/);
+  });
+
+  it('returns 404 without evaluation writes for a missing saved search', async () => {
+    const db = env({ adminToken: 'secret', persistedListings: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+    const response = await app.request(
+      '/api/admin/searches/missing/evaluations',
+      { method: 'POST', headers: { authorization: 'Bearer secret' } },
+      { DB: db, ADMIN_TOKEN: 'secret' }
+    );
+
+    assert.equal(response.status, 404);
+    assert.equal(db.writes.filter((write) => write.sql.startsWith('INSERT INTO search_evaluations')).length, 0);
+  });
+
   it('returns a saved search by id', async () => {
     const response = await app.request('/api/searches/family-replacement-vehicle', {}, env());
     const body = (await response.json()) as { search: { config: { userId: string } } };
@@ -303,7 +347,7 @@ describe('worker routes', () => {
 });
 
 function env(options: { adminToken?: string; persistedListings?: boolean; listingDetail?: boolean; disposition?: true | 'existing' } = {}): Env {
-  const writes: string[] = [];
+  const writes: Array<{ sql: string; values: unknown[] }> = [];
 
   return {
     ...(options.adminToken ? { ADMIN_TOKEN: options.adminToken } : {}),
@@ -331,7 +375,7 @@ function env(options: { adminToken?: string; persistedListings?: boolean; listin
                   : []
             }),
             run: async () => {
-              writes.push(sql.trim());
+              writes.push({ sql: sql.trim(), values });
               return { success: true };
             }
           };
@@ -345,7 +389,7 @@ function env(options: { adminToken?: string; persistedListings?: boolean; listin
         })
       }),
       writes
-    } as unknown as D1Database & { writes: string[] }
+    } as unknown as D1Database & { writes: Array<{ sql: string; values: unknown[] }> }
   };
 }
 

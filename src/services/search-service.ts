@@ -80,6 +80,10 @@ export interface RankedPersistedListing {
   disposition: ListingDisposition | null;
 }
 
+export interface WriteSearchEvaluationsResult {
+  insertedEvaluations: number;
+}
+
 export interface ListingDispositionInput {
   state: ListingDispositionState;
   rejectionReason?: string;
@@ -150,6 +154,41 @@ export async function rankPersistedListingsForSavedSearch(db: D1Database, search
         ]
       : [];
   });
+}
+
+export async function writeSearchEvaluations(
+  db: D1Database,
+  savedSearchId: string,
+  rankedListings: RankedPersistedListing[],
+  evaluatedAt: string
+): Promise<WriteSearchEvaluationsResult> {
+  let insertedEvaluations = 0;
+
+  for (const { listingId, rankedListing } of rankedListings) {
+    await db
+      .prepare(
+        `INSERT INTO search_evaluations
+         (id, saved_search_id, listing_id, vehicle_id, score_version, vehicle_score, deal_score, factors_json, flags_json, evaluated_at)
+         SELECT ?, ?, listings.id, listings.vehicle_id, ?, ?, ?, ?, ?, ?
+         FROM listings
+         WHERE listings.id = ?`
+      )
+      .bind(
+        crypto.randomUUID(),
+        savedSearchId,
+        rankedListing.scoreVersion,
+        rankedListing.vehicleScore,
+        rankedListing.dealScore,
+        JSON.stringify(rankedListing.factors),
+        JSON.stringify(rankedListing.flags),
+        evaluatedAt,
+        listingId
+      )
+      .run();
+    insertedEvaluations += 1;
+  }
+
+  return { insertedEvaluations };
 }
 
 export async function getListingDetail(db: D1Database, id: string): Promise<ListingDetail | null> {

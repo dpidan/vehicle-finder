@@ -19,13 +19,13 @@ the database.
 - Expose listing detail with recent snapshot history.
 - Expose minimal per-search listing disposition workflow.
 - Include current per-search disposition in ranked persisted results.
+- Expose protected persisted search-evaluation writes.
 
 ## Deferred
 
 - Full fallback deduplication for missing VINs.
 - Evidence persistence linked to listings or snapshots.
-- Search evaluation persistence.
-- Persisting the computed ranking results.
+- Search-evaluation retention and deduplication policy.
 - Source-specific detail-page crawling.
 - Import scheduling and stale-listing detection.
 - Broader authentication/authorization beyond a private admin import token.
