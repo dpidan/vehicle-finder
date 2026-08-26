@@ -50,9 +50,12 @@ npm run dev
 Initial endpoints:
 
 - `GET /health`
+- `GET /api/sample-listings`
 - `GET /api/searches`
 - `GET /api/searches/:id`
+- `GET /api/searches/:id/ranked-sample-listings`
 
 ## Status
 
 Early technical spike. Domain types, the initial D1 schema/seed data, and a minimal Cloudflare Worker + Hono API scaffold exist.
+Sample fixture listings can be ranked with an early explainable scoring pass.
