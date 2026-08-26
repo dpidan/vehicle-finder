@@ -27,8 +27,10 @@ plain fetch:
 - `https://www.i90motorstx.com/suvs-for-sale-b100037` fetched but produced no
   first-page parser matches.
 
-Next live attempt should try Carsforsale.com dealer profile URLs or the Dealer
-Car Search format used by Trade Lane Motors before adding complexity to this
+The next live attempt tried Carsforsale.com dealer profile URLs for VSA
+MotorCars, Auto Land Of Texas, and 501 Motors. Those also returned HTTP 403
+from a plain low-frequency fetch, so the next adapter target is the Dealer Car
+Search format used by Trade Lane Motors before adding complexity to this
 adapter.
 
 ## Deferred

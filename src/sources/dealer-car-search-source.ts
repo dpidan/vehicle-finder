@@ -1,8 +1,8 @@
 import type { CollectionContext, ListingCandidate, ListingSource, SellerSeed } from '../domain/entities.js';
 
-const source = { name: 'carsforsale seeded dealer', access: 'structured-web' } as const;
+const source = { name: 'dealer car search seeded dealer', access: 'structured-web' } as const;
 
-export const carsforsaleSource: ListingSource = {
+export const dealerCarSearchSource: ListingSource = {
   name: source.name,
   access: source.access,
   collect: async (context) => {
@@ -14,11 +14,11 @@ export const carsforsaleSource: ListingSource = {
       }))
     );
 
-    return pages.flatMap(({ seed, html }) => parseCarsforsaleInventory(html, seed, context.collectedAt));
+    return pages.flatMap(({ seed, html }) => parseDealerCarSearchInventory(html, seed, context.collectedAt));
   }
 };
 
-export function parseCarsforsaleInventory(
+export function parseDealerCarSearchInventory(
   html: string,
   seed: SellerSeed,
   capturedAt: CollectionContext['collectedAt']
@@ -32,30 +32,26 @@ export function parseCarsforsaleInventory(
       return [];
     }
 
-    const detail = lines.slice(index + 1, index + 10).join('\n');
+    const detail = lines.slice(index + 1, index + 18).join('\n');
     const price = parsePrice(detail);
     const mileage = parseMileage(detail);
-
-    if (price === 0 && mileage === 0) {
-      return [];
-    }
-
+    const vin = parseVin(detail);
     const vehicle = parseVehicleTitle(title);
     const url = seed.inventoryUrl ?? seed.websiteUrl ?? '';
 
     return {
       source,
-      sourceListingId: `${seed.name}:${index}:${title}`,
+      sourceListingId: vin ?? `${seed.name}:${index}:${title}`,
       url,
       title,
       status: 'active',
-      vehicle,
+      vehicle: { ...vehicle, ...(vin ? { vin } : {}) },
       seller: seed,
       ...(price > 0 ? { price: { amount: price, currency: 'USD' } } : {}),
       ...(mileage > 0 ? { mileage } : {}),
       ...(seed.location ? { location: seed.location } : {}),
       capturedAt,
-      evidence: [{ label: `${seed.name} inventory page`, url, confidence: 0.6 }]
+      evidence: [{ label: `${seed.name} inventory page`, url, confidence: 0.65 }]
     };
   });
 }
@@ -82,7 +78,7 @@ function htmlToText(html: string): string {
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
     .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/(?:a|div|h\d|li|p|span)>/gi, '\n')
+    .replace(/<\/(?:a|div|h\d|li|p|span|td|th)>/gi, '\n')
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
@@ -113,8 +109,12 @@ function parsePrice(text: string): number {
 
 function parseMileage(text: string): number {
   return parseInteger(
-    text.match(/Mileage\n(\d[\d,]+)/i)?.[1] ?? text.match(/\b(\d[\d,]+)\s*(?:mi\.?|miles)\b/i)?.[1]
+    text.match(/Mileage:?\s*\n?(\d[\d,]+)/i)?.[1] ?? text.match(/\b(\d[\d,]+)\s*(?:mi\.?|miles)\b/i)?.[1]
   );
+}
+
+function parseVin(text: string): string | undefined {
+  return text.match(/\b([A-HJ-NPR-Z0-9]{17})\b/i)?.[1]?.toUpperCase();
 }
 
 function parseInteger(value: string | undefined): number {

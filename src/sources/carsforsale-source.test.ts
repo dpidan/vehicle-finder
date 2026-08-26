@@ -38,4 +38,26 @@ describe('parseCarsforsaleInventory', () => {
     assert.equal(listings[0]?.mileage, 124588);
     assert.equal(listings[1]?.vehicle.model, 'Corolla S Plus');
   });
+
+  it('normalizes Carsforsale profile cards with inline price and mileage', () => {
+    const listings = parseCarsforsaleInventory(
+      `
+        <article>
+          <h2>2017 Honda Odyssey EX-L</h2>
+          <span>$14,450</span>
+          <span>118,203 miles</span>
+        </article>
+      `,
+      {
+        name: '501 Motors',
+        type: 'dealer',
+        inventoryUrl: 'https://www.carsforsale.com/used-car-dealer/501-motors-cypress-tx-d737118'
+      },
+      '2026-08-26T12:00:00.000Z'
+    );
+
+    assert.equal(listings.length, 1);
+    assert.equal(listings[0]?.price?.amount, 14450);
+    assert.equal(listings[0]?.mileage, 118203);
+  });
 });

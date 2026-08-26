@@ -39,4 +39,6 @@ Before implementing a substantial feature, update or create a plan under `docs/p
 
 When responding to a request, if it is not clear or already part of the plan, first confirm your understanding of the request. If you need more information, ask clarifying questions. Avoid making assumptions about the user's intent.
 
-When a self-encompassed change is complete, provide recommended Git commit messages and a short summary of the change.
+When a self-encompassed change is complete:
+- do a quick code review of your changes
+- provide recommended Git commit messages and a short summary of the change.
