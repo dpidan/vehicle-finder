@@ -13,6 +13,8 @@ the database.
 - Insert or update listings by source listing ID, falling back to URL when a
   source ID is missing.
 - Insert a listing snapshot for every import pass.
+- Expose a protected Worker import endpoint for the seeded Dealer Car Search
+  source.
 
 ## Deferred
 
@@ -21,5 +23,6 @@ the database.
 - Search evaluation persistence.
 - Source-specific detail-page crawling.
 - Import scheduling and stale-listing detection.
+- Broader authentication/authorization beyond a private admin import token.
 
 Add those after the live adapter can persist a useful first inventory batch.

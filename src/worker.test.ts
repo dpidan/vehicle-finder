@@ -52,6 +52,56 @@ describe('worker routes', () => {
     assert.ok(first.factors.length > 0);
   });
 
+  it('requires a configured admin token for dealer collection', async () => {
+    const response = await app.request('/api/admin/sources/dealer-car-search/collect', { method: 'POST' }, env());
+
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { error: 'admin-token-not-configured' });
+  });
+
+  it('rejects dealer collection without the admin token', async () => {
+    const response = await app.request('/api/admin/sources/dealer-car-search/collect', { method: 'POST' }, env({ adminToken: 'secret' }));
+
+    assert.equal(response.status, 401);
+    assert.deepEqual(await response.json(), { error: 'unauthorized' });
+  });
+
+  it('collects and imports Dealer Car Search listings with the admin token', async () => {
+    const originalFetch = globalThis.fetch;
+
+    globalThis.fetch = async () =>
+      new Response(
+        `
+          <div>
+            <a>2013 Honda Odyssey</a>
+            <span>$7,890</span>
+            <span>Mileage:</span><span>163,707</span>
+            <span>VIN: 5FNRL5H95DB028656</span>
+          </div>
+        `
+      );
+
+    try {
+      const response = await app.request(
+        '/api/admin/sources/dealer-car-search/collect',
+        { method: 'POST', headers: { authorization: 'Bearer secret' } },
+        env({ adminToken: 'secret' })
+      );
+      const body = (await response.json()) as {
+        collectedCount: number;
+        import: { candidateCount: number; insertedListings: number; snapshotCount: number };
+      };
+
+      assert.equal(response.status, 200);
+      assert.equal(body.collectedCount, 1);
+      assert.equal(body.import.candidateCount, 1);
+      assert.equal(body.import.insertedListings, 1);
+      assert.equal(body.import.snapshotCount, 1);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('returns a saved search by id', async () => {
     const response = await app.request('/api/searches/family-replacement-vehicle', {}, env());
     const body = (await response.json()) as { search: { config: { userId: string } } };
@@ -110,12 +160,14 @@ describe('worker routes', () => {
   });
 });
 
-function env(): Env {
+function env(options: { adminToken?: string } = {}): Env {
   return {
+    ...(options.adminToken ? { ADMIN_TOKEN: options.adminToken } : {}),
     DB: {
       prepare: (sql: string) => ({
         bind: (id: string) => ({
-          first: async () => (id === savedSearchRow.id ? savedSearchRow : null)
+          first: async () => (id === savedSearchRow.id ? savedSearchRow : null),
+          run: async () => ({ success: true })
         }),
         all: async () => ({
           results: sql.includes('FROM saved_searches') ? [savedSearchRow] : []
