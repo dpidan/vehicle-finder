@@ -52,6 +52,22 @@ describe('worker routes', () => {
     assert.ok(first.factors.length > 0);
   });
 
+  it('returns ranked persisted listings for a saved search', async () => {
+    const response = await app.request('/api/searches/family-replacement-vehicle/ranked-listings', {}, env({ persistedListings: true }));
+    const body = (await response.json()) as { rankedListings: Array<{ listing: { title: string }; dealScore: number }> };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.rankedListings[0]?.listing.title, '2015 Toyota Sienna XLE');
+    assert.ok(body.rankedListings[0]?.dealScore);
+  });
+
+  it('returns 404 for persisted ranking with a missing saved search', async () => {
+    const response = await app.request('/api/searches/missing/ranked-listings', {}, env({ persistedListings: true }));
+
+    assert.equal(response.status, 404);
+    assert.deepEqual(await response.json(), { error: 'not-found' });
+  });
+
   it('requires a configured admin token for dealer collection', async () => {
     const response = await app.request('/api/admin/sources/dealer-car-search/collect', { method: 'POST' }, env());
 
@@ -160,7 +176,7 @@ describe('worker routes', () => {
   });
 });
 
-function env(options: { adminToken?: string } = {}): Env {
+function env(options: { adminToken?: string; persistedListings?: boolean } = {}): Env {
   return {
     ...(options.adminToken ? { ADMIN_TOKEN: options.adminToken } : {}),
     DB: {
@@ -170,9 +186,57 @@ function env(options: { adminToken?: string } = {}): Env {
           run: async () => ({ success: true })
         }),
         all: async () => ({
-          results: sql.includes('FROM saved_searches') ? [savedSearchRow] : []
+          results: sql.includes('FROM saved_searches')
+            ? [savedSearchRow]
+            : options.persistedListings && sql.includes('FROM listings') && sql.includes("WHERE listings.status IN ('active', 'pending', 'unknown')")
+              ? [persistedListingRow, betterPersistedListingRow]
+              : []
         })
       })
     } as unknown as D1Database
   };
 }
+
+const persistedListingRow = {
+  id: 'listing-odyssey',
+  source_name: 'dealer car search seeded dealer',
+  source_access: 'structured-web',
+  source_listing_id: '5FNRL5H95DB028656',
+  url: 'https://www.tradelanemotors.com/newandusedcars?clearall=1',
+  title: '2013 Honda Odyssey',
+  status: 'active',
+  price_amount: 7890,
+  price_currency: 'USD',
+  mileage: 163707,
+  title_status: 'clean',
+  listing_latitude: null,
+  listing_longitude: null,
+  listing_location_label: null,
+  last_seen_at: '2026-08-26T12:00:00.000Z',
+  vin: '5FNRL5H95DB028656',
+  year: 2013,
+  make: 'Honda',
+  model: 'Odyssey',
+  trim: null,
+  seller_name: 'Trade Lane Motors',
+  seller_type: 'dealer',
+  seller_phone: null,
+  seller_website_url: 'https://www.tradelanemotors.com',
+  seller_latitude: null,
+  seller_longitude: null,
+  seller_location_label: null
+};
+
+const betterPersistedListingRow = {
+  ...persistedListingRow,
+  id: 'listing-sienna',
+  source_listing_id: '5TDYK3DC0FS000001',
+  title: '2015 Toyota Sienna XLE',
+  price_amount: 9900,
+  mileage: 93000,
+  vin: '5TDYK3DC0FS000001',
+  year: 2015,
+  make: 'Toyota',
+  model: 'Sienna',
+  seller_phone: '555-0100'
+};

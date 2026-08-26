@@ -15,12 +15,14 @@ the database.
 - Insert a listing snapshot for every import pass.
 - Expose a protected Worker import endpoint for the seeded Dealer Car Search
   source.
+- Expose ranked persisted listings for a saved search.
 
 ## Deferred
 
 - Full fallback deduplication for missing VINs.
 - Evidence persistence linked to listings or snapshots.
 - Search evaluation persistence.
+- Persisting the computed ranking results.
 - Source-specific detail-page crawling.
 - Import scheduling and stale-listing detection.
 - Broader authentication/authorization beyond a private admin import token.

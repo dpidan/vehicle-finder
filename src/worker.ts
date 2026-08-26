@@ -1,6 +1,11 @@
 import { Hono } from 'hono';
 import { importListingCandidates } from './services/inventory-service.js';
-import { getSavedSearch, listSavedSearches, rankSampleListingsForSavedSearch } from './services/search-service.js';
+import {
+  getSavedSearch,
+  listSavedSearches,
+  rankPersistedListingsForSavedSearch,
+  rankSampleListingsForSavedSearch
+} from './services/search-service.js';
 import { manualImportToCandidate, type ManualImportInput } from './sources/manual-import.js';
 import { cypressDealerCarSearchSeeds } from './sources/dealer-car-search-seeds.js';
 import { dealerCarSearchSource } from './sources/dealer-car-search-source.js';
@@ -48,6 +53,19 @@ app.get('/api/searches/:id/ranked-sample-listings', async (c) => {
   return c.json({
     searchId: search.id,
     rankedListings: await rankSampleListingsForSavedSearch(search, new Date().toISOString())
+  });
+});
+
+app.get('/api/searches/:id/ranked-listings', async (c) => {
+  const search = await getSavedSearch(c.env.DB, c.req.param('id'));
+
+  if (!search) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  return c.json({
+    searchId: search.id,
+    rankedListings: await rankPersistedListingsForSavedSearch(c.env.DB, search)
   });
 });
 
