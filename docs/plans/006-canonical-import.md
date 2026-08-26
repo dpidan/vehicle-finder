@@ -20,6 +20,7 @@ the database.
 - Expose minimal per-search listing disposition workflow.
 - Include current per-search disposition in ranked persisted results.
 - Expose protected persisted search-evaluation writes.
+- Expose latest persisted search evaluations for a saved search.
 
 ## Deferred
 

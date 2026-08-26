@@ -100,6 +100,48 @@ interface ListingDispositionRow {
   updated_at: string;
 }
 
+interface SearchEvaluationRow {
+  id: string;
+  saved_search_id: string;
+  listing_id: string;
+  vehicle_id: string;
+  score_version: string;
+  vehicle_score: number;
+  deal_score: number;
+  factors_json: string;
+  flags_json: string;
+  evaluated_at: string;
+  listing_title: string;
+  listing_url: string;
+  vin: string | null;
+  year: number | null;
+  make: string | null;
+  model: string | null;
+}
+
+export interface SearchEvaluationSummary {
+  id: string;
+  savedSearchId: string;
+  listingId: string;
+  vehicleId: string;
+  scoreVersion: string;
+  vehicleScore: number;
+  dealScore: number;
+  factors: RankedListing['factors'];
+  flags: string[];
+  evaluatedAt: string;
+  listing: {
+    title: string;
+    url: string;
+  };
+  vehicle: {
+    vin?: string;
+    year?: number;
+    make?: string;
+    model?: string;
+  };
+}
+
 export async function listSavedSearches(db: D1Database): Promise<SavedSearch[]> {
   const { results } = await db
     .prepare(
@@ -189,6 +231,45 @@ export async function writeSearchEvaluations(
   }
 
   return { insertedEvaluations };
+}
+
+export async function listLatestSearchEvaluations(db: D1Database, savedSearchId: string): Promise<SearchEvaluationSummary[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT
+         search_evaluations.id,
+         search_evaluations.saved_search_id,
+         search_evaluations.listing_id,
+         search_evaluations.vehicle_id,
+         search_evaluations.score_version,
+         search_evaluations.vehicle_score,
+         search_evaluations.deal_score,
+         search_evaluations.factors_json,
+         search_evaluations.flags_json,
+         search_evaluations.evaluated_at,
+         listings.title AS listing_title,
+         listings.url AS listing_url,
+         vehicles.vin,
+         vehicles.year,
+         vehicles.make,
+         vehicles.model
+       FROM search_evaluations
+       JOIN listings ON listings.id = search_evaluations.listing_id
+       JOIN vehicles ON vehicles.id = search_evaluations.vehicle_id
+       WHERE search_evaluations.saved_search_id = ?
+         AND search_evaluations.evaluated_at = (
+           SELECT MAX(latest.evaluated_at)
+           FROM search_evaluations latest
+           WHERE latest.saved_search_id = search_evaluations.saved_search_id
+             AND latest.listing_id = search_evaluations.listing_id
+         )
+       ORDER BY search_evaluations.deal_score DESC, search_evaluations.vehicle_score DESC
+       LIMIT 100`
+    )
+    .bind(savedSearchId)
+    .all<SearchEvaluationRow>();
+
+  return results.map(toSearchEvaluationSummary);
 }
 
 export async function getListingDetail(db: D1Database, id: string): Promise<ListingDetail | null> {
@@ -473,5 +554,30 @@ function toListingDisposition(row: ListingDispositionRow): ListingDisposition {
     ...(row.rejection_reason ? { rejectionReason: row.rejection_reason } : {}),
     ...(row.next_action_json ? { nextAction: JSON.parse(row.next_action_json) as NextAction } : {}),
     updatedAt: row.updated_at
+  };
+}
+
+function toSearchEvaluationSummary(row: SearchEvaluationRow): SearchEvaluationSummary {
+  return {
+    id: row.id,
+    savedSearchId: row.saved_search_id,
+    listingId: row.listing_id,
+    vehicleId: row.vehicle_id,
+    scoreVersion: row.score_version,
+    vehicleScore: row.vehicle_score,
+    dealScore: row.deal_score,
+    factors: JSON.parse(row.factors_json) as RankedListing['factors'],
+    flags: JSON.parse(row.flags_json) as string[],
+    evaluatedAt: row.evaluated_at,
+    listing: {
+      title: row.listing_title,
+      url: row.listing_url
+    },
+    vehicle: {
+      ...(row.vin ? { vin: row.vin } : {}),
+      ...(row.year ? { year: row.year } : {}),
+      ...(row.make ? { make: row.make } : {}),
+      ...(row.model ? { model: row.model } : {})
+    }
   };
 }

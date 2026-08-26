@@ -77,6 +77,35 @@ describe('worker routes', () => {
     assert.deepEqual(await response.json(), { error: 'not-found' });
   });
 
+  it('returns latest persisted search evaluations', async () => {
+    const response = await app.request('/api/searches/family-replacement-vehicle/evaluations/latest', {}, env({ evaluations: true }));
+    const body = (await response.json()) as {
+      evaluations: Array<{
+        listingId: string;
+        dealScore: number;
+        factors: Array<{ key: string }>;
+        flags: string[];
+        listing: { title: string };
+        vehicle: { make: string };
+      }>;
+    };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.evaluations[0]?.listingId, 'listing-sienna');
+    assert.equal(body.evaluations[0]?.dealScore, 91);
+    assert.equal(body.evaluations[0]?.factors[0]?.key, 'budget-fit');
+    assert.deepEqual(body.evaluations[0]?.flags, ['missing-maintenance-evidence']);
+    assert.equal(body.evaluations[0]?.listing.title, '2015 Toyota Sienna XLE');
+    assert.equal(body.evaluations[0]?.vehicle.make, 'Toyota');
+  });
+
+  it('returns 404 for latest evaluations with a missing saved search', async () => {
+    const response = await app.request('/api/searches/missing/evaluations/latest', {}, env({ evaluations: true }));
+
+    assert.equal(response.status, 404);
+    assert.deepEqual(await response.json(), { error: 'not-found' });
+  });
+
   it('returns listing detail with recent snapshots', async () => {
     const response = await app.request('/api/listings/listing-sienna', {}, env({ listingDetail: true }));
     const body = (await response.json()) as {
@@ -346,7 +375,9 @@ describe('worker routes', () => {
   });
 });
 
-function env(options: { adminToken?: string; persistedListings?: boolean; listingDetail?: boolean; disposition?: true | 'existing' } = {}): Env {
+function env(
+  options: { adminToken?: string; persistedListings?: boolean; listingDetail?: boolean; disposition?: true | 'existing'; evaluations?: boolean } = {}
+): Env {
   const writes: Array<{ sql: string; values: unknown[] }> = [];
 
   return {
@@ -370,6 +401,8 @@ function env(options: { adminToken?: string; persistedListings?: boolean; listin
               results:
                 options.persistedListings && id === savedSearchRow.id && sql.includes('FROM listings') && sql.includes('LEFT JOIN listing_dispositions')
                   ? [persistedListingRow, betterPersistedListingRow]
+                  : options.evaluations && id === savedSearchRow.id && sql.includes('MAX(latest.evaluated_at)') && sql.includes('ORDER BY search_evaluations.deal_score DESC')
+                    ? evaluationRows
                   : options.listingDetail && id === 'listing-sienna' && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
                   ? snapshotRows
                   : []
@@ -383,6 +416,8 @@ function env(options: { adminToken?: string; persistedListings?: boolean; listin
         all: async () => ({
           results: sql.includes('FROM saved_searches')
             ? [savedSearchRow]
+            : options.evaluations && sql.includes('MAX(latest.evaluated_at)') && sql.includes('ORDER BY search_evaluations.deal_score DESC')
+              ? evaluationRows
             : options.listingDetail && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
               ? snapshotRows
               : []
@@ -462,6 +497,45 @@ const dispositionRow = {
   next_action_json: JSON.stringify({ type: 'schedule-inspection' }),
   updated_at: '2026-08-26T14:00:00.000Z'
 };
+
+const evaluationRows = [
+  {
+    id: 'evaluation-sienna',
+    saved_search_id: 'family-replacement-vehicle',
+    listing_id: 'listing-sienna',
+    vehicle_id: 'vehicle-sienna',
+    score_version: 'sample-v1',
+    vehicle_score: 82,
+    deal_score: 91,
+    factors_json: JSON.stringify([{ key: 'budget-fit', messageKey: 'score.budgetFit', scoreImpact: 18 }]),
+    flags_json: JSON.stringify(['missing-maintenance-evidence']),
+    evaluated_at: '2026-08-26T14:00:00.000Z',
+    listing_title: '2015 Toyota Sienna XLE',
+    listing_url: 'https://example.test/sienna',
+    vin: '5TDYK3DC0FS000001',
+    year: 2015,
+    make: 'Toyota',
+    model: 'Sienna'
+  },
+  {
+    id: 'evaluation-odyssey',
+    saved_search_id: 'family-replacement-vehicle',
+    listing_id: 'listing-odyssey',
+    vehicle_id: 'vehicle-odyssey',
+    score_version: 'sample-v1',
+    vehicle_score: 75,
+    deal_score: 80,
+    factors_json: JSON.stringify([{ key: 'mileage-fit', messageKey: 'score.mileageFit', scoreImpact: -8 }]),
+    flags_json: JSON.stringify([]),
+    evaluated_at: '2026-08-26T14:00:00.000Z',
+    listing_title: '2013 Honda Odyssey',
+    listing_url: 'https://example.test/odyssey',
+    vin: '5FNRL5H95DB028656',
+    year: 2013,
+    make: 'Honda',
+    model: 'Odyssey'
+  }
+];
 
 const betterPersistedListingRow = {
   ...persistedListingRow,

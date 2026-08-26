@@ -5,6 +5,7 @@ import {
   getListingDetail,
   getListingDisposition,
   listingExists,
+  listLatestSearchEvaluations,
   listSavedSearches,
   rankPersistedListingsForSavedSearch,
   rankSampleListingsForSavedSearch,
@@ -72,6 +73,19 @@ app.get('/api/searches/:id/ranked-listings', async (c) => {
   return c.json({
     searchId: search.id,
     rankedListings: await rankPersistedListingsForSavedSearch(c.env.DB, search)
+  });
+});
+
+app.get('/api/searches/:id/evaluations/latest', async (c) => {
+  const search = await getSavedSearch(c.env.DB, c.req.param('id'));
+
+  if (!search) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  return c.json({
+    searchId: search.id,
+    evaluations: await listLatestSearchEvaluations(c.env.DB, search.id)
   });
 });
 
