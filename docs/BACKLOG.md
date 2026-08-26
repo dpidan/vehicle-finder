@@ -17,7 +17,7 @@
 10. Add React/Vite only after API/database skeleton is working, using regular API calls for data.
 11. Implement migrations and seed one user + initial family search.
 12. Build a fake/sample source adapter and fixture dataset.
-13. Add manual import for pasted VIN/URL/listing details.
+13. Add manual import preview for pasted VIN/URL/listing details.
 14. Run scoring against fixtures before connecting live sources.
 
 ## First live data

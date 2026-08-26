@@ -60,6 +60,48 @@ describe('worker routes', () => {
     assert.equal(body.search.config.userId, 'family');
   });
 
+  it('previews a manual import against a saved search', async () => {
+    const response = await app.request(
+      '/api/manual-imports/preview',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          searchId: 'family-replacement-vehicle',
+          url: 'https://example.test/manual-sienna',
+          title: '2015 Toyota Sienna XLE',
+          year: 2015,
+          make: 'Toyota',
+          model: 'Sienna',
+          price: 14900,
+          mileage: 93000,
+          titleStatus: 'clean',
+          description: 'Maintenance records available.'
+        }),
+        headers: { 'content-type': 'application/json' }
+      },
+      env()
+    );
+    const body = (await response.json()) as { rankedListing: { listing: { title: string }; dealScore: number } };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.rankedListing.listing.title, '2015 Toyota Sienna XLE');
+    assert.ok(body.rankedListing.dealScore > 0);
+  });
+
+  it('rejects invalid manual import preview payloads', async () => {
+    const response = await app.request(
+      '/api/manual-imports/preview',
+      {
+        method: 'POST',
+        body: JSON.stringify({ url: '', title: 'Missing URL' }),
+        headers: { 'content-type': 'application/json' }
+      },
+      env()
+    );
+
+    assert.equal(response.status, 400);
+  });
+
   it('returns 404 for a missing saved search', async () => {
     const response = await app.request('/api/searches/missing', {}, env());
 
