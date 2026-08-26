@@ -34,6 +34,13 @@ Observed Cypress-area Carsforsale.com inventory pages:
 | I 90 Motors | https://www.i90motorstx.com/suvs-for-sale-b100037 | Page footer shows `Powered by Carsforsale.com`; SUV inventory includes family-relevant models. |
 | Southwest Bus Sales | https://www.swbussales.com/cars-for-sale | Carsforsale.com-powered but not useful for the initial family search because inventory is mostly buses/chassis. |
 
+Other useful nearby dealer platforms:
+
+| Dealer | Platform / format | Evidence | Adapter fit |
+|---|---|---|---|
+| Trade Lane Motors | Dealer Car Search | https://www.tradelanemotors.com/newandusedcars?clearall=1 plus homepage footer link to Dealer Car Search login | Good second adapter target. Inventory HTML exposed title, trim, price, stock number, mileage, drivetrain, transmission, VIN, engine, color, phone, and detail links during research. |
+| Autostrade | Dealer.com | https://www.autostradetx.net/used-inventory/index.htm plus page footer `Website by Dealer.com` | Separate investigation needed. The fetched inventory page exposed dealer info and an inventory shell, but not enough listing-card data in the text snapshot. |
+
 Franchise/dealer-group pages are still useful as future targets, but should not
 be first:
 
@@ -51,6 +58,9 @@ be first:
 
 Implement the first compliant dealer adapter against dealer-owned
 Carsforsale.com-powered inventory pages, starting with `cars-for-sale` pages.
+Add a Dealer Car Search adapter next if Trade Lane Motors remains useful.
+Treat Dealer.com as a later, separate adapter because the inventory data may be
+client-rendered or exposed through platform-specific endpoints.
 
 Initial adapter inputs should be explicit dealer seeds:
 

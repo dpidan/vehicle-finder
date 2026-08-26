@@ -16,6 +16,8 @@ inventory URLs from Carsforsale.com-powered sites.
 ## Deferred
 
 - Automated dealer discovery.
+- Dealer Car Search parser for dealers such as Trade Lane Motors.
+- Dealer.com parser/research for dealers such as Autostrade.
 - Detail-page crawling for VIN/photos/fees.
 - Pagination beyond the first page.
 - Persistence, deduplication, and listing snapshots.
