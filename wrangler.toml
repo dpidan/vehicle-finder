@@ -2,6 +2,9 @@ name = "vehicle-finder"
 main = "src/worker.ts"
 compatibility_date = "2026-08-25"
 
+[triggers]
+crons = ["0 */12 * * *"]
+
 [[d1_databases]]
 binding = "DB"
 database_name = "vehicle-finder"

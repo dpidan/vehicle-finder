@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { familySearchDefaults } from './domain/search-config.js';
-import { app, type Env } from './worker.js';
+import { app, refreshEnabledSavedSearches, type Env } from './worker.js';
 
 const savedSearchRow = {
   id: 'family-replacement-vehicle',
@@ -387,6 +387,37 @@ describe('worker routes', () => {
       assert.equal(body.import.insertedListings, 1);
       assert.equal(body.import.snapshotCount, 1);
       assert.equal(body.evaluation.insertedEvaluations, 2);
+      assert.ok(db.writes.some((write) => write.sql.startsWith('INSERT INTO listing_snapshots')));
+      assert.equal(db.writes.filter((write) => write.sql.startsWith('INSERT INTO search_evaluations')).length, 2);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('refreshes enabled saved searches for scheduled collection', async () => {
+    const originalFetch = globalThis.fetch;
+
+    globalThis.fetch = async () =>
+      new Response(
+        `
+          <div>
+            <a>2013 Honda Odyssey</a>
+            <span>$7,890</span>
+            <span>Mileage:</span><span>163,707</span>
+            <span>VIN: 5FNRL5H95DB028656</span>
+          </div>
+        `
+      );
+
+    try {
+      const db = env({ persistedListings: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+      const result = await refreshEnabledSavedSearches(db, '2026-08-26T18:00:00.000Z');
+
+      assert.equal(result.collectedCount, 1);
+      assert.equal(result.imported.candidateCount, 1);
+      assert.equal(result.imported.snapshotCount, 1);
+      assert.equal(result.evaluatedSearches, 1);
+      assert.equal(result.insertedEvaluations, 2);
       assert.ok(db.writes.some((write) => write.sql.startsWith('INSERT INTO listing_snapshots')));
       assert.equal(db.writes.filter((write) => write.sql.startsWith('INSERT INTO search_evaluations')).length, 2);
     } finally {

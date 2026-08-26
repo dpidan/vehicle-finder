@@ -261,4 +261,37 @@ function isDispositionInput(value: Partial<ListingDispositionInput>): value is L
   );
 }
 
-export default app;
+export async function refreshEnabledSavedSearches(db: D1Database, refreshedAt: string): Promise<{
+  collectedCount: number;
+  imported: Awaited<ReturnType<typeof importListingCandidates>>;
+  evaluatedSearches: number;
+  insertedEvaluations: number;
+}> {
+  const candidates = await dealerCarSearchSource.collect({
+    sellerSeeds: cypressDealerCarSearchSeeds,
+    collectedAt: refreshedAt
+  });
+  const imported = await importListingCandidates(db, candidates);
+  let evaluatedSearches = 0;
+  let insertedEvaluations = 0;
+
+  for (const search of await listSavedSearches(db)) {
+    if (!search.enabled) {
+      continue;
+    }
+
+    const rankedListings = await rankPersistedListingsForSavedSearch(db, search);
+    const evaluation = await writeSearchEvaluations(db, search.id, rankedListings, refreshedAt);
+    evaluatedSearches += 1;
+    insertedEvaluations += evaluation.insertedEvaluations;
+  }
+
+  return { collectedCount: candidates.length, imported, evaluatedSearches, insertedEvaluations };
+}
+
+export default {
+  fetch: app.fetch,
+  scheduled: async (controller, env) => {
+    await refreshEnabledSavedSearches(env.DB, new Date(controller.scheduledTime).toISOString());
+  }
+} satisfies ExportedHandler<Env>;

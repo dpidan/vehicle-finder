@@ -30,7 +30,7 @@ the database.
 - Evidence persistence linked to listings or snapshots.
 - Search-evaluation retention and deduplication policy.
 - Source-specific detail-page crawling.
-- Import scheduling and stale-listing detection.
+- Stale-listing detection.
 - Broader authentication/authorization beyond a private admin import token.
 - Rich workflow audit history.
 
