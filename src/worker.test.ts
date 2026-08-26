@@ -106,6 +106,51 @@ describe('worker routes', () => {
     assert.deepEqual(await response.json(), { error: 'not-found' });
   });
 
+  it('returns recent listing change signals for a saved search', async () => {
+    const response = await app.request(
+      '/api/searches/family-replacement-vehicle/listing-changes?since=2026-08-26T12:00:00.000Z',
+      {},
+      env({ listingChanges: true })
+    );
+    const body = (await response.json()) as {
+      changes: {
+        newListings: Array<{ listingId: string }>;
+        priceDrops: Array<{ listingId: string; currentPrice?: { amount: number }; previousPrice?: { amount: number } }>;
+      };
+    };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.changes.priceDrops[0]?.listingId, 'listing-sienna');
+    assert.equal(body.changes.priceDrops[0]?.currentPrice?.amount, 9900);
+    assert.equal(body.changes.priceDrops[0]?.previousPrice?.amount, 10900);
+    assert.equal(body.changes.newListings[0]?.listingId, 'listing-odyssey');
+  });
+
+  it('validates listing change requests', async () => {
+    const missingSince = await app.request(
+      '/api/searches/family-replacement-vehicle/listing-changes',
+      {},
+      env({ listingChanges: true })
+    );
+    const invalidSince = await app.request(
+      '/api/searches/family-replacement-vehicle/listing-changes?since=not-a-date',
+      {},
+      env({ listingChanges: true })
+    );
+    const missingSearch = await app.request(
+      '/api/searches/missing/listing-changes?since=2026-08-26T12:00:00.000Z',
+      {},
+      env({ listingChanges: true })
+    );
+
+    assert.equal(missingSince.status, 400);
+    assert.deepEqual(await missingSince.json(), { error: 'invalid-since' });
+    assert.equal(invalidSince.status, 400);
+    assert.deepEqual(await invalidSince.json(), { error: 'invalid-since' });
+    assert.equal(missingSearch.status, 404);
+    assert.deepEqual(await missingSearch.json(), { error: 'not-found' });
+  });
+
   it('returns listing detail with recent snapshots', async () => {
     const response = await app.request('/api/listings/listing-sienna', {}, env({ listingDetail: true }));
     const body = (await response.json()) as {
@@ -484,7 +529,14 @@ describe('worker routes', () => {
 });
 
 function env(
-  options: { adminToken?: string; persistedListings?: boolean; listingDetail?: boolean; disposition?: true | 'existing'; evaluations?: boolean } = {}
+  options: {
+    adminToken?: string;
+    persistedListings?: boolean;
+    listingDetail?: boolean;
+    listingChanges?: boolean;
+    disposition?: true | 'existing';
+    evaluations?: boolean;
+  } = {}
 ): Env {
   const writes: Array<{ sql: string; values: unknown[] }> = [];
 
@@ -511,6 +563,10 @@ function env(
                   ? [persistedListingRow, betterPersistedListingRow]
                   : options.evaluations && id === savedSearchRow.id && sql.includes('MAX(latest.evaluated_at)') && sql.includes('ORDER BY search_evaluations.deal_score DESC')
                     ? evaluationRows
+                  : options.listingChanges && id === savedSearchRow.id && sql.includes('listings.first_seen_at > ?')
+                    ? [newListingChangeRow]
+                  : options.listingChanges && id === savedSearchRow.id && sql.includes('latest.price_amount < previous.price_amount')
+                    ? [priceDropChangeRow]
                   : options.listingDetail && id === 'listing-sienna' && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
                   ? snapshotRows
                   : []
@@ -644,6 +700,28 @@ const evaluationRows = [
     model: 'Odyssey'
   }
 ];
+
+const newListingChangeRow = {
+  listing_id: 'listing-odyssey',
+  title: '2013 Honda Odyssey',
+  url: 'https://example.test/odyssey',
+  detected_at: '2026-08-26T14:00:00.000Z',
+  current_price_amount: 7890,
+  previous_price_amount: null,
+  current_price_currency: 'USD',
+  previous_price_currency: null
+};
+
+const priceDropChangeRow = {
+  listing_id: 'listing-sienna',
+  title: '2015 Toyota Sienna XLE',
+  url: 'https://example.test/sienna',
+  detected_at: '2026-08-26T13:00:00.000Z',
+  current_price_amount: 9900,
+  previous_price_amount: 10900,
+  current_price_currency: 'USD',
+  previous_price_currency: 'USD'
+};
 
 const betterPersistedListingRow = {
   ...persistedListingRow,

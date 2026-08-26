@@ -142,6 +142,31 @@ export interface SearchEvaluationSummary {
   };
 }
 
+interface ListingChangeRow {
+  listing_id: string;
+  title: string;
+  url: string;
+  detected_at: string;
+  current_price_amount: number | null;
+  previous_price_amount: number | null;
+  current_price_currency: 'USD' | null;
+  previous_price_currency: 'USD' | null;
+}
+
+export interface ListingChangeSummary {
+  listingId: string;
+  title: string;
+  url: string;
+  detectedAt: string;
+  currentPrice?: { amount: number; currency: 'USD' };
+  previousPrice?: { amount: number; currency: 'USD' };
+}
+
+export interface ListingChanges {
+  newListings: ListingChangeSummary[];
+  priceDrops: ListingChangeSummary[];
+}
+
 export async function listSavedSearches(db: D1Database): Promise<SavedSearch[]> {
   const { results } = await db
     .prepare(
@@ -270,6 +295,93 @@ export async function listLatestSearchEvaluations(db: D1Database, savedSearchId:
     .all<SearchEvaluationRow>();
 
   return results.map(toSearchEvaluationSummary);
+}
+
+export async function listListingChanges(db: D1Database, savedSearchId: string, since: string): Promise<ListingChanges> {
+  const newListings = await db
+    .prepare(
+      `SELECT
+         listings.id AS listing_id,
+         listings.title,
+         listings.url,
+         listings.first_seen_at AS detected_at,
+         listings.price_amount AS current_price_amount,
+         NULL AS previous_price_amount,
+         listings.price_currency AS current_price_currency,
+         NULL AS previous_price_currency
+       FROM listings
+       JOIN search_evaluations
+         ON search_evaluations.listing_id = listings.id
+        AND search_evaluations.saved_search_id = ?
+       WHERE listings.status IN ('active', 'pending', 'unknown')
+         AND listings.first_seen_at > ?
+       GROUP BY listings.id
+       ORDER BY detected_at DESC, title
+       LIMIT 100`
+    )
+    .bind(savedSearchId, since)
+    .all<ListingChangeRow>();
+
+  const priceDrops = await db
+    .prepare(
+      `SELECT
+         listings.id AS listing_id,
+         listings.title,
+         listings.url,
+         latest.captured_at AS detected_at,
+         latest.price_amount AS current_price_amount,
+         previous.price_amount AS previous_price_amount,
+         latest.price_currency AS current_price_currency,
+         previous.price_currency AS previous_price_currency
+       FROM listings
+       JOIN search_evaluations
+         ON search_evaluations.listing_id = listings.id
+        AND search_evaluations.saved_search_id = ?
+       JOIN listing_snapshots latest ON latest.listing_id = listings.id
+       JOIN listing_snapshots previous
+         ON previous.listing_id = listings.id
+        AND previous.captured_at = (
+          SELECT MAX(candidate.captured_at)
+          FROM listing_snapshots candidate
+          WHERE candidate.listing_id = listings.id
+            AND candidate.captured_at < latest.captured_at
+        )
+       WHERE listings.status IN ('active', 'pending', 'unknown')
+         AND latest.captured_at > ?
+         AND latest.price_amount IS NOT NULL
+         AND previous.price_amount IS NOT NULL
+         AND latest.price_amount < previous.price_amount
+         AND latest.captured_at = (
+           SELECT MAX(current.captured_at)
+           FROM listing_snapshots current
+           WHERE current.listing_id = listings.id
+         )
+       GROUP BY listings.id
+       ORDER BY detected_at DESC, title
+       LIMIT 100`
+    )
+    .bind(savedSearchId, since)
+    .all<ListingChangeRow>();
+
+  return {
+    newListings: newListings.results.map(toListingChangeSummary),
+    priceDrops: priceDrops.results.map(toListingChangeSummary)
+  };
+}
+
+function toListingChangeSummary(row: ListingChangeRow): ListingChangeSummary {
+  return {
+    listingId: row.listing_id,
+    title: row.title,
+    url: row.url,
+    detectedAt: row.detected_at,
+    ...(row.current_price_amount && row.current_price_currency
+      ? { currentPrice: { amount: row.current_price_amount, currency: row.current_price_currency } }
+      : {}),
+    ...(row.previous_price_amount && row.previous_price_currency
+      ? { previousPrice: { amount: row.previous_price_amount, currency: row.previous_price_currency } }
+      : {})
+  };
 }
 
 export async function getListingDetail(db: D1Database, id: string): Promise<ListingDetail | null> {

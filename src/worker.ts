@@ -6,6 +6,7 @@ import {
   getListingDisposition,
   listingExists,
   listLatestSearchEvaluations,
+  listListingChanges,
   listSavedSearches,
   rankPersistedListingsForSavedSearch,
   rankSampleListingsForSavedSearch,
@@ -86,6 +87,25 @@ app.get('/api/searches/:id/evaluations/latest', async (c) => {
   return c.json({
     searchId: search.id,
     evaluations: await listLatestSearchEvaluations(c.env.DB, search.id)
+  });
+});
+
+app.get('/api/searches/:id/listing-changes', async (c) => {
+  const search = await getSavedSearch(c.env.DB, c.req.param('id'));
+  const since = c.req.query('since');
+
+  if (!search) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  if (!since || Number.isNaN(Date.parse(since))) {
+    return c.json({ error: 'invalid-since' }, 400);
+  }
+
+  return c.json({
+    searchId: search.id,
+    since,
+    changes: await listListingChanges(c.env.DB, search.id, since)
   });
 });
 
