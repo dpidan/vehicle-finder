@@ -54,6 +54,16 @@ Initial endpoints:
 - `GET /api/searches`
 - `GET /api/searches/:id`
 - `GET /api/searches/:id/ranked-sample-listings`
+- `POST /api/manual-imports/preview`
+
+## Fixture scoring
+
+```sh
+npm run score:fixtures
+```
+
+This prints a ranked JSON report from the sample source using the initial
+family search defaults.
 
 ## Status
 
