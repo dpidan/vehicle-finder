@@ -124,3 +124,12 @@ export interface ManualImportSaveResult {
     insertedEvaluations: number;
   };
 }
+
+export interface SearchRefreshResult {
+  searchId: string;
+  refreshedAt: string;
+  source: string;
+  collectedCount: number;
+  import: ManualImportSaveResult['import'];
+  evaluation: ManualImportSaveResult['evaluation'];
+}

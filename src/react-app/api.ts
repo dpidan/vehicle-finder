@@ -8,7 +8,8 @@ import type {
   MonitoringSummary,
   NextAction,
   RankedListingSummary,
-  SavedSearchSummary
+  SavedSearchSummary,
+  SearchRefreshResult
 } from './types.js';
 
 export async function fetchSavedSearches(): Promise<SavedSearchSummary[]> {
@@ -47,6 +48,13 @@ export function saveManualImport(searchId: string, input: ManualImportInput, adm
     method: 'POST',
     headers: { authorization: `Bearer ${adminToken}`, 'content-type': 'application/json' },
     body: JSON.stringify({ searchId, ...input })
+  });
+}
+
+export function refreshSearch(searchId: string, adminToken: string): Promise<SearchRefreshResult> {
+  return fetchJson<SearchRefreshResult>(`/api/admin/searches/${searchId}/refresh`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${adminToken}` }
   });
 }
 

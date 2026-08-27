@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchListingDetail, fetchMonitoringSummary, fetchRankedListings, fetchSavedSearches, saveListingDisposition } from './api.js';
+import { fetchListingDetail, fetchMonitoringSummary, fetchRankedListings, fetchSavedSearches, refreshSearch, saveListingDisposition } from './api.js';
 import { bestScore, emptyMessage, emptyTitle, filterAndSortListings, statusLabel } from './format.js';
 import { ComparisonPanel } from './ComparisonPanel.js';
 import { ListingDetailPanel } from './ListingDetailPanel.js';
@@ -28,6 +28,7 @@ function DashboardShell() {
   const [monitoringSummary, setMonitoringSummary] = useState<MonitoringSummary | null>(null);
   const [monitoringStatus, setMonitoringStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [workflowStatus, setWorkflowStatus] = useState('');
+  const [refreshStatus, setRefreshStatus] = useState<'idle' | 'refreshing' | 'error'>('idle');
   const [stateFilter, setStateFilter] = useState<ListingDispositionState | 'all'>('all');
   const [sortMode, setSortMode] = useState<SortMode>('deal');
   const [compareListingIds, setCompareListingIds] = useState<string[]>([]);
@@ -111,15 +112,7 @@ function DashboardShell() {
     let cancelled = false;
     setMonitoringStatus('loading');
 
-    fetchMonitoringSummary(selectedSearchId)
-      .then((summary) => {
-        if (cancelled) return;
-        setMonitoringSummary(summary);
-        setMonitoringStatus('ready');
-      })
-      .catch(() => {
-        if (!cancelled) setMonitoringStatus('error');
-      });
+    refreshMonitoring(selectedSearchId, () => cancelled);
 
     return () => {
       cancelled = true;
@@ -140,16 +133,21 @@ function DashboardShell() {
           <p className={styles.eyebrow}>Dashboard</p>
           <h1>{selectedSearch?.name ?? 'Vehicle searches'}</h1>
         </div>
-        <label className={styles.searchPicker}>
-          <span>Search</span>
-          <select value={selectedSearchId} onChange={(event) => setSelectedSearchId(event.target.value)}>
-            {searches.map((search) => (
-              <option key={search.id} value={search.id}>
-                {search.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className={styles.toolbarActions}>
+          <label className={styles.searchPicker}>
+            <span>Search</span>
+            <select value={selectedSearchId} onChange={(event) => setSelectedSearchId(event.target.value)}>
+              {searches.map((search) => (
+                <option key={search.id} value={search.id}>
+                  {search.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className={styles.secondaryButton} type="button" disabled={!selectedSearchId || refreshStatus === 'refreshing'} onClick={runRefresh}>
+            {refreshStatus === 'refreshing' ? 'Refreshing' : 'Refresh'}
+          </button>
+        </div>
       </header>
 
       <section className={styles.summaryBand} aria-live="polite">
@@ -238,6 +236,42 @@ function DashboardShell() {
       setStatus('ready');
     } catch {
       setStatus('error');
+    }
+  }
+
+  async function runRefresh() {
+    const adminToken = window.prompt('Admin token')?.trim();
+
+    if (!adminToken) {
+      setRefreshStatus('error');
+      return;
+    }
+
+    setRefreshStatus('refreshing');
+    setWorkflowStatus('Refreshing search.');
+
+    try {
+      await refreshSearch(selectedSearchId, adminToken);
+      await refreshListings(selectedSearchId);
+      await refreshMonitoring(selectedSearchId);
+      setRefreshStatus('idle');
+      setWorkflowStatus('Search refreshed.');
+    } catch {
+      setRefreshStatus('error');
+      setWorkflowStatus('Could not refresh search.');
+    }
+  }
+
+  async function refreshMonitoring(searchId: string, cancelled = () => false) {
+    setMonitoringStatus('loading');
+
+    try {
+      const summary = await fetchMonitoringSummary(searchId);
+      if (cancelled()) return;
+      setMonitoringSummary(summary);
+      setMonitoringStatus('ready');
+    } catch {
+      if (!cancelled()) setMonitoringStatus('error');
     }
   }
 

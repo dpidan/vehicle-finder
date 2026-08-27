@@ -64,6 +64,12 @@
   background: var(--color-surface);
 }
 
+.toolbarActions {
+  display: flex;
+  align-items: end;
+  gap: var(--space-3);
+}
+
 .searchPicker {
   display: grid;
   gap: var(--space-1);
@@ -616,6 +622,12 @@
 
   .toolbar {
     align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .toolbarActions {
+    width: 100%;
+    align-items: stretch;
     flex-direction: column;
   }
 
