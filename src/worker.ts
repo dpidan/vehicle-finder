@@ -129,6 +129,48 @@ app.get('/api/searches/:id/stale-listings', async (c) => {
   });
 });
 
+app.get('/api/searches/:id/monitoring-summary', async (c) => {
+  const search = await getSavedSearch(c.env.DB, c.req.param('id'));
+  const since = c.req.query('since');
+  const staleBefore = c.req.query('staleBefore');
+
+  if (!search) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  if (!isIsoDateTime(since)) {
+    return c.json({ error: 'invalid-since' }, 400);
+  }
+
+  if (!isIsoDateTime(staleBefore)) {
+    return c.json({ error: 'invalid-stale-before' }, 400);
+  }
+
+  const [changes, staleListings, evaluations] = await Promise.all([
+    listListingChanges(c.env.DB, search.id, since),
+    listStaleListings(c.env.DB, search.id, staleBefore),
+    listLatestSearchEvaluations(c.env.DB, search.id)
+  ]);
+  const minimumVehicleScore = search.config.notifications.minimumVehicleScore;
+  const minimumDealScore = search.config.notifications.minimumDealScore;
+
+  return c.json({
+    searchId: search.id,
+    since,
+    staleBefore,
+    changes,
+    staleListings,
+    thresholdMatches:
+      minimumVehicleScore === undefined && minimumDealScore === undefined
+        ? []
+        : evaluations.filter(
+            (evaluation) =>
+              (minimumVehicleScore === undefined || evaluation.vehicleScore >= minimumVehicleScore) &&
+              (minimumDealScore === undefined || evaluation.dealScore >= minimumDealScore)
+          )
+  });
+});
+
 app.get('/api/listings/:id', async (c) => {
   const detail = await getListingDetail(c.env.DB, c.req.param('id'));
 

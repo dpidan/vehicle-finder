@@ -194,6 +194,74 @@ describe('worker routes', () => {
     assert.deepEqual(await missingSearch.json(), { error: 'not-found' });
   });
 
+  it('returns a monitoring summary for a saved search', async () => {
+    const db = env({ listingChanges: true, staleListings: true, evaluations: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+    const response = await app.request(
+      '/api/searches/family-replacement-vehicle/monitoring-summary?since=2026-08-26T12:00:00.000Z&staleBefore=2026-08-26T12:00:00.000Z',
+      {},
+      { DB: db }
+    );
+    const body = (await response.json()) as {
+      changes: { newListings: Array<{ listingId: string }>; priceDrops: Array<{ listingId: string }> };
+      staleListings: Array<{ listingId: string }>;
+      thresholdMatches: Array<{ listingId: string; vehicleScore: number; dealScore: number }>;
+    };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.changes.newListings[0]?.listingId, 'listing-odyssey');
+    assert.equal(body.changes.priceDrops[0]?.listingId, 'listing-sienna');
+    assert.equal(body.staleListings[0]?.listingId, 'listing-odyssey');
+    assert.equal(body.thresholdMatches.length, 1);
+    assert.equal(body.thresholdMatches[0]?.listingId, 'listing-sienna');
+    assert.ok((body.thresholdMatches[0]?.vehicleScore ?? 0) >= familySearchDefaults.notifications.minimumVehicleScore!);
+    assert.ok((body.thresholdMatches[0]?.dealScore ?? 0) >= familySearchDefaults.notifications.minimumDealScore!);
+    assert.equal(db.writes.length, 0);
+  });
+
+  it('validates monitoring summary requests', async () => {
+    const missingWindow = await app.request(
+      '/api/searches/family-replacement-vehicle/monitoring-summary?since=2026-08-26T12:00:00.000Z',
+      {},
+      env({ listingChanges: true, staleListings: true, evaluations: true })
+    );
+    const invalidWindow = await app.request(
+      '/api/searches/family-replacement-vehicle/monitoring-summary?since=not-a-date&staleBefore=2026-08-26T12:00:00.000Z',
+      {},
+      env({ listingChanges: true, staleListings: true, evaluations: true })
+    );
+    const invalidStaleBefore = await app.request(
+      '/api/searches/family-replacement-vehicle/monitoring-summary?since=2026-08-26T12:00:00.000Z&staleBefore=not-a-date',
+      {},
+      env({ listingChanges: true, staleListings: true, evaluations: true })
+    );
+    const missingSearch = await app.request(
+      '/api/searches/missing/monitoring-summary?since=2026-08-26T12:00:00.000Z&staleBefore=2026-08-26T12:00:00.000Z',
+      {},
+      env({ listingChanges: true, staleListings: true, evaluations: true })
+    );
+
+    assert.equal(missingWindow.status, 400);
+    assert.deepEqual(await missingWindow.json(), { error: 'invalid-stale-before' });
+    assert.equal(invalidWindow.status, 400);
+    assert.deepEqual(await invalidWindow.json(), { error: 'invalid-since' });
+    assert.equal(invalidStaleBefore.status, 400);
+    assert.deepEqual(await invalidStaleBefore.json(), { error: 'invalid-stale-before' });
+    assert.equal(missingSearch.status, 404);
+    assert.deepEqual(await missingSearch.json(), { error: 'not-found' });
+  });
+
+  it('returns no threshold matches when a search has no score thresholds', async () => {
+    const response = await app.request(
+      '/api/searches/family-replacement-vehicle/monitoring-summary?since=2026-08-26T12:00:00.000Z&staleBefore=2026-08-26T12:00:00.000Z',
+      {},
+      env({ listingChanges: true, staleListings: true, evaluations: true, noNotificationThresholds: true })
+    );
+    const body = (await response.json()) as { thresholdMatches: unknown[] };
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(body.thresholdMatches, []);
+  });
+
   it('returns listing detail with recent snapshots', async () => {
     const response = await app.request('/api/listings/listing-sienna', {}, env({ listingDetail: true }));
     const body = (await response.json()) as {
@@ -578,11 +646,15 @@ function env(
     listingDetail?: boolean;
     listingChanges?: boolean;
     staleListings?: boolean;
+    noNotificationThresholds?: boolean;
     disposition?: true | 'existing';
     evaluations?: boolean;
   } = {}
 ): Env {
   const writes: Array<{ sql: string; values: unknown[] }> = [];
+  const searchRow = options.noNotificationThresholds
+    ? { ...savedSearchRow, config_json: JSON.stringify({ ...familySearchDefaults, notifications: {} }) }
+    : savedSearchRow;
 
   return {
     ...(options.adminToken ? { ADMIN_TOKEN: options.adminToken } : {}),
@@ -593,7 +665,7 @@ function env(
 
           return {
             first: async () => {
-              if (sql.includes('FROM saved_searches')) return id === savedSearchRow.id ? savedSearchRow : null;
+              if (sql.includes('FROM saved_searches')) return id === savedSearchRow.id ? searchRow : null;
               if (sql === 'SELECT id FROM listings WHERE id = ?') return id === 'listing-sienna' ? { id } : null;
               if (options.listingDetail && sql.includes('WHERE listings.id = ?')) return id === 'listing-sienna' ? betterPersistedListingRow : null;
               if (options.disposition && sql.includes('FROM listing_dispositions')) {
@@ -625,7 +697,7 @@ function env(
         },
         all: async () => ({
           results: sql.includes('FROM saved_searches')
-            ? [savedSearchRow]
+            ? [searchRow]
             : options.evaluations && sql.includes('MAX(latest.evaluated_at)') && sql.includes('ORDER BY search_evaluations.deal_score DESC')
               ? evaluationRows
             : options.listingDetail && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
@@ -733,7 +805,7 @@ const evaluationRows = [
     listing_id: 'listing-odyssey',
     vehicle_id: 'vehicle-odyssey',
     score_version: 'sample-v1',
-    vehicle_score: 75,
+    vehicle_score: 65,
     deal_score: 80,
     factors_json: JSON.stringify([{ key: 'mileage-fit', messageKey: 'score.mileageFit', scoreImpact: -8 }]),
     flags_json: JSON.stringify([]),
