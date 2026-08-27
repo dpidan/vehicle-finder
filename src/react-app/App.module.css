@@ -227,6 +227,29 @@
   padding: var(--space-4);
 }
 
+.monitoringControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) 0;
+}
+
+.monitoringControls label {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.monitoringControls span {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.monitoringControls input {
+  width: 8rem;
+}
+
 .signal {
   display: grid;
   gap: var(--space-1);

@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'react';
-import { fetchListingDetail, fetchMonitoringSummary, fetchRankedListings, fetchSavedSearches, refreshSearch, saveListingDisposition } from './api.js';
+import {
+  defaultMonitoringWindow,
+  fetchListingDetail,
+  fetchMonitoringSummary,
+  fetchRankedListings,
+  fetchSavedSearches,
+  refreshSearch,
+  saveListingDisposition,
+  type MonitoringWindow
+} from './api.js';
 import { bestScore, emptyMessage, emptyTitle, filterAndSortListings, statusLabel } from './format.js';
 import { ComparisonPanel } from './ComparisonPanel.js';
 import { ListingDetailPanel } from './ListingDetailPanel.js';
@@ -27,6 +36,7 @@ function DashboardShell() {
   const [detailStatus, setDetailStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [monitoringSummary, setMonitoringSummary] = useState<MonitoringSummary | null>(null);
   const [monitoringStatus, setMonitoringStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [monitoringWindow, setMonitoringWindow] = useState<MonitoringWindow>(() => defaultMonitoringWindow());
   const [workflowStatus, setWorkflowStatus] = useState('');
   const [refreshStatus, setRefreshStatus] = useState<'idle' | 'refreshing' | 'error'>('idle');
   const [stateFilter, setStateFilter] = useState<ListingDispositionState | 'all'>('all');
@@ -112,12 +122,12 @@ function DashboardShell() {
     let cancelled = false;
     setMonitoringStatus('loading');
 
-    refreshMonitoring(selectedSearchId, () => cancelled);
+    refreshMonitoring(selectedSearchId, monitoringWindow, () => cancelled);
 
     return () => {
       cancelled = true;
     };
-  }, [selectedSearchId]);
+  }, [monitoringWindow, selectedSearchId]);
 
   const selectedSearch = searches.find((search) => search.id === selectedSearchId);
   const selectedRanking = rankedListings.find((item) => item.listingId === selectedListingId) ?? null;
@@ -156,7 +166,12 @@ function DashboardShell() {
         <Metric label="Best deal" value={bestScore(rankedListings, 'dealScore')} />
       </section>
 
-      <MonitoringSummaryPanel summary={monitoringSummary} status={monitoringStatus} />
+      <MonitoringSummaryPanel
+        summary={monitoringSummary}
+        status={monitoringStatus}
+        window={monitoringWindow}
+        onWindowChange={setMonitoringWindow}
+      />
       <ComparisonPanel
         listings={comparedListings}
         onRemove={(listingId) => setCompareListingIds((ids) => ids.filter((id) => id !== listingId))}
@@ -253,7 +268,7 @@ function DashboardShell() {
     try {
       await refreshSearch(selectedSearchId, adminToken);
       await refreshListings(selectedSearchId);
-      await refreshMonitoring(selectedSearchId);
+      await refreshMonitoring(selectedSearchId, monitoringWindow);
       setRefreshStatus('idle');
       setWorkflowStatus('Search refreshed.');
     } catch {
@@ -262,11 +277,11 @@ function DashboardShell() {
     }
   }
 
-  async function refreshMonitoring(searchId: string, cancelled = () => false) {
+  async function refreshMonitoring(searchId: string, window: MonitoringWindow, cancelled = () => false) {
     setMonitoringStatus('loading');
 
     try {
-      const summary = await fetchMonitoringSummary(searchId);
+      const summary = await fetchMonitoringSummary(searchId, window);
       if (cancelled()) return;
       setMonitoringSummary(summary);
       setMonitoringStatus('ready');

@@ -2,7 +2,7 @@
 
 ## Now — monitoring operations
 
-1. Add configurable monitoring windows instead of fixed dashboard defaults.
+1. Done — add configurable monitoring windows instead of fixed dashboard defaults.
 2. Add notification delivery for monitoring digests.
 3. Improve dashboard digest/report presentation.
 4. Add admin/dashboard controls for explicit VIN and recall enrichment.
@@ -63,10 +63,10 @@
 ## Monitoring
 
 43. Done — scheduled collection.
-44. Partial — new-listing signals in API/MCP/dashboard; delivery still pending.
-45. Partial — price-drop signals in API/MCP/dashboard; delivery still pending.
-46. Partial — score-threshold signals in API/MCP/dashboard; delivery still pending.
-47. Partial — stale-listing signals in API/MCP/dashboard; delivery still pending.
+44. Partial — new-listing signals in API/MCP/dashboard with configurable dashboard windows; delivery still pending.
+45. Partial — price-drop signals in API/MCP/dashboard with configurable dashboard windows; delivery still pending.
+46. Partial — score-threshold signals in API/MCP/dashboard with configurable dashboard windows; delivery still pending.
+47. Partial — stale-listing signals in API/MCP/dashboard with configurable dashboard windows; delivery still pending.
 48. Partial — plain text digest API/MCP; delivery/scheduling still pending.
 
 ## Dashboard operations

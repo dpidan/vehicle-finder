@@ -26,13 +26,22 @@ export function fetchListingDetail(listingId: string): Promise<ListingDetail> {
   return fetchJson<ListingDetail>(`/api/listings/${listingId}`);
 }
 
-export function fetchMonitoringSummary(searchId: string): Promise<MonitoringSummary> {
+export function fetchMonitoringSummary(searchId: string, window: MonitoringWindow = defaultMonitoringWindow()): Promise<MonitoringSummary> {
   const now = new Date();
-  const since = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-  const staleBefore = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const since = new Date(now.getTime() - window.recentHours * 60 * 60 * 1000).toISOString();
+  const staleBefore = new Date(now.getTime() - window.staleDays * 24 * 60 * 60 * 1000).toISOString();
   return fetchJson<MonitoringSummary>(
     `/api/searches/${searchId}/monitoring-summary?since=${encodeURIComponent(since)}&staleBefore=${encodeURIComponent(staleBefore)}`
   );
+}
+
+export interface MonitoringWindow {
+  recentHours: number;
+  staleDays: number;
+}
+
+export function defaultMonitoringWindow(): MonitoringWindow {
+  return { recentHours: 24, staleDays: 7 };
 }
 
 export function previewManualImport(searchId: string, input: ManualImportInput): Promise<ManualImportPreview> {
