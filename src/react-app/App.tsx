@@ -33,6 +33,7 @@ function DashboardShell() {
   const [listingDetail, setListingDetail] = useState<ListingDetail | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading');
   const [detailStatus, setDetailStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [workflowStatus, setWorkflowStatus] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -156,6 +157,7 @@ function DashboardShell() {
                       item={item}
                       selected={item.listingId === selectedListingId}
                       onSelect={() => setSelectedListingId(item.listingId)}
+                      onStateChange={(state) => updateDisposition(selectedSearchId, item.listingId, state)}
                     />
                   ))}
                 </tbody>
@@ -171,20 +173,55 @@ function DashboardShell() {
 
         <ListingDetailPanel detail={listingDetail} status={detailStatus} />
       </div>
+      <p className={styles.srStatus} aria-live="polite">
+        {workflowStatus}
+      </p>
     </main>
   );
+
+  async function updateDisposition(searchId: string, listingId: string, state: ListingDispositionState) {
+    const rejectionReason =
+      state === 'rejected' ? window.prompt('Why reject this listing?')?.trim() : undefined;
+
+    if (state === 'rejected' && !rejectionReason) {
+      setWorkflowStatus('Rejected listings need a reason.');
+      return;
+    }
+
+    setWorkflowStatus('Saving workflow state.');
+
+    try {
+      const { disposition } = await fetchJson<{ disposition: ListingDisposition }>(
+        `/api/searches/${searchId}/listings/${listingId}/disposition`,
+        {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ state, ...(rejectionReason ? { rejectionReason } : {}) })
+        }
+      );
+      setRankedListings((items) =>
+        items.map((item) => (item.listingId === listingId ? { ...item, disposition } : item))
+      );
+      setWorkflowStatus('Workflow state saved.');
+    } catch {
+      setWorkflowStatus('Could not save workflow state.');
+    }
+  }
 }
 
 function ListingRow({
   item,
   selected,
-  onSelect
+  onSelect,
+  onStateChange
 }: {
   item: RankedListingSummary;
   selected: boolean;
   onSelect: () => void;
+  onStateChange: (state: ListingDispositionState) => void;
 }) {
   const listing = item.rankedListing.listing;
+  const state = item.disposition?.state ?? 'new';
 
   return (
     <tr className={selected ? styles.selectedRow : undefined}>
@@ -205,7 +242,17 @@ function ListingRow({
       <td>{listing.mileage ? `${listing.mileage.toLocaleString()} mi` : 'Unknown'}</td>
       <td>{listing.seller?.name ?? 'Unknown'}</td>
       <td>
-        <span className={styles.status}>{item.disposition?.state ?? 'new'}</span>
+        <select
+          className={styles.stateSelect}
+          value={state}
+          onChange={(event) => onStateChange(event.target.value as ListingDispositionState)}
+        >
+          {listingDispositionStates.map((state) => (
+            <option key={state} value={state}>
+              {state}
+            </option>
+          ))}
+        </select>
       </td>
       <td>
         <button className={styles.secondaryButton} type="button" onClick={onSelect}>
@@ -289,8 +336,8 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetch(url);
+async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init);
 
   if (!response.ok) {
     throw new Error(`Request failed: ${response.status}`);
@@ -348,6 +395,10 @@ interface SavedSearchSummary {
   name: string;
 }
 
+const listingDispositionStates = ['new', 'interested', 'favorite', 'contacted', 'inspection', 'rejected', 'sold'] as const;
+
+type ListingDispositionState = (typeof listingDispositionStates)[number];
+
 interface RankedListingSummary {
   listingId: string;
   rankedListing: {
@@ -355,7 +406,16 @@ interface RankedListingSummary {
     vehicleScore: number;
     dealScore: number;
   };
-  disposition: { state: string } | null;
+  disposition: ListingDisposition | null;
+}
+
+interface ListingDisposition {
+  id: string;
+  savedSearchId: string;
+  listingId: string;
+  state: ListingDispositionState;
+  rejectionReason?: string;
+  updatedAt: string;
 }
 
 interface ListingCandidate {
