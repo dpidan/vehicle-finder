@@ -49,6 +49,9 @@ npm run db:seed:local
 npm run dev
 ```
 
+Use `npm run dev:worker` when you specifically want Wrangler without the Vite
+frontend pipeline.
+
 Public endpoints:
 
 - `GET /health`

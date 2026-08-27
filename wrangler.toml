@@ -2,6 +2,10 @@ name = "vehicle-finder"
 main = "src/worker.ts"
 compatibility_date = "2026-08-25"
 
+[assets]
+directory = "./dist/client"
+not_found_handling = "single-page-application"
+
 [triggers]
 crons = ["0 */12 * * *"]
 

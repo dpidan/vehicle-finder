@@ -3,7 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "vite",
+    "dev:worker": "wrangler dev",
+    "build": "vite build",
+    "preview": "vite preview",
     "db:migrate:local": "wrangler d1 migrations apply vehicle-finder --local",
     "db:seed:local": "wrangler d1 execute vehicle-finder --local --file seeds/0001_family_search.sql",
     "collect:carsforsale": "tsx src/sources/collect-carsforsale.ts",
@@ -13,13 +16,20 @@
     "test": "tsx --test \"src/**/*.test.ts\""
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.54.0",
     "@cloudflare/workers-types": "^5.20260825.1",
     "@types/node": "^22.13.14",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.0",
     "tsx": "^4.19.3",
     "typescript": "^6.0.3",
+    "vite": "^8.2.2",
     "wrangler": "^4.126.0"
   },
   "dependencies": {
-    "hono": "^4.13.4"
+    "hono": "^4.13.4",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   }
 }
