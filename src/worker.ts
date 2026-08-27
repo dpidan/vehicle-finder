@@ -21,6 +21,7 @@ import {
 import { manualImportToCandidate, type ManualImportInput } from './sources/manual-import.js';
 import { handleMcpHttpRequest, parseMcpJsonRequest } from './mcp/http.js';
 import { callMcpTool, mcpTools } from './mcp/tools.js';
+import { lookupRecalls } from './services/recall-service.js';
 import { cypressDealerCarSearchSeeds } from './sources/dealer-car-search-seeds.js';
 import { dealerCarSearchSource } from './sources/dealer-car-search-source.js';
 import { collectSampleListings } from './sources/sample-source.js';
@@ -364,6 +365,26 @@ app.post('/api/admin/searches/:id/vin-decodes', async (c) => {
   }
 
   return c.json(await decodeSavedSearchVins(c.env.DB, search.id, new Date().toISOString()));
+});
+
+app.post('/api/admin/recalls', async (c) => {
+  const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
+
+  if (unauthorized) {
+    return c.json({ error: unauthorized }, unauthorized === 'admin-token-not-configured' ? 503 : 401);
+  }
+
+  const body = (await c.req.json()) as { modelYear?: unknown; make?: unknown; model?: unknown };
+
+  if (!isValidModelYear(body.modelYear) || typeof body.make !== 'string' || typeof body.model !== 'string') {
+    return c.json({ error: 'invalid-recall-lookup' }, 400);
+  }
+
+  try {
+    return c.json(await lookupRecalls(c.env.DB, body.modelYear, body.make, body.model, new Date().toISOString()));
+  } catch (error) {
+    return c.json({ error: 'recall-lookup-failed', message: errorMessage(error) }, 400);
+  }
 });
 
 app.get('/api/admin/mcp/tools', (c) => {
