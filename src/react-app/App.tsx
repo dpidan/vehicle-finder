@@ -34,6 +34,8 @@ function DashboardShell() {
   const [status, setStatus] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading');
   const [detailStatus, setDetailStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [workflowStatus, setWorkflowStatus] = useState('');
+  const [stateFilter, setStateFilter] = useState<ListingDispositionState | 'all'>('all');
+  const [sortMode, setSortMode] = useState<SortMode>('deal');
 
   useEffect(() => {
     let cancelled = false;
@@ -104,6 +106,7 @@ function DashboardShell() {
   }, [selectedListingId]);
 
   const selectedSearch = searches.find((search) => search.id === selectedSearchId);
+  const visibleListings = filterAndSortListings(rankedListings, stateFilter, sortMode);
 
   return (
     <main className={styles.appShell}>
@@ -126,8 +129,8 @@ function DashboardShell() {
 
       <section className={styles.summaryBand} aria-live="polite">
         <Metric label="Listings" value={rankedListings.length.toLocaleString()} />
+        <Metric label="Shown" value={visibleListings.length.toLocaleString()} />
         <Metric label="Best deal" value={bestScore(rankedListings, 'dealScore')} />
-        <Metric label="Best vehicle" value={bestScore(rankedListings, 'vehicleScore')} />
       </section>
 
       <div className={styles.workspace}>
@@ -137,6 +140,30 @@ function DashboardShell() {
             <span className={styles.status}>{statusLabel(status)}</span>
           </div>
           {status === 'ready' && rankedListings.length > 0 ? (
+            <>
+              <div className={styles.tableControls}>
+                <label>
+                  <span>State</span>
+                  <select value={stateFilter} onChange={(event) => setStateFilter(event.target.value as ListingDispositionState | 'all')}>
+                    <option value="all">All</option>
+                    {listingDispositionStates.map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Sort</span>
+                  <select value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}>
+                    <option value="deal">Deal score</option>
+                    <option value="vehicle">Vehicle score</option>
+                    <option value="price">Lowest price</option>
+                    <option value="mileage">Lowest mileage</option>
+                  </select>
+                </label>
+              </div>
+              {visibleListings.length > 0 ? (
             <div className={styles.tableWrap}>
               <table className={styles.listingTable}>
                 <thead>
@@ -151,7 +178,7 @@ function DashboardShell() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rankedListings.map((item) => (
+                  {visibleListings.map((item) => (
                     <ListingRow
                       key={item.listingId}
                       item={item}
@@ -163,6 +190,13 @@ function DashboardShell() {
                 </tbody>
               </table>
             </div>
+              ) : (
+                <div className={styles.emptyState}>
+                  <h2>No listings match this filter.</h2>
+                  <p>Change the workflow-state filter to see more candidates.</p>
+                </div>
+              )}
+            </>
           ) : (
             <div className={styles.emptyState}>
               <h2>{emptyTitle(status)}</h2>
@@ -350,6 +384,32 @@ function bestScore(listings: RankedListingSummary[], key: 'dealScore' | 'vehicle
   return listings.length ? Math.max(...listings.map((listing) => listing.rankedListing[key])).toString() : '0';
 }
 
+function filterAndSortListings(
+  listings: RankedListingSummary[],
+  stateFilter: ListingDispositionState | 'all',
+  sortMode: SortMode
+): RankedListingSummary[] {
+  return listings
+    .filter((listing) => stateFilter === 'all' || (listing.disposition?.state ?? 'new') === stateFilter)
+    .sort((a, b) => sortListing(a, b, sortMode));
+}
+
+function sortListing(a: RankedListingSummary, b: RankedListingSummary, sortMode: SortMode): number {
+  if (sortMode === 'vehicle') {
+    return b.rankedListing.vehicleScore - a.rankedListing.vehicleScore;
+  }
+
+  if (sortMode === 'price') {
+    return (a.rankedListing.listing.price?.amount ?? Number.MAX_SAFE_INTEGER) - (b.rankedListing.listing.price?.amount ?? Number.MAX_SAFE_INTEGER);
+  }
+
+  if (sortMode === 'mileage') {
+    return (a.rankedListing.listing.mileage ?? Number.MAX_SAFE_INTEGER) - (b.rankedListing.listing.mileage ?? Number.MAX_SAFE_INTEGER);
+  }
+
+  return b.rankedListing.dealScore - a.rankedListing.dealScore;
+}
+
 function statusLabel(status: 'loading' | 'ready' | 'empty' | 'error'): string {
   return status === 'loading' ? 'Loading' : status === 'error' ? 'Error' : status === 'empty' ? 'No searches' : 'Ready';
 }
@@ -398,6 +458,8 @@ interface SavedSearchSummary {
 const listingDispositionStates = ['new', 'interested', 'favorite', 'contacted', 'inspection', 'rejected', 'sold'] as const;
 
 type ListingDispositionState = (typeof listingDispositionStates)[number];
+
+type SortMode = 'deal' | 'vehicle' | 'price' | 'mileage';
 
 interface RankedListingSummary {
   listingId: string;
