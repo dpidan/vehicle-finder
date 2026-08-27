@@ -123,6 +123,7 @@ function DashboardShell() {
   }, [selectedSearchId]);
 
   const selectedSearch = searches.find((search) => search.id === selectedSearchId);
+  const selectedRanking = rankedListings.find((item) => item.listingId === selectedListingId) ?? null;
   const visibleListings = filterAndSortListings(rankedListings, stateFilter, sortMode);
 
   return (
@@ -177,7 +178,7 @@ function DashboardShell() {
           )}
         </section>
 
-        <ListingDetailPanel detail={listingDetail} status={detailStatus} />
+        <ListingDetailPanel detail={listingDetail} ranking={selectedRanking?.rankedListing ?? null} status={detailStatus} />
       </div>
       <p className={styles.srStatus} aria-live="polite">
         {workflowStatus}

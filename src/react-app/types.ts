@@ -13,10 +13,21 @@ export interface RankedListingSummary {
   listingId: string;
   rankedListing: {
     listing: ListingCandidate;
+    scoreVersion: string;
     vehicleScore: number;
     dealScore: number;
+    factors: ScoreFactor[];
+    flags: string[];
   };
   disposition: ListingDisposition | null;
+}
+
+export interface ScoreFactor {
+  key: string;
+  messageKey: string;
+  messageParams?: Record<string, string | number | boolean>;
+  scoreImpact: number;
+  evidenceIds?: string[];
 }
 
 export interface ListingDisposition {

@@ -1,12 +1,14 @@
 import { detailEmptyMessage, detailEmptyTitle, formatDate, formatMoney, statusLabel, vehicleLabel } from './format.js';
 import styles from './App.module.css';
-import type { ListingDetail } from './types.js';
+import type { ListingDetail, RankedListingSummary, ScoreFactor } from './types.js';
 
 export function ListingDetailPanel({
   detail,
+  ranking,
   status
 }: {
   detail: ListingDetail | null;
+  ranking: RankedListingSummary['rankedListing'] | null;
   status: 'idle' | 'loading' | 'ready' | 'error';
 }) {
   const listing = detail?.listing;
@@ -32,6 +34,29 @@ export function ListingDetailPanel({
             <DetailItem label="Seller" value={listing.seller?.name ?? 'Unknown'} />
             <DetailItem label="Source" value={listing.source.name} />
           </div>
+          {ranking ? (
+            <>
+              <h3>Score factors</h3>
+              <div className={styles.scoreSummary}>
+                <DetailItem label="Deal score" value={String(ranking.dealScore)} />
+                <DetailItem label="Vehicle score" value={String(ranking.vehicleScore)} />
+              </div>
+              {ranking.factors.length ? (
+                <ol className={styles.factorList}>
+                  {ranking.factors.map((factor) => (
+                    <li key={factor.key}>
+                      <span className={factor.scoreImpact < 0 ? styles.negativeImpact : styles.positiveImpact}>
+                        {formatImpact(factor.scoreImpact)}
+                      </span>
+                      <span>{factorLabel(factor)}</span>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className={styles.subtle}>No score factors stored for this listing.</p>
+              )}
+            </>
+          ) : null}
           <h3>Recent snapshots</h3>
           {detail.snapshots.length ? (
             <ol className={styles.snapshotList}>
@@ -55,6 +80,25 @@ export function ListingDetailPanel({
       )}
     </aside>
   );
+}
+
+function formatImpact(scoreImpact: number): string {
+  return scoreImpact > 0 ? `+${scoreImpact}` : String(scoreImpact);
+}
+
+function factorLabel(factor: ScoreFactor): string {
+  const labels: Record<string, string> = {
+    'budget-fit': 'Budget fit',
+    'clean-title': 'Clean title',
+    'maintenance-evidence': 'Maintenance evidence',
+    'mileage-fit': 'Mileage fit',
+    'missing-maintenance-evidence': 'Missing maintenance evidence',
+    'missing-vin': 'Missing VIN',
+    'model-preference': 'Model preference',
+    'title-status-mismatch': 'Title status mismatch'
+  };
+
+  return labels[factor.key] ?? factor.key.replaceAll('-', ' ');
 }
 
 function DetailItem({ label, value }: { label: string; value: string }) {
