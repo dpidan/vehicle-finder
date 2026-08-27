@@ -16,10 +16,17 @@ export interface RankedListingSummary {
     scoreVersion: string;
     vehicleScore: number;
     dealScore: number;
+    effectiveCost?: EffectiveCostEstimate;
     factors: ScoreFactor[];
     flags: string[];
   };
   disposition: ListingDisposition | null;
+}
+
+export interface EffectiveCostEstimate {
+  askingPrice: number;
+  maintenanceReserve: number;
+  total: number;
 }
 
 export interface ScoreFactor {

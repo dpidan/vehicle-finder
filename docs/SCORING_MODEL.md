@@ -54,6 +54,16 @@ Taxes/registration, financing costs, insurance deltas, and travel costs can be t
 
 For the initial family search, known immediate repairs should be treated seriously when they exceed the configured maintenance reserve of less than $800.
 
+Initial implementation: when a listing has an asking price and the saved search has an immediate-maintenance budget, the system computes a conservative reserve-aware total:
+
+```text
+effectivePurchaseCost =
+  askingPrice
+  + immediateMaintenanceBudget
+```
+
+This adds a modest Deal Score adjustment and flags listings whose reserve-aware total exceeds the saved search's absolute maximum. Specific repair estimates remain deferred until repairs can be captured with evidence.
+
 ## Explainability
 
 Every computed score should persist its factors, for example:

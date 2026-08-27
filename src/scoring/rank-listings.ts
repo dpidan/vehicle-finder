@@ -8,8 +8,15 @@ export interface RankedListing {
   scoreVersion: typeof SCORE_VERSION;
   vehicleScore: number;
   dealScore: number;
+  effectiveCost?: EffectiveCostEstimate;
   factors: ScoreFactor[];
   flags: string[];
+}
+
+export interface EffectiveCostEstimate {
+  askingPrice: number;
+  maintenanceReserve: number;
+  total: number;
 }
 
 export function rankListingsForSearch(search: SavedSearchConfig, listings: ListingCandidate[]): RankedListing[] {
@@ -76,6 +83,18 @@ function scoreListing(search: SavedSearchConfig, listing: ListingCandidate): Ran
   dealScore += priceImpact;
   factors.push(factor('budget-fit', 'score.budgetFit', priceImpact));
 
+  const effectiveCost = effectiveCostEstimate(search, listing);
+  if (effectiveCost) {
+    const impact = effectiveCostScoreImpact(search, effectiveCost.total);
+    dealScore += impact;
+    if (impact !== 0) {
+      factors.push(factor('effective-purchase-cost', 'score.effectivePurchaseCost', impact));
+    }
+    if (search.budgets.absoluteMax && effectiveCost.total > search.budgets.absoluteMax) {
+      flags.push('effective-cost-over-budget');
+    }
+  }
+
   if (!listing.vehicle.vin) {
     vehicleScore -= 10;
     dealScore -= 5;
@@ -90,6 +109,7 @@ function scoreListing(search: SavedSearchConfig, listing: ListingCandidate): Ran
     scoreVersion: SCORE_VERSION,
     vehicleScore: clamp(vehicleScore),
     dealScore: clamp(dealScore),
+    ...(effectiveCost ? { effectiveCost } : {}),
     factors,
     flags
   };
@@ -138,6 +158,37 @@ function priceScoreImpact(search: SavedSearchConfig, listing: ListingCandidate):
   }
 
   return -20;
+}
+
+function effectiveCostEstimate(search: SavedSearchConfig, listing: ListingCandidate): EffectiveCostEstimate | undefined {
+  const askingPrice = listing.price?.amount;
+  const maintenanceReserve = search.workflow?.immediateMaintenanceBudget;
+
+  if (askingPrice === undefined || maintenanceReserve === undefined) {
+    return undefined;
+  }
+
+  return {
+    askingPrice,
+    maintenanceReserve,
+    total: askingPrice + maintenanceReserve
+  };
+}
+
+function effectiveCostScoreImpact(search: SavedSearchConfig, total: number): number {
+  if (search.budgets.absoluteMax && total > search.budgets.absoluteMax) {
+    return -8;
+  }
+
+  if (search.budgets.cashTarget && total <= search.budgets.cashTarget) {
+    return 6;
+  }
+
+  if (search.budgets.stretchTarget && total <= search.budgets.stretchTarget) {
+    return 3;
+  }
+
+  return 0;
 }
 
 function modelYearRiskImpact(listing: ListingCandidate): number {

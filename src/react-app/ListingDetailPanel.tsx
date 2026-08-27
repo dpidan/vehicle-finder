@@ -74,6 +74,9 @@ export function ListingDetailPanel({
               <div className={styles.scoreSummary}>
                 <DetailItem label="Deal score" value={String(ranking.dealScore)} />
                 <DetailItem label="Vehicle score" value={String(ranking.vehicleScore)} />
+                {ranking.effectiveCost ? (
+                  <DetailItem label="Effective cost" value={formatMoney({ amount: ranking.effectiveCost.total, currency: 'USD' })} />
+                ) : null}
               </div>
               {ranking.factors.length ? (
                 <ol className={styles.factorList}>
@@ -193,6 +196,7 @@ function factorLabel(factor: ScoreFactor): string {
   const labels: Record<string, string> = {
     'budget-fit': 'Budget fit',
     'clean-title': 'Clean title',
+    'effective-purchase-cost': 'Effective purchase cost',
     'maintenance-evidence': 'Maintenance evidence',
     'mileage-fit': 'Mileage fit',
     'missing-maintenance-evidence': 'Missing maintenance evidence',
