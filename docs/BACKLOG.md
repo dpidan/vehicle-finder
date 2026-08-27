@@ -1,76 +1,86 @@
 # Backlog
 
-## Now — finish definitions
+## Now — monitoring operations
 
-1. Finalize `SavedSearchConfig` fields and defaults.
-2. Define canonical database entities and relationships.
-3. Define score-factor data structures and scoring-version behavior.
-4. Convert the initial model/year matrix into structured risk records with evidence.
-5. Define source-adapter contract and normalized candidate/listing payloads.
-6. Define typed attribute/evidence model for extensible facts.
-7. Decide initial authentication approach for the first private users while preserving a path to public accounts.
+1. Add configurable monitoring windows instead of fixed dashboard defaults.
+2. Add notification delivery for monitoring digests.
+3. Improve dashboard digest/report presentation.
+4. Add admin/dashboard controls for explicit VIN and recall enrichment.
+5. Decide whether recall/model-year risk signals should affect scoring now or remain inspection-only.
+6. Add persisted inspection checklist state if the manual checklist starts carrying real workflow weight.
+
+## Done — definitions
+
+7. Done — finalized initial `SavedSearchConfig` fields and family defaults.
+8. Done — defined canonical database entities and relationships.
+9. Done — defined score-factor data structures and scoring-version behavior.
+10. Done — converted the initial model/year matrix into structured risk records.
+11. Done — defined source-adapter contract and normalized candidate/listing payloads.
+12. Done — defined typed attribute/evidence model for extensible facts.
+13. Done — decided initial auth approach: private `ADMIN_TOKEN`, with public-account auth deferred.
 
 ## Done — technical spike
 
-8. Done — scaffold a minimal Cloudflare Worker + Hono + D1 project.
-9. Done — define thin domain services behind the Hono routes so API, MCP, and future clients share behavior.
-10. Done — add React/Vite after API/database skeleton is working, using regular API calls for data.
-11. Done — implement migrations and seed one user + initial family search.
-12. Done — build a fake/sample source adapter and fixture dataset.
-13. Done — add manual import preview for pasted VIN/URL/listing details.
-14. Done — add a repeatable fixture-scoring command before connecting live sources.
+14. Done — scaffold a minimal Cloudflare Worker + Hono + D1 project.
+15. Done — define thin domain services behind the Hono routes so API, MCP, and future clients share behavior.
+16. Done — add React/Vite after API/database skeleton is working, using regular API calls for data.
+17. Done — implement migrations and seed one user + initial family search.
+18. Done — build a fake/sample source adapter and fixture dataset.
+19. Done — add manual import preview for pasted VIN/URL/listing details.
+20. Done — add a repeatable fixture-scoring command before connecting live sources.
 
 ## First live data
 
-15. Research local dealer platforms around Cypress, TX.
-16. Define a minimal dealer-discovery input: explicit dealer seed list first, center/radius later.
-17. Research compliant business/dealer discovery targets for finding franchise and independent dealers within a radius.
-18. Pick one structured dealer platform with several nearby dealers.
-19. Implement one compliant dealer adapter.
-20. Add canonicalization and VIN-based deduplication.
-21. Add listing snapshots and price history.
+21. Done — researched local dealer platforms around Cypress, TX enough to select a first structured source.
+22. Done — defined a minimal dealer-discovery input using explicit dealer seed lists.
+23. Later — research compliant business/dealer discovery targets for finding franchise and independent dealers within a radius.
+24. Done — picked Dealer Car Search as the first structured dealer platform.
+25. Done — implemented a compliant Dealer Car Search adapter.
+26. Done — added canonicalization and VIN-based deduplication.
+27. Done — added listing snapshots and price history.
 
 ## Enrichment
 
-22. Partial — cached VIN decoding supports admin-triggered single-VIN decode and saved-search VIN enrichment; automatic scheduled enrichment still pending.
-23. Partial — cached NHTSA recall lookup by model year/make/model and listing-detail display; scoring integration still pending.
-24. Partial — structured model/year risk records seeded, shown in listing detail, and used in scoring; evidence weighting still pending.
-25. Add estimated immediate-maintenance items.
-26. Done — effective-purchase-cost calculation using asking price plus saved-search maintenance reserve.
-27. Partial — anomaly / "why is this cheap?" flags include low-price transparency checks; market-comparable pricing still pending.
-28. Partial — inspection guidance shown in listing detail; persisted checklist state still pending.
+28. Partial — cached VIN decoding supports admin-triggered single-VIN decode and saved-search VIN enrichment; automatic scheduled enrichment still pending.
+29. Partial — cached NHTSA recall lookup by model year/make/model and listing-detail display; scoring integration still pending.
+30. Partial — structured model/year risk records seeded, shown in listing detail, and used in scoring; evidence weighting still pending.
+31. Partial — estimated immediate-maintenance items parse explicit listing text; richer repair catalog still pending.
+32. Done — effective-purchase-cost calculation using asking price plus saved-search maintenance reserve and explicit maintenance items.
+33. Partial — anomaly / "why is this cheap?" flags include low-price transparency checks; market-comparable pricing still pending.
+34. Partial — inspection guidance shown in listing detail; persisted checklist state still pending.
 
 ## Dashboard
 
-29. Done — search selector.
-30. Done — ranked result list.
-31. Done — Vehicle vs Deal Score explanation.
-32. Done — listing details, photos, manual-import preview, and save-from-preview.
-33. Done — favorites / contacted / inspection / rejected states.
-34. Done — next action and follow-up tracking basics.
-35. Done — rejection reasons.
-36. Done — candidate comparison basics.
+35. Done — search selector.
+36. Done — ranked result list.
+37. Done — Vehicle vs Deal Score explanation.
+38. Done — listing details, photos, manual-import preview, and save-from-preview.
+39. Done — favorites / contacted / inspection / rejected states.
+40. Done — next action and follow-up tracking basics.
+41. Done — rejection reasons.
+42. Done — candidate comparison basics.
 
 ## Monitoring
 
-37. Done — scheduled collection.
-38. Partial — new-listing signals in API/MCP/dashboard; delivery still pending.
-39. Partial — price-drop signals in API/MCP/dashboard; delivery still pending.
-40. Partial — score-threshold signals in API/MCP/dashboard; delivery still pending.
-41. Partial — stale-listing signals in API/MCP/dashboard; delivery still pending.
-42. Partial — plain text digest API/MCP; delivery/scheduling still pending.
+43. Done — scheduled collection.
+44. Partial — new-listing signals in API/MCP/dashboard; delivery still pending.
+45. Partial — price-drop signals in API/MCP/dashboard; delivery still pending.
+46. Partial — score-threshold signals in API/MCP/dashboard; delivery still pending.
+47. Partial — stale-listing signals in API/MCP/dashboard; delivery still pending.
+48. Partial — plain text digest API/MCP; delivery/scheduling still pending.
 
 ## Dashboard operations
 
-48. Done — admin-token-protected saved-search refresh from the dashboard.
+49. Done — admin-token-protected saved-search refresh from the dashboard.
+50. Partial — admin-triggered VIN and recall enrichment API exists; dashboard controls still pending.
 
 ## Assistant access
 
-43. Done — define MCP tool surface for saved searches, ranked candidates, listing details, score explanations, and listing history.
-44. Done — implement a minimal Streamable-HTTP-shaped `/mcp` endpoint backed by the same domain services as the dashboard/API.
-45. Done — implement read-oriented MCP tools.
-46. Done — add admin-token-protected mutation tools for workflow state updates.
-47. Done — document ChatGPT connection/setup steps for family users.
+51. Done — define MCP tool surface for saved searches, ranked candidates, listing details, score explanations, and listing history.
+52. Done — implement a minimal Streamable-HTTP-shaped `/mcp` endpoint backed by the same domain services as the dashboard/API.
+53. Done — implement read-oriented MCP tools.
+54. Done — add admin-token-protected mutation tools for workflow state updates.
+55. Done — document ChatGPT connection/setup steps for family users.
 
 ## Later research
 

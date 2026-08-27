@@ -94,31 +94,31 @@ Each source is implemented behind an adapter and classified by access type, such
 
 ### Phase 0 — domain definition
 
-- Search configuration schema.
-- Model/year knowledge structure.
-- Scoring definitions.
-- Canonical vehicle/listing model.
-- Source adapter contract.
-- Extensible attribute/evidence model.
+- Done: search configuration schema.
+- Done: model/year knowledge structure.
+- Done: scoring definitions.
+- Done: canonical vehicle/listing model.
+- Done: source adapter contract.
+- Done: extensible attribute/evidence model.
 
 ### Phase 1 — useful without a polished UI
 
-- Database schema.
-- Manual import and/or one source adapter.
-- Listing normalization and deduplication.
-- Search evaluator.
-- Vehicle Score and Deal Score.
-- Ranked JSON/HTML output.
-- Basic buyer workflow states and next actions.
+- Done: database schema.
+- Done: manual import and one structured source adapter.
+- Done: listing normalization and deduplication.
+- Done: search evaluator.
+- Done: Vehicle Score and Deal Score.
+- Done: ranked API/dashboard output.
+- Done: basic buyer workflow states and next actions.
 
 ### Phase 2 — enrichment and history
 
-- VIN decoding/enrichment.
-- Recall lookup.
-- Listing snapshots and price history.
-- Partial: maintenance/risk knowledge surfaced in listing detail and used in scoring through seeded model-year risk records.
-- Effective purchase-cost calculation.
-- "Why is this cheap?" anomaly flags.
+- Partial: cached VIN decoding and admin-triggered saved-search enrichment; automatic scheduled enrichment still pending.
+- Partial: cached recall lookup by model year/make/model, shown in listing detail; scoring integration still pending.
+- Done: listing snapshots and price history.
+- Partial: maintenance/risk knowledge surfaced in listing detail and used in scoring through seeded model-year risk records; evidence weighting still pending.
+- Done: effective purchase-cost calculation using asking price, saved-search maintenance reserve, and explicit maintenance items.
+- Partial: "Why is this cheap?" anomaly flags include low-price transparency checks; market-comparable pricing still pending.
 - Partial: inspection guidance and verification questions derived from known risks and missing data.
 
 ### Phase 3 — interactive dashboard
