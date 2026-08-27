@@ -10,6 +10,8 @@ export function ListingTable({
   onStateFilterChange,
   onSortModeChange,
   onSelect,
+  compareListingIds,
+  onCompareChange,
   onStateChange
 }: {
   listings: RankedListingSummary[];
@@ -19,6 +21,8 @@ export function ListingTable({
   onStateFilterChange: (state: ListingDispositionState | 'all') => void;
   onSortModeChange: (sortMode: SortMode) => void;
   onSelect: (listingId: string) => void;
+  compareListingIds: string[];
+  onCompareChange: (listingId: string, compared: boolean) => void;
   onStateChange: (listingId: string, state: ListingDispositionState) => void;
 }) {
   return (
@@ -55,6 +59,7 @@ export function ListingTable({
                 <th>Price</th>
                 <th>Mileage</th>
                 <th>Seller</th>
+                <th>Compare</th>
                 <th>State</th>
                 <th>Action</th>
               </tr>
@@ -65,7 +70,9 @@ export function ListingTable({
                   key={item.listingId}
                   item={item}
                   selected={item.listingId === selectedListingId}
+                  compared={compareListingIds.includes(item.listingId)}
                   onSelect={() => onSelect(item.listingId)}
+                  onCompareChange={(compared) => onCompareChange(item.listingId, compared)}
                   onStateChange={(state) => onStateChange(item.listingId, state)}
                 />
               ))}
@@ -85,12 +92,16 @@ export function ListingTable({
 function ListingRow({
   item,
   selected,
+  compared,
   onSelect,
+  onCompareChange,
   onStateChange
 }: {
   item: RankedListingSummary;
   selected: boolean;
+  compared: boolean;
   onSelect: () => void;
+  onCompareChange: (compared: boolean) => void;
   onStateChange: (state: ListingDispositionState) => void;
 }) {
   const listing = item.rankedListing.listing;
@@ -114,6 +125,12 @@ function ListingRow({
       <td>{formatMoney(listing.price)}</td>
       <td>{listing.mileage ? `${listing.mileage.toLocaleString()} mi` : 'Unknown'}</td>
       <td>{listing.seller?.name ?? 'Unknown'}</td>
+      <td>
+        <label className={styles.compareToggle}>
+          <input type="checkbox" checked={compared} onChange={(event) => onCompareChange(event.target.checked)} />
+          <span>Compare</span>
+        </label>
+      </td>
       <td>
         <select
           className={styles.stateSelect}

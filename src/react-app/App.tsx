@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { fetchListingDetail, fetchMonitoringSummary, fetchRankedListings, fetchSavedSearches, saveListingDisposition } from './api.js';
 import { bestScore, emptyMessage, emptyTitle, filterAndSortListings, statusLabel } from './format.js';
+import { ComparisonPanel } from './ComparisonPanel.js';
 import { ListingDetailPanel } from './ListingDetailPanel.js';
 import { ListingTable } from './ListingTable.js';
 import { Metric } from './Metric.js';
@@ -28,6 +29,7 @@ function DashboardShell() {
   const [workflowStatus, setWorkflowStatus] = useState('');
   const [stateFilter, setStateFilter] = useState<ListingDispositionState | 'all'>('all');
   const [sortMode, setSortMode] = useState<SortMode>('deal');
+  const [compareListingIds, setCompareListingIds] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,6 +63,7 @@ function DashboardShell() {
         if (cancelled) return;
         setRankedListings(rankedListings);
         setSelectedListingId(rankedListings[0]?.listingId ?? '');
+        setCompareListingIds([]);
         setStatus('ready');
       })
       .catch(() => {
@@ -125,6 +128,9 @@ function DashboardShell() {
   const selectedSearch = searches.find((search) => search.id === selectedSearchId);
   const selectedRanking = rankedListings.find((item) => item.listingId === selectedListingId) ?? null;
   const visibleListings = filterAndSortListings(rankedListings, stateFilter, sortMode);
+  const comparedListings = compareListingIds
+    .map((listingId) => rankedListings.find((item) => item.listingId === listingId))
+    .filter((item): item is RankedListingSummary => Boolean(item));
 
   return (
     <main className={styles.appShell}>
@@ -152,6 +158,10 @@ function DashboardShell() {
       </section>
 
       <MonitoringSummaryPanel summary={monitoringSummary} status={monitoringStatus} />
+      <ComparisonPanel
+        listings={comparedListings}
+        onRemove={(listingId) => setCompareListingIds((ids) => ids.filter((id) => id !== listingId))}
+      />
 
       <div className={styles.workspace}>
         <section className={styles.listPanel}>
@@ -168,6 +178,8 @@ function DashboardShell() {
               onStateFilterChange={setStateFilter}
               onSortModeChange={setSortMode}
               onSelect={setSelectedListingId}
+              compareListingIds={compareListingIds}
+              onCompareChange={toggleCompareListing}
               onStateChange={(listingId, state) => updateDisposition(selectedSearchId, listingId, state)}
             />
           ) : (
@@ -212,6 +224,13 @@ function DashboardShell() {
     } catch {
       setWorkflowStatus('Could not save workflow state.');
     }
+  }
+
+  function toggleCompareListing(listingId: string, compared: boolean) {
+    setCompareListingIds((ids) => {
+      if (!compared) return ids.filter((id) => id !== listingId);
+      return ids.includes(listingId) ? ids : [...ids, listingId].slice(-4);
+    });
   }
 
   async function updateNextAction(searchId: string, listingId: string, nextAction: NextAction) {
