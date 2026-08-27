@@ -16,7 +16,8 @@
 
 .publicIntro h1,
 .toolbar h1,
-.emptyState h2 {
+.emptyState h2,
+.panelHeader h2 {
   margin: 0;
   color: var(--color-text);
   letter-spacing: 0;
@@ -63,6 +64,24 @@
   background: var(--color-surface);
 }
 
+.searchPicker {
+  display: grid;
+  gap: var(--space-1);
+  min-width: min(260px, 100%);
+  color: var(--color-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.searchPicker select {
+  min-height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-1);
+  padding: 0 var(--space-3);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
 .toolbar h1 {
   font-size: 1.4rem;
   line-height: 1.2;
@@ -90,7 +109,6 @@
 }
 
 .emptyState {
-  margin: var(--space-6);
   padding: var(--space-5);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-2);
@@ -99,6 +117,97 @@
 
 .emptyState h2 {
   font-size: 1.1rem;
+}
+
+.summaryBand {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6) 0;
+}
+
+.metric {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2);
+  background: var(--color-surface);
+}
+
+.metric span,
+.subtle {
+  color: var(--color-muted);
+  font-size: 0.86rem;
+}
+
+.metric strong {
+  color: var(--color-text);
+  font-size: 1.6rem;
+}
+
+.listPanel {
+  margin: var(--space-5) var(--space-6) var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.panelHeader h2 {
+  font-size: 1rem;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.listingTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.listingTable th,
+.listingTable td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.listingTable th {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.listingTable tr:last-child td {
+  border-bottom: 0;
+}
+
+.listingTitle {
+  color: var(--color-text);
+  font-weight: 700;
+  text-decoration-color: transparent;
+}
+
+.listingTitle:hover,
+.listingTitle:focus-visible {
+  text-decoration-color: currentcolor;
+}
+
+.score {
+  font-weight: 800;
 }
 
 @media (max-width: 640px) {
@@ -118,6 +227,17 @@
   }
 
   .emptyState {
+    border-width: 0;
+    border-top: 1px solid var(--color-border);
+    border-radius: 0;
+  }
+
+  .summaryBand {
+    grid-template-columns: 1fr;
+    padding: var(--space-4) var(--space-4) 0;
+  }
+
+  .listPanel {
     margin: var(--space-4);
   }
 }
