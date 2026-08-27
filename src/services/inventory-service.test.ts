@@ -41,6 +41,15 @@ describe('importListingCandidates', () => {
     assert.equal(db.insertedListings.length, 1);
     assert.equal(db.snapshots.length, 1);
   });
+
+  it('stores listing photo URLs on listings and snapshots', async () => {
+    const db = fakeInventoryDb();
+
+    await importListingCandidates(db, [listingCandidate({ photoUrls: ['https://example.test/photo.jpg'] })]);
+
+    assert.equal(db.insertedListings[0]?.[12], JSON.stringify(['https://example.test/photo.jpg']));
+    assert.equal(db.snapshots[0]?.[6], JSON.stringify(['https://example.test/photo.jpg']));
+  });
 });
 
 function listingCandidate(overrides: Partial<ListingCandidate> = {}): ListingCandidate {

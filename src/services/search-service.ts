@@ -24,6 +24,7 @@ interface PersistedListingRow {
   price_amount: number | null;
   price_currency: 'USD' | null;
   mileage: number | null;
+  photo_urls_json: string | null;
   title_status: ListingCandidate['titleStatus'] | null;
   listing_latitude: number | null;
   listing_longitude: number | null;
@@ -56,6 +57,7 @@ interface SnapshotRow {
   price_amount: number | null;
   price_currency: 'USD' | null;
   mileage: number | null;
+  photo_urls_json: string | null;
   status: ListingCandidate['status'];
   raw_title: string | null;
   raw_description: string | null;
@@ -68,6 +70,7 @@ export interface ListingDetail {
     capturedAt: string;
     price?: { amount: number; currency: 'USD' };
     mileage?: number;
+    photoUrls?: string[];
     status: ListingCandidate['status'];
     rawTitle?: string;
     rawDescription?: string;
@@ -444,6 +447,7 @@ export async function getListingDetail(db: D1Database, id: string): Promise<List
          listings.price_amount,
          listings.price_currency,
          listings.mileage,
+         listings.photo_urls_json,
          listings.title_status,
          listings.latitude AS listing_latitude,
          listings.longitude AS listing_longitude,
@@ -475,7 +479,7 @@ export async function getListingDetail(db: D1Database, id: string): Promise<List
 
   const { results } = await db
     .prepare(
-      `SELECT id, captured_at, price_amount, price_currency, mileage, status, raw_title, raw_description
+      `SELECT id, captured_at, price_amount, price_currency, mileage, photo_urls_json, status, raw_title, raw_description
        FROM listing_snapshots
        WHERE listing_id = ?
        ORDER BY captured_at DESC
@@ -568,6 +572,7 @@ async function listPersistedListingCandidates(db: D1Database, savedSearchId: str
          listings.price_amount,
          listings.price_currency,
          listings.mileage,
+         listings.photo_urls_json,
          listings.title_status,
          listings.latitude AS listing_latitude,
          listings.longitude AS listing_longitude,
@@ -651,6 +656,7 @@ function toListingCandidate(row: PersistedListingRow): ListingCandidate & { list
       : {}),
     ...(row.price_amount && row.price_currency ? { price: { amount: row.price_amount, currency: row.price_currency } } : {}),
     ...(row.mileage ? { mileage: row.mileage } : {}),
+    ...(row.photo_urls_json ? { photoUrls: JSON.parse(row.photo_urls_json) as string[] } : {}),
     ...(row.title_status ? { titleStatus: row.title_status } : {}),
     ...(row.listing_latitude && row.listing_longitude
       ? { location: location(row.listing_latitude, row.listing_longitude, row.listing_location_label) }
@@ -673,6 +679,7 @@ function toSnapshot(row: SnapshotRow): ListingDetail['snapshots'][number] {
     capturedAt: row.captured_at,
     ...(row.price_amount && row.price_currency ? { price: { amount: row.price_amount, currency: row.price_currency } } : {}),
     ...(row.mileage ? { mileage: row.mileage } : {}),
+    ...(row.photo_urls_json ? { photoUrls: JSON.parse(row.photo_urls_json) as string[] } : {}),
     status: row.status,
     ...(row.raw_title ? { rawTitle: row.raw_title } : {}),
     ...(row.raw_description ? { rawDescription: row.raw_description } : {})

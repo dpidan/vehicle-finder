@@ -13,6 +13,7 @@ export interface ManualImportInput {
   vin?: string;
   price?: number;
   mileage?: number;
+  photoUrls?: string[];
   titleStatus?: TitleStatus;
   sellerName?: string;
   sellerType?: SellerType;
@@ -47,6 +48,7 @@ export function manualImportToCandidate(input: ManualImportInput, capturedAt: st
       : {}),
     ...(input.price === undefined ? {} : { price: { amount: input.price, currency: 'USD' } as const }),
     ...(input.mileage === undefined ? {} : { mileage: input.mileage }),
+    ...(input.photoUrls?.length ? { photoUrls: input.photoUrls.filter((url) => url.trim()) } : {}),
     ...(input.titleStatus === undefined ? {} : { titleStatus: input.titleStatus }),
     ...(rawDescription === undefined ? {} : { rawDescription }),
     capturedAt,

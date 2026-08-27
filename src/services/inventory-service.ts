@@ -168,9 +168,9 @@ async function insertListing(
     .prepare(
       `INSERT INTO listings
        (id, vehicle_id, seller_id, source_name, source_access, source_listing_id, url, title, status,
-        price_amount, price_currency, mileage, title_status, latitude, longitude, location_label,
+        price_amount, price_currency, mileage, photo_urls_json, title_status, latitude, longitude, location_label,
         first_seen_at, last_seen_at, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(...listingValues(id, vehicleId, sellerId, candidate, candidate.capturedAt))
     .run();
@@ -187,7 +187,7 @@ async function updateListing(
     .prepare(
       `UPDATE listings
        SET vehicle_id = ?, seller_id = ?, url = ?, title = ?, status = ?, price_amount = ?, price_currency = ?,
-           mileage = ?, title_status = ?, latitude = ?, longitude = ?, location_label = ?, last_seen_at = ?, updated_at = ?
+           mileage = ?, photo_urls_json = ?, title_status = ?, latitude = ?, longitude = ?, location_label = ?, last_seen_at = ?, updated_at = ?
        WHERE id = ?`
     )
     .bind(
@@ -199,6 +199,7 @@ async function updateListing(
       candidate.price?.amount ?? null,
       candidate.price?.currency ?? null,
       candidate.mileage ?? null,
+      candidate.photoUrls?.length ? JSON.stringify(candidate.photoUrls) : null,
       candidate.titleStatus ?? null,
       candidate.location?.latitude ?? null,
       candidate.location?.longitude ?? null,
@@ -230,6 +231,7 @@ function listingValues(
     candidate.price?.amount ?? null,
     candidate.price?.currency ?? null,
     candidate.mileage ?? null,
+    candidate.photoUrls?.length ? JSON.stringify(candidate.photoUrls) : null,
     candidate.titleStatus ?? null,
     candidate.location?.latitude ?? null,
     candidate.location?.longitude ?? null,
@@ -245,8 +247,8 @@ async function insertSnapshot(db: D1Database, listingId: string, candidate: List
   await db
     .prepare(
       `INSERT INTO listing_snapshots
-       (id, listing_id, captured_at, price_amount, price_currency, mileage, status, raw_title, raw_description)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       (id, listing_id, captured_at, price_amount, price_currency, mileage, photo_urls_json, status, raw_title, raw_description)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       crypto.randomUUID(),
@@ -255,6 +257,7 @@ async function insertSnapshot(db: D1Database, listingId: string, candidate: List
       candidate.price?.amount ?? null,
       candidate.price?.currency ?? null,
       candidate.mileage ?? null,
+      candidate.photoUrls?.length ? JSON.stringify(candidate.photoUrls) : null,
       candidate.status ?? 'active',
       candidate.title,
       candidate.rawDescription ?? null

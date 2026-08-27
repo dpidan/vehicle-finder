@@ -1064,6 +1064,7 @@ const persistedListingRow = {
   price_amount: 7890,
   price_currency: 'USD',
   mileage: 163707,
+  photo_urls_json: null,
   title_status: 'clean',
   listing_latitude: null,
   listing_longitude: null,
@@ -1097,6 +1098,7 @@ const snapshotRows = [
     price_amount: 9900,
     price_currency: 'USD',
     mileage: 93000,
+    photo_urls_json: null,
     status: 'active',
     raw_title: '2015 Toyota Sienna XLE',
     raw_description: null
@@ -1107,6 +1109,7 @@ const snapshotRows = [
     price_amount: 10900,
     price_currency: 'USD',
     mileage: 93100,
+    photo_urls_json: null,
     status: 'active',
     raw_title: '2015 Toyota Sienna XLE',
     raw_description: null

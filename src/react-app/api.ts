@@ -2,6 +2,7 @@ import type {
   ListingDetail,
   ListingDisposition,
   ListingDispositionState,
+  ManualImportInput,
   ManualImportPreview,
   ManualImportSaveResult,
   MonitoringSummary,
@@ -33,7 +34,7 @@ export function fetchMonitoringSummary(searchId: string): Promise<MonitoringSumm
   );
 }
 
-export function previewManualImport(searchId: string, input: Record<string, string | number>): Promise<ManualImportPreview> {
+export function previewManualImport(searchId: string, input: ManualImportInput): Promise<ManualImportPreview> {
   return fetchJson<ManualImportPreview>('/api/manual-imports/preview', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -41,7 +42,7 @@ export function previewManualImport(searchId: string, input: Record<string, stri
   });
 }
 
-export function saveManualImport(searchId: string, input: Record<string, string | number>, adminToken: string): Promise<ManualImportSaveResult> {
+export function saveManualImport(searchId: string, input: ManualImportInput, adminToken: string): Promise<ManualImportSaveResult> {
   return fetchJson<ManualImportSaveResult>('/api/admin/manual-imports', {
     method: 'POST',
     headers: { authorization: `Bearer ${adminToken}`, 'content-type': 'application/json' },

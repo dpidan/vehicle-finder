@@ -48,6 +48,15 @@ export function ListingDetailPanel({
           <a className={styles.detailTitle} href={listing.url} target="_blank" rel="noreferrer">
             {listing.title}
           </a>
+          {listing.photoUrls?.length ? (
+            <div className={styles.photoStrip}>
+              {listing.photoUrls.slice(0, 6).map((url) => (
+                <a key={url} href={url} target="_blank" rel="noreferrer">
+                  <img src={url} alt={listing.title} loading="lazy" />
+                </a>
+              ))}
+            </div>
+          ) : null}
           <div className={styles.detailGrid}>
             <DetailItem label="Vehicle" value={vehicleLabel(listing.vehicle)} />
             <DetailItem label="VIN" value={listing.vehicle.vin ?? 'Missing'} />

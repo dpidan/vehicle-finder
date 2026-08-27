@@ -13,6 +13,7 @@ describe('manualImportToCandidate', () => {
         model: 'Sienna',
         price: 14900,
         mileage: 93000,
+        photoUrls: ['https://example.test/photo.jpg'],
         titleStatus: 'clean',
         sellerName: 'Private seller',
         description: 'Maintenance records available.'
@@ -23,6 +24,7 @@ describe('manualImportToCandidate', () => {
     assert.equal(candidate.source.name, 'manual import');
     assert.equal(candidate.vehicle.make, 'Toyota');
     assert.equal(candidate.price?.currency, 'USD');
+    assert.deepEqual(candidate.photoUrls, ['https://example.test/photo.jpg']);
     assert.equal(candidate.capturedAt, '2026-08-26T12:00:00.000Z');
     assert.equal(candidate.evidence?.[0]?.url, 'https://example.test/listing');
   });

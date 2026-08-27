@@ -74,6 +74,7 @@ export interface ListingCandidate {
     currency: 'USD';
   };
   mileage?: number;
+  photoUrls?: string[];
   titleStatus?: string;
   seller?: {
     name: string;
@@ -87,6 +88,7 @@ export interface ListingDetail {
     capturedAt: string;
     price?: ListingCandidate['price'];
     mileage?: number;
+    photoUrls?: string[];
   }>;
 }
 
@@ -106,6 +108,8 @@ export interface ManualImportPreview {
   candidate: ListingCandidate;
   rankedListing: RankedListingSummary['rankedListing'];
 }
+
+export type ManualImportInput = Record<string, string | number | string[]>;
 
 export interface ManualImportSaveResult {
   searchId: string;

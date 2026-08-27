@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { previewManualImport, saveManualImport } from './api.js';
 import { formatMoney, vehicleLabel } from './format.js';
 import styles from './App.module.css';
-import type { ManualImportPreview } from './types.js';
+import type { ManualImportInput, ManualImportPreview } from './types.js';
 
 export function ManualImportPanel({ searchId, onSaved }: { searchId: string; onSaved: () => void }) {
   const [preview, setPreview] = useState<ManualImportPreview | null>(null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const [lastPayload, setLastPayload] = useState<Record<string, string | number> | null>(null);
+  const [lastPayload, setLastPayload] = useState<ManualImportInput | null>(null);
 
   return (
     <section className={styles.manualImportPanel}>
@@ -48,6 +48,10 @@ export function ManualImportPanel({ searchId, onSaved }: { searchId: string; onS
         <label>
           <span>Mileage</span>
           <input name="mileage" inputMode="numeric" />
+        </label>
+        <label className={styles.fullWidthField}>
+          <span>Photo URLs</span>
+          <textarea name="photoUrls" rows={2} />
         </label>
         <label>
           <span>Title</span>
@@ -138,10 +142,11 @@ export function ManualImportPanel({ searchId, onSaved }: { searchId: string; onS
   }
 }
 
-function formPayload(formData: FormData): Record<string, string | number> {
+function formPayload(formData: FormData): ManualImportInput {
   return Object.fromEntries(
     Array.from(formData.entries())
       .map(([key, value]) => [key, String(value).trim()] as const)
+      .map(([key, value]) => [key, key === 'photoUrls' ? value.split(/\s+/).filter(Boolean) : value] as const)
       .filter(([, value]) => value.length > 0)
       .map(([key, value]) => [key, ['year', 'price', 'mileage'].includes(key) ? Number(value) : value])
   );
