@@ -4,6 +4,11 @@ This project exposes a minimal, protected MCP-shaped HTTP endpoint at `/mcp`.
 It is intended for the private family deployment and currently uses the same
 admin bearer token as other protected Worker routes.
 
+Current auth posture: `ADMIN_TOKEN` is a private shared API key for trusted
+users and clients. Longer term, the leading direction is app-native auth for the
+web app while keeping private MCP/API automation behind an API key until public
+MCP access is needed. See `docs/decisions/002-auth-posture.md`.
+
 Official OpenAI documentation describes remote MCP tools as using a server URL,
 optional authorization or headers, optional allowed-tool filters, and optional
 approval requirements:
@@ -118,7 +123,7 @@ Configure the client with:
 ## Current Limits
 
 - The endpoint is a minimal JSON-RPC HTTP transport, not the official MCP SDK.
-- Auth is a single shared admin token.
+- Auth is a single shared admin token/private API key.
 - There is no per-user authorization or separate audit log yet.
 - The mutation tool should require human approval in any client that supports
   approval policies.

@@ -141,7 +141,7 @@ Each source is implemented behind an adapter and classified by access type, such
 
 - Initial app stack is React + Vite for the dashboard and Hono on Cloudflare Workers for the API/MCP/scheduled server surface.
 - D1 schema/ORM choice.
-- Authentication approach for a simple family deployment now and public multi-user product later.
+- Current auth approach is `ADMIN_TOKEN` as a private shared API key; later likely app-native auth before public multi-user deployment.
 - Whether Waku, TanStack Start, RedwoodSDK, Astro, or another lightweight framework later earns adoption for richer routing, SSR, or app-shell needs.
 - Exact acquisition approach for each marketplace/aggregator.
 - How much historical vehicle-report data can be obtained legally and economically without paid services.
