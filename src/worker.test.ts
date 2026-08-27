@@ -650,6 +650,108 @@ describe('worker routes', () => {
     }
   });
 
+  it('requires the admin token for MCP tool preview routes', async () => {
+    const missingTokenTools = await app.request('/api/admin/mcp/tools', {}, env());
+    const wrongTokenTools = await app.request('/api/admin/mcp/tools', {}, env({ adminToken: 'secret' }));
+    const missingTokenCall = await app.request('/api/admin/mcp/tools/list_saved_searches/call', { method: 'POST' }, env());
+    const wrongTokenCall = await app.request(
+      '/api/admin/mcp/tools/list_saved_searches/call',
+      { method: 'POST' },
+      env({ adminToken: 'secret' })
+    );
+
+    assert.equal(missingTokenTools.status, 503);
+    assert.equal(wrongTokenTools.status, 401);
+    assert.equal(missingTokenCall.status, 503);
+    assert.equal(wrongTokenCall.status, 401);
+  });
+
+  it('lists MCP tool metadata through the protected preview route', async () => {
+    const response = await app.request('/api/admin/mcp/tools', { headers: { authorization: 'Bearer secret' } }, env({ adminToken: 'secret' }));
+    const body = (await response.json()) as { tools: Array<{ name: string; requiredArguments: string[] }> };
+
+    assert.equal(response.status, 200);
+    assert.ok(body.tools.some((tool) => tool.name === 'get_ranked_listings'));
+    assert.deepEqual(body.tools.find((tool) => tool.name === 'get_monitoring_summary')?.requiredArguments, [
+      'searchId',
+      'since',
+      'staleBefore'
+    ]);
+  });
+
+  it('calls MCP read tools through the protected preview route', async () => {
+    const db = env({ adminToken: 'secret', persistedListings: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+    const noArgs = await app.request(
+      '/api/admin/mcp/tools/list_saved_searches/call',
+      { method: 'POST', headers: { authorization: 'Bearer secret' } },
+      { DB: db, ADMIN_TOKEN: 'secret' }
+    );
+    const emptyArgs = await app.request(
+      '/api/admin/mcp/tools/list_saved_searches/call',
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer secret', 'content-type': 'application/json' },
+        body: '{}'
+      },
+      { DB: db, ADMIN_TOKEN: 'secret' }
+    );
+    const withArgs = await app.request(
+      '/api/admin/mcp/tools/get_ranked_listings/call',
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer secret', 'content-type': 'application/json' },
+        body: JSON.stringify({ searchId: 'family-replacement-vehicle' })
+      },
+      { DB: db, ADMIN_TOKEN: 'secret' }
+    );
+    const noArgsBody = (await noArgs.json()) as { ok: boolean; data: { searches: unknown[] } };
+    const emptyArgsBody = (await emptyArgs.json()) as { ok: boolean; data: { searches: unknown[] } };
+    const withArgsBody = (await withArgs.json()) as { ok: boolean; data: { rankedListings: unknown[] } };
+
+    assert.equal(noArgs.status, 200);
+    assert.equal(noArgsBody.ok, true);
+    assert.equal(noArgsBody.data.searches.length, 1);
+    assert.equal(emptyArgs.status, 200);
+    assert.equal(emptyArgsBody.ok, true);
+    assert.equal(emptyArgsBody.data.searches.length, 1);
+    assert.equal(withArgs.status, 200);
+    assert.equal(withArgsBody.ok, true);
+    assert.equal(withArgsBody.data.rankedListings.length, 2);
+    assert.equal(db.writes.length, 0);
+  });
+
+  it('validates MCP tool preview call bodies and tool names', async () => {
+    const invalidJson = await app.request(
+      '/api/admin/mcp/tools/list_saved_searches/call',
+      { method: 'POST', headers: { authorization: 'Bearer secret', 'content-type': 'application/json' }, body: '{' },
+      env({ adminToken: 'secret' })
+    );
+    const arrayBody = await app.request(
+      '/api/admin/mcp/tools/list_saved_searches/call',
+      { method: 'POST', headers: { authorization: 'Bearer secret', 'content-type': 'application/json' }, body: '[]' },
+      env({ adminToken: 'secret' })
+    );
+    const nullBody = await app.request(
+      '/api/admin/mcp/tools/list_saved_searches/call',
+      { method: 'POST', headers: { authorization: 'Bearer secret', 'content-type': 'application/json' }, body: 'null' },
+      env({ adminToken: 'secret' })
+    );
+    const unknownTool = await app.request(
+      '/api/admin/mcp/tools/nope/call',
+      { method: 'POST', headers: { authorization: 'Bearer secret' } },
+      env({ adminToken: 'secret' })
+    );
+
+    assert.equal(invalidJson.status, 400);
+    assert.deepEqual(await invalidJson.json(), { error: 'invalid-json' });
+    assert.equal(arrayBody.status, 400);
+    assert.deepEqual(await arrayBody.json(), { ok: false, error: 'invalid-arguments' });
+    assert.equal(nullBody.status, 400);
+    assert.deepEqual(await nullBody.json(), { ok: false, error: 'invalid-arguments' });
+    assert.equal(unknownTool.status, 400);
+    assert.deepEqual(await unknownTool.json(), { ok: false, error: 'unknown-tool' });
+  });
+
   it('returns a saved search by id', async () => {
     const response = await app.request('/api/searches/family-replacement-vehicle', {}, env());
     const body = (await response.json()) as { search: { config: { userId: string } } };

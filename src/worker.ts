@@ -17,6 +17,7 @@ import {
   writeSearchEvaluations
 } from './services/search-service.js';
 import { manualImportToCandidate, type ManualImportInput } from './sources/manual-import.js';
+import { callMcpTool, mcpTools } from './mcp/tools.js';
 import { cypressDealerCarSearchSeeds } from './sources/dealer-car-search-seeds.js';
 import { dealerCarSearchSource } from './sources/dealer-car-search-source.js';
 import { collectSampleListings } from './sources/sample-source.js';
@@ -313,6 +314,42 @@ app.post('/api/admin/searches/:id/refresh', async (c) => {
   });
 });
 
+app.get('/api/admin/mcp/tools', (c) => {
+  const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
+
+  if (unauthorized) {
+    return c.json({ error: unauthorized }, unauthorized === 'admin-token-not-configured' ? 503 : 401);
+  }
+
+  return c.json({ tools: mcpTools });
+});
+
+app.post('/api/admin/mcp/tools/:name/call', async (c) => {
+  const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
+
+  if (unauthorized) {
+    return c.json({ error: unauthorized }, unauthorized === 'admin-token-not-configured' ? 503 : 401);
+  }
+
+  let body: unknown = {};
+  const text = await c.req.text();
+
+  if (text.trim()) {
+    try {
+      body = JSON.parse(text) as unknown;
+    } catch {
+      return c.json({ error: 'invalid-json' }, 400);
+    }
+  }
+
+  if (!isRecord(body)) {
+    return c.json({ ok: false, error: 'invalid-arguments' }, 400);
+  }
+
+  const result = await callMcpTool(c.env.DB, c.req.param('name'), body);
+  return c.json(result, result.ok ? 200 : result.error === 'not-found' ? 404 : 400);
+});
+
 app.post('/api/manual-imports/preview', async (c) => {
   const body = (await c.req.json()) as ManualImportInput & { searchId?: string };
   let candidate;
@@ -370,6 +407,10 @@ function isDispositionInput(value: Partial<ListingDispositionInput>): value is L
         (nextAction.dueAt === undefined || !Number.isNaN(Date.parse(nextAction.dueAt))) &&
         (nextAction.note === undefined || typeof nextAction.note === 'string')))
   );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export async function refreshEnabledSavedSearches(db: D1Database, refreshedAt: string): Promise<{
