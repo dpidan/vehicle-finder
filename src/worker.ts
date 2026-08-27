@@ -8,6 +8,7 @@ import {
   listingExists,
   listLatestSearchEvaluations,
   listListingChanges,
+  listModelYearRisksForVehicle,
   listSavedSearches,
   listStaleListings,
   rankPersistedListingsForSavedSearch,
@@ -383,10 +384,11 @@ app.post('/api/manual-imports/preview', async (c) => {
   if (!search) {
     return c.json({ error: 'not-found' }, 404);
   }
+  const risks = await listModelYearRisksForVehicle(c.env.DB, candidate.vehicle.make, candidate.vehicle.model, candidate.vehicle.year);
 
   return c.json({
     candidate,
-    rankedListing: rankListingsForSearch(search.config, [candidate])[0]
+    rankedListing: rankListingsForSearch(search.config, [{ ...candidate, risks }])[0]
   });
 });
 

@@ -34,7 +34,7 @@
 
 22. Add cached VIN decoding.
 23. Add recall lookup where appropriate.
-24. Partial — structured model/year risk records seeded and shown in listing detail; scoring impact still pending.
+24. Partial — structured model/year risk records seeded, shown in listing detail, and used in scoring; evidence weighting still pending.
 25. Add estimated immediate-maintenance items.
 26. Add effective-purchase-cost calculation.
 27. Add anomaly / "why is this cheap?" flags.

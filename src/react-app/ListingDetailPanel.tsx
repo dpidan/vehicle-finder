@@ -197,6 +197,7 @@ function factorLabel(factor: ScoreFactor): string {
     'mileage-fit': 'Mileage fit',
     'missing-maintenance-evidence': 'Missing maintenance evidence',
     'missing-vin': 'Missing VIN',
+    'model-year-risk': 'Model-year risk',
     'model-preference': 'Model preference',
     'title-status-mismatch': 'Title status mismatch'
   };

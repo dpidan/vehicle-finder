@@ -146,6 +146,7 @@ export interface ListingCandidate {
   price?: MoneyAmount;
   mileage?: number;
   photoUrls?: string[];
+  risks?: ModelYearRisk[];
   titleStatus?: TitleStatus;
   location?: GeoPoint;
   rawDescription?: string;

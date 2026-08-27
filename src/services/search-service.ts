@@ -239,7 +239,12 @@ export async function rankSampleListingsForSavedSearch(
 }
 
 export async function rankPersistedListingsForSavedSearch(db: D1Database, search: SavedSearch): Promise<RankedPersistedListing[]> {
-  const candidates = await listPersistedListingCandidates(db, search.id);
+  const candidates = await Promise.all(
+    (await listPersistedListingCandidates(db, search.id)).map(async (candidate) => ({
+      ...candidate,
+      risks: await listModelYearRisksForVehicle(db, candidate.vehicle.make, candidate.vehicle.model, candidate.vehicle.year)
+    }))
+  );
   const listingIds = new WeakMap<ListingCandidate, string>();
   const dispositions = new WeakMap<ListingCandidate, ListingDisposition | null>();
 

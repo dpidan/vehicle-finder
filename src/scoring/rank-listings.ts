@@ -38,6 +38,15 @@ function scoreListing(search: SavedSearchConfig, listing: ListingCandidate): Ran
     factors.push(factor('model-preference', 'score.modelPreference', impact));
   }
 
+  const riskImpact = modelYearRiskImpact(listing);
+  if (riskImpact !== 0) {
+    vehicleScore += riskImpact;
+    factors.push(factor('model-year-risk', 'score.modelYearRisk', riskImpact));
+  }
+  if (listing.risks?.some((risk) => risk.rating === 'caution' || risk.rating === 'avoid-unless-remediated')) {
+    flags.push('model-year-risk');
+  }
+
   if (listing.titleStatus && search.filters.titleStatuses?.includes(listing.titleStatus)) {
     vehicleScore += 10;
     factors.push(factor('clean-title', 'score.cleanTitle', 10));
@@ -129,6 +138,17 @@ function priceScoreImpact(search: SavedSearchConfig, listing: ListingCandidate):
   }
 
   return -20;
+}
+
+function modelYearRiskImpact(listing: ListingCandidate): number {
+  const risks = listing.risks ?? [];
+
+  if (risks.some((risk) => risk.rating === 'avoid-unless-remediated')) return -18;
+  if (risks.some((risk) => risk.rating === 'caution')) return -10;
+  if (risks.some((risk) => risk.rating === 'preferred')) return 8;
+  if (risks.some((risk) => risk.rating === 'good')) return 5;
+
+  return 0;
 }
 
 function factor(key: string, messageKey: string, scoreImpact: number): ScoreFactor {
