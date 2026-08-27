@@ -41,4 +41,4 @@ When responding to a request, if it is not clear or already part of the plan, fi
 
 When a self-encompassed change is complete:
 - do a quick code review of your changes
-- provide recommended Git commit messages and a short summary of the change.
+- provide a short summary of the change and what the new work does as well as a recommended Git commit message.

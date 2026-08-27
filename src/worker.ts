@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { importListingCandidates } from './services/inventory-service.js';
+import { filterThresholdMatches, formatMonitoringDigest, isIsoDateTime, type MonitoringSummary } from './services/monitoring-service.js';
 import {
   getSavedSearch,
   getListingDetail,
@@ -12,10 +13,7 @@ import {
   rankPersistedListingsForSavedSearch,
   rankSampleListingsForSavedSearch,
   setListingDisposition,
-  type ListingChanges,
   type ListingDispositionInput,
-  type SearchEvaluationSummary,
-  type StaleListingSummary,
   writeSearchEvaluations
 } from './services/search-service.js';
 import { manualImportToCandidate, type ManualImportInput } from './sources/manual-import.js';
@@ -157,14 +155,16 @@ app.get('/api/searches/:id/monitoring-summary', async (c) => {
   const minimumVehicleScore = search.config.notifications.minimumVehicleScore;
   const minimumDealScore = search.config.notifications.minimumDealScore;
 
-  return c.json({
+  const summary: MonitoringSummary = {
     searchId: search.id,
     since,
     staleBefore,
     changes,
     staleListings,
     thresholdMatches: filterThresholdMatches(evaluations, minimumVehicleScore, minimumDealScore)
-  });
+  };
+
+  return c.json(summary);
 });
 
 app.get('/api/searches/:id/monitoring-digest', async (c) => {
@@ -194,7 +194,7 @@ app.get('/api/searches/:id/monitoring-digest', async (c) => {
   const thresholdMatches = filterThresholdMatches(evaluations, minimumVehicleScore, minimumDealScore);
 
   return c.text(
-    formatMonitoringDigest(search.name, since, staleBefore, changes, staleListings, thresholdMatches),
+    formatMonitoringDigest(search.name, { searchId: search.id, since, staleBefore, changes, staleListings, thresholdMatches }),
     200,
     { 'content-type': 'text/plain; charset=utf-8' }
   );
@@ -349,67 +349,6 @@ function requireAdminToken(request: Request, expected: string | undefined): 'adm
   }
 
   return request.headers.get('authorization') === `Bearer ${expected}` ? undefined : 'unauthorized';
-}
-
-function isIsoDateTime(value: string | undefined): value is string {
-  if (!value) {
-    return false;
-  }
-
-  const date = new Date(value);
-  return !Number.isNaN(date.getTime()) && date.toISOString() === value;
-}
-
-function filterThresholdMatches(
-  evaluations: SearchEvaluationSummary[],
-  minimumVehicleScore: number | undefined,
-  minimumDealScore: number | undefined
-): SearchEvaluationSummary[] {
-  return minimumVehicleScore === undefined && minimumDealScore === undefined
-    ? []
-    : evaluations.filter(
-        (evaluation) =>
-          (minimumVehicleScore === undefined || evaluation.vehicleScore >= minimumVehicleScore) &&
-          (minimumDealScore === undefined || evaluation.dealScore >= minimumDealScore)
-      );
-}
-
-function formatMonitoringDigest(
-  searchName: string,
-  since: string,
-  staleBefore: string,
-  changes: ListingChanges,
-  staleListings: StaleListingSummary[],
-  thresholdMatches: SearchEvaluationSummary[]
-): string {
-  const lines = [
-    `${searchName} monitoring digest`,
-    `Window since: ${since}`,
-    `Stale before: ${staleBefore}`,
-    '',
-    `New listings: ${changes.newListings.length}`,
-    ...changes.newListings.map((listing) => `- ${listing.title} ${formatPrice(listing.currentPrice)} ${listing.url}`.trim()),
-    '',
-    `Price drops: ${changes.priceDrops.length}`,
-    ...changes.priceDrops.map((listing) =>
-      `- ${listing.title} ${formatPrice(listing.previousPrice)} -> ${formatPrice(listing.currentPrice)} ${listing.url}`.trim()
-    ),
-    '',
-    `Stale listings: ${staleListings.length}`,
-    ...staleListings.map((listing) => `- ${listing.title} last seen ${listing.lastSeenAt} ${listing.url}`),
-    '',
-    `Score threshold matches: ${thresholdMatches.length}`,
-    ...thresholdMatches.map(
-      (evaluation) =>
-        `- ${evaluation.listing.title} vehicle ${evaluation.vehicleScore}, deal ${evaluation.dealScore} ${evaluation.listing.url}`
-    )
-  ];
-
-  return `${lines.join('\n')}\n`;
-}
-
-function formatPrice(price: { amount: number; currency: 'USD' } | undefined): string {
-  return price ? `$${price.amount.toLocaleString('en-US')}` : 'unknown price';
 }
 
 function isDispositionInput(value: Partial<ListingDispositionInput>): value is ListingDispositionInput {
