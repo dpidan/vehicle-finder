@@ -45,11 +45,11 @@
 29. Done — search selector.
 30. Done — ranked result list.
 31. Done — Vehicle vs Deal Score explanation.
-32. Partial — listing details; photos still pending.
+32. Partial — listing details and manual-import preview; photos/save-from-preview still pending.
 33. Done — favorites / contacted / inspection / rejected states.
-34. Next action and follow-up tracking.
+34. Done — next action and follow-up tracking basics.
 35. Done — rejection reasons.
-36. Candidate comparison.
+36. Done — candidate comparison basics.
 
 ## Monitoring
 
