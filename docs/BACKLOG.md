@@ -44,7 +44,7 @@
 28. Partial — cached VIN decoding supports admin-triggered single-VIN decode and saved-search VIN enrichment; automatic scheduled enrichment still pending.
 29. Partial — cached NHTSA recall lookup by model year/make/model and listing-detail display; scoring integration still pending.
 30. Partial — structured model/year risk records seeded, shown in listing detail, and used in scoring; evidence weighting still pending.
-31. Partial — estimated immediate-maintenance items parse explicit listing text; richer repair catalog still pending.
+31. Done — estimated immediate-maintenance items parse explicit listing text; richer repair catalog remains later research.
 32. Done — effective-purchase-cost calculation using asking price plus saved-search maintenance reserve and explicit maintenance items.
 33. Partial — anomaly / "why is this cheap?" flags include low-price transparency checks; market-comparable pricing still pending.
 34. Partial — inspection guidance shown in listing detail; persisted checklist state still pending.
@@ -90,6 +90,7 @@
 - Dealer-platform adapter reuse opportunities.
 - Business-search APIs for automatic dealer discovery within a saved-search radius.
 - Optional paid vehicle-history data and whether it provides enough incremental value.
+- Richer repair-cost catalog for immediate-maintenance estimates.
 - MCP authentication options on Cloudflare.
 - Whether Waku, TanStack Start, RedwoodSDK, Astro, or another lightweight framework becomes useful for richer dashboard needs.
 - pnpm workspace transition once multiple independently built apps/packages exist.
