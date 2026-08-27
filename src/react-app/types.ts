@@ -101,3 +101,8 @@ export interface MonitoringSummary {
   staleListings: unknown[];
   thresholdMatches: unknown[];
 }
+
+export interface ManualImportPreview {
+  candidate: ListingCandidate;
+  rankedListing: RankedListingSummary['rankedListing'];
+}

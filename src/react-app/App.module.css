@@ -178,6 +178,14 @@
   background: var(--color-surface);
 }
 
+.manualImportPanel {
+  margin: var(--space-5) var(--space-6) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
 .compareWrap {
   overflow-x: auto;
 }
@@ -465,6 +473,13 @@
   gap: var(--space-3);
 }
 
+.manualImportForm {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
 .nextActionForm label {
   display: grid;
   gap: var(--space-1);
@@ -475,8 +490,21 @@
   text-transform: uppercase;
 }
 
+.manualImportForm label {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .nextActionForm input,
-.nextActionForm select {
+.nextActionForm select,
+.manualImportForm input,
+.manualImportForm select,
+.manualImportForm textarea {
   min-height: 36px;
   min-width: 0;
   border: 1px solid var(--color-border);
@@ -488,8 +516,43 @@
   text-transform: none;
 }
 
+.manualImportForm textarea {
+  padding-block: var(--space-2);
+  resize: vertical;
+}
+
 .fullWidthField {
   grid-column: 1 / -1;
+}
+
+.formError {
+  margin: 0;
+  padding: 0 var(--space-4) var(--space-4);
+  color: #a33828;
+  font-weight: 700;
+}
+
+.manualPreview {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(0, auto));
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.manualPreview div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.manualPreview strong {
+  color: var(--color-text);
+}
+
+.manualPreview span {
+  color: var(--color-muted);
+  font-size: 0.86rem;
 }
 
 .snapshotList li {
@@ -547,6 +610,10 @@
     margin: var(--space-4) var(--space-4) 0;
   }
 
+  .manualImportPanel {
+    margin: var(--space-4) var(--space-4) 0;
+  }
+
   .monitoringGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -561,6 +628,11 @@
   }
 
   .nextActionForm {
+    grid-template-columns: 1fr;
+  }
+
+  .manualImportForm,
+  .manualPreview {
     grid-template-columns: 1fr;
   }
 }

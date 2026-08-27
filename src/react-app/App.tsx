@@ -4,6 +4,7 @@ import { bestScore, emptyMessage, emptyTitle, filterAndSortListings, statusLabel
 import { ComparisonPanel } from './ComparisonPanel.js';
 import { ListingDetailPanel } from './ListingDetailPanel.js';
 import { ListingTable } from './ListingTable.js';
+import { ManualImportPanel } from './ManualImportPanel.js';
 import { Metric } from './Metric.js';
 import { MonitoringSummaryPanel } from './MonitoringSummaryPanel.js';
 import { PublicHome } from './PublicHome.js';
@@ -162,6 +163,7 @@ function DashboardShell() {
         listings={comparedListings}
         onRemove={(listingId) => setCompareListingIds((ids) => ids.filter((id) => id !== listingId))}
       />
+      <ManualImportPanel searchId={selectedSearchId} />
 
       <div className={styles.workspace}>
         <section className={styles.listPanel}>

@@ -2,6 +2,7 @@ import type {
   ListingDetail,
   ListingDisposition,
   ListingDispositionState,
+  ManualImportPreview,
   MonitoringSummary,
   NextAction,
   RankedListingSummary,
@@ -29,6 +30,14 @@ export function fetchMonitoringSummary(searchId: string): Promise<MonitoringSumm
   return fetchJson<MonitoringSummary>(
     `/api/searches/${searchId}/monitoring-summary?since=${encodeURIComponent(since)}&staleBefore=${encodeURIComponent(staleBefore)}`
   );
+}
+
+export function previewManualImport(searchId: string, input: Record<string, string | number>): Promise<ManualImportPreview> {
+  return fetchJson<ManualImportPreview>('/api/manual-imports/preview', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ searchId, ...input })
+  });
 }
 
 export async function saveListingDisposition(
