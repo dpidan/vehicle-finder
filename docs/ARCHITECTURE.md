@@ -39,6 +39,25 @@ React + Vite is the initial dashboard choice because React is ubiquitous and kee
 
 Hono is the initial server framework because it is lightweight, TypeScript-friendly, built on web-standard `Request`/`Response`, and portable across Cloudflare Workers, Node.js, Bun, Deno, and other compatible hosts. Hono routes should stay thin and delegate durable behavior to domain services that can also back MCP and non-Worker collectors.
 
+The initial web route shape should keep one Cloudflare Worker deployment:
+
+```text
+/
+  public marketing/info area
+
+/app/*
+  auth-protected React dashboard
+
+/api/*
+  auth-protected JSON API
+
+/mcp
+  auth-protected MCP endpoint
+```
+
+Use Workers Assets for the React SPA when the dashboard is added, with Hono
+continuing to own the API, MCP, and scheduled surfaces.
+
 Waku, TanStack Start, RedwoodSDK, Astro, and similar frameworks remain revisit candidates if the dashboard grows enough to need richer routing, SSR, streaming, or framework-managed React integration. Avoid making React Server Components or server actions the core data model unless a later product requirement clearly justifies that tradeoff.
 
 ## Repository shape
