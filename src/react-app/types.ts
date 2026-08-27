@@ -36,7 +36,23 @@ export interface ListingDisposition {
   listingId: string;
   state: ListingDispositionState;
   rejectionReason?: string;
+  nextAction?: NextAction;
   updatedAt: string;
+}
+
+export type NextActionType =
+  | 'request-vin'
+  | 'ask-maintenance-records'
+  | 'ask-out-the-door-price'
+  | 'schedule-inspection'
+  | 'follow-up'
+  | 'compare'
+  | 'none';
+
+export interface NextAction {
+  type: NextActionType;
+  dueAt?: string;
+  note?: string;
 }
 
 export interface ListingCandidate {

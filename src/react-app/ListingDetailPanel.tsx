@@ -1,17 +1,41 @@
+import { useEffect, useState } from 'react';
 import { detailEmptyMessage, detailEmptyTitle, formatDate, formatMoney, statusLabel, vehicleLabel } from './format.js';
 import styles from './App.module.css';
-import type { ListingDetail, RankedListingSummary, ScoreFactor } from './types.js';
+import type { ListingDetail, ListingDisposition, NextAction, NextActionType, RankedListingSummary, ScoreFactor } from './types.js';
+
+const nextActionOptions: Array<{ value: NextActionType; label: string }> = [
+  { value: 'none', label: 'None' },
+  { value: 'request-vin', label: 'Request VIN' },
+  { value: 'ask-maintenance-records', label: 'Ask for records' },
+  { value: 'ask-out-the-door-price', label: 'Ask OTD price' },
+  { value: 'schedule-inspection', label: 'Schedule inspection' },
+  { value: 'follow-up', label: 'Follow up' },
+  { value: 'compare', label: 'Compare' }
+];
 
 export function ListingDetailPanel({
   detail,
   ranking,
+  disposition,
+  onNextActionSave,
   status
 }: {
   detail: ListingDetail | null;
   ranking: RankedListingSummary['rankedListing'] | null;
+  disposition: ListingDisposition | null;
+  onNextActionSave: (nextAction: NextAction) => void;
   status: 'idle' | 'loading' | 'ready' | 'error';
 }) {
   const listing = detail?.listing;
+  const [nextActionType, setNextActionType] = useState<NextActionType>('none');
+  const [nextActionDueAt, setNextActionDueAt] = useState('');
+  const [nextActionNote, setNextActionNote] = useState('');
+
+  useEffect(() => {
+    setNextActionType(disposition?.nextAction?.type ?? 'none');
+    setNextActionDueAt(toDateTimeInputValue(disposition?.nextAction?.dueAt));
+    setNextActionNote(disposition?.nextAction?.note ?? '');
+  }, [disposition?.nextAction?.dueAt, disposition?.nextAction?.note, disposition?.nextAction?.type]);
 
   return (
     <aside className={styles.detailPanel}>
@@ -57,6 +81,30 @@ export function ListingDetailPanel({
               )}
             </>
           ) : null}
+          <h3>Next action</h3>
+          <form className={styles.nextActionForm} onSubmit={saveNextAction}>
+            <label>
+              <span>Action</span>
+              <select value={nextActionType} onChange={(event) => setNextActionType(event.target.value as NextActionType)}>
+                {nextActionOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Due</span>
+              <input type="datetime-local" value={nextActionDueAt} onChange={(event) => setNextActionDueAt(event.target.value)} />
+            </label>
+            <label className={styles.fullWidthField}>
+              <span>Note</span>
+              <input value={nextActionNote} onChange={(event) => setNextActionNote(event.target.value)} />
+            </label>
+            <button className={styles.secondaryButton} type="submit">
+              Save action
+            </button>
+          </form>
           <h3>Recent snapshots</h3>
           {detail.snapshots.length ? (
             <ol className={styles.snapshotList}>
@@ -80,6 +128,21 @@ export function ListingDetailPanel({
       )}
     </aside>
   );
+
+  function saveNextAction(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onNextActionSave({
+      type: nextActionType,
+      ...(nextActionDueAt ? { dueAt: new Date(nextActionDueAt).toISOString() } : {}),
+      ...(nextActionNote.trim() ? { note: nextActionNote.trim() } : {})
+    });
+  }
+}
+
+function toDateTimeInputValue(value: string | undefined): string {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 16);
 }
 
 function formatImpact(scoreImpact: number): string {

@@ -406,6 +406,39 @@
   color: #a33828;
 }
 
+.nextActionForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.nextActionForm label {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.nextActionForm input,
+.nextActionForm select {
+  min-height: 36px;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-1);
+  padding: 0 var(--space-2);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  text-transform: none;
+}
+
+.fullWidthField {
+  grid-column: 1 / -1;
+}
+
 .snapshotList li {
   display: grid;
   grid-template-columns: minmax(110px, 1fr) auto auto;
@@ -467,6 +500,10 @@
   }
 
   .snapshotList li {
+    grid-template-columns: 1fr;
+  }
+
+  .nextActionForm {
     grid-template-columns: 1fr;
   }
 }

@@ -1,4 +1,12 @@
-import type { ListingDetail, ListingDisposition, ListingDispositionState, MonitoringSummary, RankedListingSummary, SavedSearchSummary } from './types.js';
+import type {
+  ListingDetail,
+  ListingDisposition,
+  ListingDispositionState,
+  MonitoringSummary,
+  NextAction,
+  RankedListingSummary,
+  SavedSearchSummary
+} from './types.js';
 
 export async function fetchSavedSearches(): Promise<SavedSearchSummary[]> {
   const { searches } = await fetchJson<{ searches: SavedSearchSummary[] }>('/api/searches');
@@ -27,14 +35,15 @@ export async function saveListingDisposition(
   searchId: string,
   listingId: string,
   state: ListingDispositionState,
-  rejectionReason?: string
+  rejectionReason?: string,
+  nextAction?: NextAction
 ): Promise<ListingDisposition> {
   const { disposition } = await fetchJson<{ disposition: ListingDisposition }>(
     `/api/searches/${searchId}/listings/${listingId}/disposition`,
     {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ state, ...(rejectionReason ? { rejectionReason } : {}) })
+      body: JSON.stringify({ state, ...(rejectionReason ? { rejectionReason } : {}), ...(nextAction ? { nextAction } : {}) })
     }
   );
   return disposition;

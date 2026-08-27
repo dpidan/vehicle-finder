@@ -7,7 +7,7 @@ import { Metric } from './Metric.js';
 import { MonitoringSummaryPanel } from './MonitoringSummaryPanel.js';
 import { PublicHome } from './PublicHome.js';
 import styles from './App.module.css';
-import type { ListingDetail, ListingDispositionState, MonitoringSummary, RankedListingSummary, SavedSearchSummary, SortMode } from './types.js';
+import type { ListingDetail, ListingDispositionState, MonitoringSummary, NextAction, RankedListingSummary, SavedSearchSummary, SortMode } from './types.js';
 
 export function App() {
   const isDashboard = window.location.pathname.startsWith('/app');
@@ -178,7 +178,13 @@ function DashboardShell() {
           )}
         </section>
 
-        <ListingDetailPanel detail={listingDetail} ranking={selectedRanking?.rankedListing ?? null} status={detailStatus} />
+        <ListingDetailPanel
+          detail={listingDetail}
+          ranking={selectedRanking?.rankedListing ?? null}
+          disposition={selectedRanking?.disposition ?? null}
+          status={detailStatus}
+          onNextActionSave={(nextAction) => updateNextAction(selectedSearchId, selectedListingId, nextAction)}
+        />
       </div>
       <p className={styles.srStatus} aria-live="polite">
         {workflowStatus}
@@ -197,13 +203,37 @@ function DashboardShell() {
     setWorkflowStatus('Saving workflow state.');
 
     try {
-      const disposition = await saveListingDisposition(searchId, listingId, state, rejectionReason);
+      const currentDisposition = rankedListings.find((item) => item.listingId === listingId)?.disposition;
+      const disposition = await saveListingDisposition(searchId, listingId, state, rejectionReason, currentDisposition?.nextAction);
       setRankedListings((items) =>
         items.map((item) => (item.listingId === listingId ? { ...item, disposition } : item))
       );
       setWorkflowStatus('Workflow state saved.');
     } catch {
       setWorkflowStatus('Could not save workflow state.');
+    }
+  }
+
+  async function updateNextAction(searchId: string, listingId: string, nextAction: NextAction) {
+    const currentDisposition = rankedListings.find((item) => item.listingId === listingId)?.disposition;
+    const state = currentDisposition?.state ?? 'interested';
+    const rejectionReason = state === 'rejected' ? currentDisposition?.rejectionReason : undefined;
+
+    if (state === 'rejected' && !rejectionReason) {
+      setWorkflowStatus('Rejected listings need a reason.');
+      return;
+    }
+
+    setWorkflowStatus('Saving next action.');
+
+    try {
+      const disposition = await saveListingDisposition(searchId, listingId, state, rejectionReason, nextAction);
+      setRankedListings((items) =>
+        items.map((item) => (item.listingId === listingId ? { ...item, disposition } : item))
+      );
+      setWorkflowStatus('Next action saved.');
+    } catch {
+      setWorkflowStatus('Could not save next action.');
     }
   }
 }
