@@ -1,4 +1,4 @@
-import type { ListingCandidate, ListingDisposition, ListingDispositionState, NextAction, SavedSearch } from '../domain/entities.js';
+import type { ListingCandidate, ListingDisposition, ListingDispositionState, ModelYearRisk, NextAction, SavedSearch } from '../domain/entities.js';
 import type { SavedSearchConfig } from '../domain/search-config.js';
 import { rankListingsForSearch, type RankedListing } from '../scoring/rank-listings.js';
 import { collectSampleListings } from '../sources/sample-source.js';
@@ -65,6 +65,7 @@ interface SnapshotRow {
 
 export interface ListingDetail {
   listing: ListingCandidate;
+  risks: ModelYearRisk[];
   snapshots: Array<{
     id: string;
     capturedAt: string;
@@ -120,6 +121,24 @@ interface SearchEvaluationRow {
   year: number | null;
   make: string | null;
   model: string | null;
+}
+
+interface ModelYearRiskRow {
+  id: string;
+  make: string;
+  model: string;
+  year_start: number;
+  year_end: number;
+  rating: ModelYearRisk['rating'];
+  trim_json: string | null;
+  engine_json: string | null;
+  transmission_json: string | null;
+  issue: string;
+  category: ModelYearRisk['category'];
+  severity: number;
+  inspect_for_json: string;
+  remediation_json: string | null;
+  evidence_ids_json: string;
 }
 
 export interface SearchEvaluationSummary {
@@ -487,9 +506,11 @@ export async function getListingDetail(db: D1Database, id: string): Promise<List
     )
     .bind(id)
     .all<SnapshotRow>();
+  const risks = await listModelYearRisksForVehicle(db, row.make, row.model, row.year);
 
   return {
     listing: withoutListingId(toListingCandidate(row)),
+    risks,
     snapshots: results.map(toSnapshot)
   };
 }
@@ -497,6 +518,30 @@ export async function getListingDetail(db: D1Database, id: string): Promise<List
 export async function listingExists(db: D1Database, id: string): Promise<boolean> {
   const row = await db.prepare(`SELECT id FROM listings WHERE id = ?`).bind(id).first<{ id: string }>();
   return Boolean(row);
+}
+
+export async function listModelYearRisksForVehicle(
+  db: D1Database,
+  make: string | null | undefined,
+  model: string | null | undefined,
+  year: number | null | undefined
+): Promise<ModelYearRisk[]> {
+  if (!make || !model || !year) return [];
+
+  const { results } = await db
+    .prepare(
+      `SELECT id, make, model, year_start, year_end, rating, trim_json, engine_json, transmission_json,
+              issue, category, severity, inspect_for_json, remediation_json, evidence_ids_json
+       FROM model_year_risks
+       WHERE lower(make) = lower(?)
+         AND lower(model) = lower(?)
+         AND ? BETWEEN year_start AND year_end
+       ORDER BY severity DESC, year_start DESC`
+    )
+    .bind(make, model, year)
+    .all<ModelYearRiskRow>();
+
+  return results.map(toModelYearRisk);
 }
 
 export async function getListingDisposition(
@@ -745,4 +790,27 @@ function toSearchEvaluationSummary(row: SearchEvaluationRow): SearchEvaluationSu
       ...(row.model ? { model: row.model } : {})
     }
   };
+}
+
+function toModelYearRisk(row: ModelYearRiskRow): ModelYearRisk {
+  const risk: ModelYearRisk = {
+    id: row.id,
+    make: row.make,
+    model: row.model,
+    yearStart: row.year_start,
+    yearEnd: row.year_end,
+    rating: row.rating,
+    issue: row.issue,
+    category: row.category,
+    severity: row.severity,
+    inspectFor: JSON.parse(row.inspect_for_json) as string[],
+    evidenceIds: JSON.parse(row.evidence_ids_json) as string[]
+  };
+
+  if (row.trim_json) risk.trim = JSON.parse(row.trim_json) as string[];
+  if (row.engine_json) risk.engine = JSON.parse(row.engine_json) as string[];
+  if (row.transmission_json) risk.transmission = JSON.parse(row.transmission_json) as string[];
+  if (row.remediation_json) risk.remediation = JSON.parse(row.remediation_json) as NonNullable<ModelYearRisk['remediation']>;
+
+  return risk;
 }

@@ -90,6 +90,26 @@ export function ListingDetailPanel({
               )}
             </>
           ) : null}
+          {detail.risks.length ? (
+            <>
+              <h3>Model-year notes</h3>
+              <ol className={styles.riskList}>
+                {detail.risks.map((risk) => (
+                  <li key={risk.id}>
+                    <strong>{risk.rating}</strong>
+                    <span>{risk.issue}</span>
+                    {risk.inspectFor.length ? (
+                      <ul>
+                        {risk.inspectFor.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </li>
+                ))}
+              </ol>
+            </>
+          ) : null}
           <h3>Next action</h3>
           <form className={styles.nextActionForm} onSubmit={saveNextAction}>
             <label>

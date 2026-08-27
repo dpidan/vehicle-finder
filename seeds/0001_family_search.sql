@@ -25,3 +25,73 @@ VALUES (
   '2026-08-25T00:00:00.000Z',
   '2026-08-25T00:00:00.000Z'
 );
+
+INSERT INTO model_year_risks (
+  id,
+  make,
+  model,
+  year_start,
+  year_end,
+  rating,
+  trim_json,
+  engine_json,
+  transmission_json,
+  issue,
+  category,
+  severity,
+  inspect_for_json,
+  remediation_json,
+  evidence_ids_json
+)
+VALUES
+  (
+    'risk-honda-odyssey-2011-2013-vcm',
+    'Honda',
+    'Odyssey',
+    2011,
+    2013,
+    'caution',
+    NULL,
+    NULL,
+    NULL,
+    'VCM, misfire, piston-ring, sliding-door, and timing-belt history should be verified.',
+    'engine',
+    7,
+    '["Ask for timing-belt service records","Verify misfire or oil-consumption history","Test power sliding doors"]',
+    NULL,
+    '[]'
+  ),
+  (
+    'risk-honda-pilot-2012-2013-vcm',
+    'Honda',
+    'Pilot',
+    2012,
+    2013,
+    'caution',
+    NULL,
+    NULL,
+    NULL,
+    'Piston-ring, misfire, oil-consumption, and torque-converter behavior should be verified.',
+    'engine',
+    7,
+    '["Ask for oil-consumption or misfire repair history","Check transmission behavior on test drive","Verify timing-belt service"]',
+    NULL,
+    '[]'
+  ),
+  (
+    'risk-toyota-sienna-2015-2016-sliding-doors',
+    'Toyota',
+    'Sienna',
+    2015,
+    2016,
+    'preferred',
+    NULL,
+    NULL,
+    NULL,
+    'Generally preferred years, with power sliding-door operation still worth checking.',
+    'body',
+    3,
+    '["Test both power sliding doors","Check door cable and latch operation","Verify maintenance records"]',
+    NULL,
+    '[]'
+  );

@@ -332,9 +332,10 @@ describe('worker routes', () => {
   });
 
   it('returns listing detail with recent snapshots', async () => {
-    const response = await app.request('/api/listings/listing-sienna', {}, env({ listingDetail: true }));
+    const response = await app.request('/api/listings/listing-sienna', {}, env({ listingDetail: true, modelYearRisks: true }));
     const body = (await response.json()) as {
       listing: { title: string; vehicle: { vin: string }; seller: { phone: string }; price: { amount: number }; mileage: number };
+      risks: Array<{ issue: string; inspectFor: string[] }>;
       snapshots: Array<{ capturedAt: string; price: { amount: number }; mileage: number }>;
     };
 
@@ -344,6 +345,8 @@ describe('worker routes', () => {
     assert.equal(body.listing.seller.phone, '555-0100');
     assert.equal(body.listing.price.amount, 9900);
     assert.equal(body.listing.mileage, 93000);
+    assert.equal(body.risks[0]?.issue, 'Generally preferred years, with power sliding-door operation still worth checking.');
+    assert.deepEqual(body.risks[0]?.inspectFor, ['Test both power sliding doors']);
     assert.deepEqual(
       body.snapshots.map((snapshot) => snapshot.capturedAt),
       ['2026-08-26T13:00:00.000Z', '2026-08-26T12:00:00.000Z']
@@ -992,6 +995,7 @@ function env(
     noNotificationThresholds?: boolean;
     disposition?: true | 'existing';
     evaluations?: boolean;
+    modelYearRisks?: boolean;
   } = {}
 ): Env {
   const writes: Array<{ sql: string; values: unknown[] }> = [];
@@ -1028,6 +1032,8 @@ function env(
                     ? [priceDropChangeRow]
                   : options.staleListings && id === savedSearchRow.id && sql.includes('listings.last_seen_at < ?')
                     ? [staleListingRow]
+                  : options.modelYearRisks && sql.includes('FROM model_year_risks')
+                    ? [modelYearRiskRow]
                   : options.listingDetail && id === 'listing-sienna' && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
                   ? snapshotRows
                   : []
@@ -1115,6 +1121,24 @@ const snapshotRows = [
     raw_description: null
   }
 ];
+
+const modelYearRiskRow = {
+  id: 'risk-toyota-sienna-2015-2016-sliding-doors',
+  make: 'Toyota',
+  model: 'Sienna',
+  year_start: 2015,
+  year_end: 2016,
+  rating: 'preferred',
+  trim_json: null,
+  engine_json: null,
+  transmission_json: null,
+  issue: 'Generally preferred years, with power sliding-door operation still worth checking.',
+  category: 'body',
+  severity: 3,
+  inspect_for_json: JSON.stringify(['Test both power sliding doors']),
+  remediation_json: null,
+  evidence_ids_json: JSON.stringify([])
+};
 
 const dispositionRow = {
   id: 'disposition-sienna',

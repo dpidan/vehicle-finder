@@ -83,6 +83,7 @@ export interface ListingCandidate {
 
 export interface ListingDetail {
   listing: ListingCandidate;
+  risks: ModelYearRisk[];
   snapshots: Array<{
     id: string;
     capturedAt: string;
@@ -90,6 +91,19 @@ export interface ListingDetail {
     mileage?: number;
     photoUrls?: string[];
   }>;
+}
+
+export interface ModelYearRisk {
+  id: string;
+  make: string;
+  model: string;
+  yearStart: number;
+  yearEnd: number;
+  rating: 'preferred' | 'good' | 'neutral' | 'caution' | 'avoid-unless-remediated';
+  issue: string;
+  category: string;
+  severity: number;
+  inspectFor: string[];
 }
 
 export interface MonitoringSummary {

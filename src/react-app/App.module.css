@@ -472,6 +472,40 @@
   list-style: none;
 }
 
+.riskList {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.riskList > li {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-1);
+  background: var(--color-page);
+}
+
+.riskList strong {
+  color: var(--color-text);
+  text-transform: capitalize;
+}
+
+.riskList span,
+.riskList ul {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.riskList ul {
+  padding-left: var(--space-4);
+}
+
 .factorList li {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr);
