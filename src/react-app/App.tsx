@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { fetchListingDetail, fetchRankedListings, fetchSavedSearches, saveListingDisposition } from './api.js';
+import { fetchListingDetail, fetchMonitoringSummary, fetchRankedListings, fetchSavedSearches, saveListingDisposition } from './api.js';
 import { bestScore, emptyMessage, emptyTitle, filterAndSortListings, statusLabel } from './format.js';
 import { ListingDetailPanel } from './ListingDetailPanel.js';
 import { ListingTable } from './ListingTable.js';
 import { Metric } from './Metric.js';
+import { MonitoringSummaryPanel } from './MonitoringSummaryPanel.js';
 import { PublicHome } from './PublicHome.js';
 import styles from './App.module.css';
-import type { ListingDetail, ListingDispositionState, RankedListingSummary, SavedSearchSummary, SortMode } from './types.js';
+import type { ListingDetail, ListingDispositionState, MonitoringSummary, RankedListingSummary, SavedSearchSummary, SortMode } from './types.js';
 
 export function App() {
   const isDashboard = window.location.pathname.startsWith('/app');
@@ -22,6 +23,8 @@ function DashboardShell() {
   const [listingDetail, setListingDetail] = useState<ListingDetail | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading');
   const [detailStatus, setDetailStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [monitoringSummary, setMonitoringSummary] = useState<MonitoringSummary | null>(null);
+  const [monitoringStatus, setMonitoringStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [workflowStatus, setWorkflowStatus] = useState('');
   const [stateFilter, setStateFilter] = useState<ListingDispositionState | 'all'>('all');
   const [sortMode, setSortMode] = useState<SortMode>('deal');
@@ -94,6 +97,31 @@ function DashboardShell() {
     };
   }, [selectedListingId]);
 
+  useEffect(() => {
+    if (!selectedSearchId) {
+      setMonitoringSummary(null);
+      setMonitoringStatus('idle');
+      return;
+    }
+
+    let cancelled = false;
+    setMonitoringStatus('loading');
+
+    fetchMonitoringSummary(selectedSearchId)
+      .then((summary) => {
+        if (cancelled) return;
+        setMonitoringSummary(summary);
+        setMonitoringStatus('ready');
+      })
+      .catch(() => {
+        if (!cancelled) setMonitoringStatus('error');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSearchId]);
+
   const selectedSearch = searches.find((search) => search.id === selectedSearchId);
   const visibleListings = filterAndSortListings(rankedListings, stateFilter, sortMode);
 
@@ -121,6 +149,8 @@ function DashboardShell() {
         <Metric label="Shown" value={visibleListings.length.toLocaleString()} />
         <Metric label="Best deal" value={bestScore(rankedListings, 'dealScore')} />
       </section>
+
+      <MonitoringSummaryPanel summary={monitoringSummary} status={monitoringStatus} />
 
       <div className={styles.workspace}>
         <section className={styles.listPanel}>

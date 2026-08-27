@@ -145,6 +145,39 @@
   padding: var(--space-5) var(--space-6) 0;
 }
 
+.monitoringPanel {
+  margin: var(--space-5) var(--space-6) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.monitoringGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.signal {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.signal span {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.signal strong {
+  color: var(--color-text);
+  font-size: 1.4rem;
+}
+
 .metric {
   display: grid;
   gap: var(--space-1);
@@ -382,6 +415,14 @@
   .summaryBand {
     grid-template-columns: 1fr;
     padding: var(--space-4) var(--space-4) 0;
+  }
+
+  .monitoringPanel {
+    margin: var(--space-4) var(--space-4) 0;
+  }
+
+  .monitoringGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .workspace {

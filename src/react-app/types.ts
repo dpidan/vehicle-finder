@@ -62,3 +62,15 @@ export interface ListingDetail {
     mileage?: number;
   }>;
 }
+
+export interface MonitoringSummary {
+  searchId: string;
+  since: string;
+  staleBefore: string;
+  changes: {
+    newListings: unknown[];
+    priceDrops: unknown[];
+  };
+  staleListings: unknown[];
+  thresholdMatches: unknown[];
+}

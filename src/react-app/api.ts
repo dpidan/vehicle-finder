@@ -1,4 +1,4 @@
-import type { ListingDetail, ListingDisposition, ListingDispositionState, RankedListingSummary, SavedSearchSummary } from './types.js';
+import type { ListingDetail, ListingDisposition, ListingDispositionState, MonitoringSummary, RankedListingSummary, SavedSearchSummary } from './types.js';
 
 export async function fetchSavedSearches(): Promise<SavedSearchSummary[]> {
   const { searches } = await fetchJson<{ searches: SavedSearchSummary[] }>('/api/searches');
@@ -12,6 +12,15 @@ export async function fetchRankedListings(searchId: string): Promise<RankedListi
 
 export function fetchListingDetail(listingId: string): Promise<ListingDetail> {
   return fetchJson<ListingDetail>(`/api/listings/${listingId}`);
+}
+
+export function fetchMonitoringSummary(searchId: string): Promise<MonitoringSummary> {
+  const now = new Date();
+  const since = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const staleBefore = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  return fetchJson<MonitoringSummary>(
+    `/api/searches/${searchId}/monitoring-summary?since=${encodeURIComponent(since)}&staleBefore=${encodeURIComponent(staleBefore)}`
+  );
 }
 
 export async function saveListingDisposition(
