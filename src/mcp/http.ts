@@ -14,6 +14,14 @@ export async function handleMcpHttpRequest(db: D1Database, body: unknown): Promi
 
   const id = body.id ?? null;
 
+  if (body.method === 'initialize') {
+    return jsonRpcResult(id, {
+      protocolVersion: '2025-06-18',
+      serverInfo: { name: 'vehicle-finder', version: '0.1.0' },
+      capabilities: { tools: {} }
+    });
+  }
+
   if (body.method === 'tools/list') {
     return jsonRpcResult(id, { tools: mcpTools });
   }

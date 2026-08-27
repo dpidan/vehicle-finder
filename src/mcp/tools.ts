@@ -28,6 +28,12 @@ export interface McpToolDefinition {
   name: McpToolName;
   description: string;
   requiredArguments: string[];
+  inputSchema: {
+    type: 'object';
+    properties: Record<string, { type: 'string'; description: string }>;
+    required: string[];
+    additionalProperties: false;
+  };
 }
 
 export type McpToolResult =
@@ -35,15 +41,15 @@ export type McpToolResult =
   | { ok: false; error: 'unknown-tool' | 'invalid-arguments' | 'not-found'; message?: string };
 
 export const mcpTools: McpToolDefinition[] = [
-  { name: 'list_saved_searches', description: 'List saved vehicle searches.', requiredArguments: [] },
-  { name: 'get_saved_search', description: 'Fetch one saved search and its configuration.', requiredArguments: ['searchId'] },
-  { name: 'get_ranked_listings', description: 'Rank persisted listings for one saved search.', requiredArguments: ['searchId'] },
-  { name: 'get_listing_detail', description: 'Fetch listing detail and recent snapshots.', requiredArguments: ['listingId'] },
-  { name: 'get_listing_snapshots', description: 'Fetch recent snapshots for one listing.', requiredArguments: ['listingId'] },
-  { name: 'get_latest_evaluations', description: 'Fetch latest saved-search listing evaluations.', requiredArguments: ['searchId'] },
-  { name: 'get_listing_disposition', description: 'Fetch workflow state for one listing.', requiredArguments: ['searchId', 'listingId'] },
-  { name: 'get_monitoring_summary', description: 'Fetch recent monitoring signals for one saved search.', requiredArguments: ['searchId', 'since', 'staleBefore'] },
-  { name: 'get_monitoring_digest', description: 'Fetch a plain text monitoring digest.', requiredArguments: ['searchId', 'since', 'staleBefore'] }
+  tool('list_saved_searches', 'List saved vehicle searches.', []),
+  tool('get_saved_search', 'Fetch one saved search and its configuration.', ['searchId']),
+  tool('get_ranked_listings', 'Rank persisted listings for one saved search.', ['searchId']),
+  tool('get_listing_detail', 'Fetch listing detail and recent snapshots.', ['listingId']),
+  tool('get_listing_snapshots', 'Fetch recent snapshots for one listing.', ['listingId']),
+  tool('get_latest_evaluations', 'Fetch latest saved-search listing evaluations.', ['searchId']),
+  tool('get_listing_disposition', 'Fetch workflow state for one listing.', ['searchId', 'listingId']),
+  tool('get_monitoring_summary', 'Fetch recent monitoring signals for one saved search.', ['searchId', 'since', 'staleBefore']),
+  tool('get_monitoring_digest', 'Fetch a plain text monitoring digest.', ['searchId', 'since', 'staleBefore'])
 ];
 
 export async function callMcpTool(db: D1Database, name: string, args: Record<string, unknown> = {}): Promise<McpToolResult> {
@@ -118,6 +124,28 @@ export async function callMcpTool(db: D1Database, name: string, args: Record<str
 
 function isMcpToolName(name: string): name is McpToolName {
   return (mcpToolNames as readonly string[]).includes(name);
+}
+
+function tool(name: McpToolName, description: string, requiredArguments: string[]): McpToolDefinition {
+  return {
+    name,
+    description,
+    requiredArguments,
+    inputSchema: {
+      type: 'object',
+      properties: Object.fromEntries(requiredArguments.map((argument) => [argument, { type: 'string', description: argumentDescription(argument) }])),
+      required: requiredArguments,
+      additionalProperties: false
+    }
+  };
+}
+
+function argumentDescription(argument: string): string {
+  return argument === 'since' || argument === 'staleBefore'
+    ? 'ISO timestamp.'
+    : argument === 'searchId'
+      ? 'Saved search ID.'
+      : 'Listing ID.';
 }
 
 async function withSearch(

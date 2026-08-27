@@ -20,6 +20,12 @@ describe('MCP read tool handlers', () => {
       [...mcpToolNames]
     );
     assert.ok(mcpTools.every((tool) => tool.description && Array.isArray(tool.requiredArguments)));
+    assert.ok(mcpTools.every((tool) => tool.inputSchema.type === 'object'));
+    assert.ok(mcpTools.every((tool) => tool.inputSchema.additionalProperties === false));
+    assert.deepEqual(
+      mcpTools.find((tool) => tool.name === 'get_monitoring_summary')?.inputSchema.required,
+      ['searchId', 'since', 'staleBefore']
+    );
   });
 
   it('rejects unknown tools and invalid arguments without throwing', async () => {

@@ -676,6 +676,15 @@ describe('worker routes', () => {
 
   it('handles MCP transport JSON-RPC requests', async () => {
     const db = env({ adminToken: 'secret', persistedListings: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+    const initialized = await app.request(
+      '/mcp',
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer secret', 'content-type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 'init', method: 'initialize' })
+      },
+      { DB: db, ADMIN_TOKEN: 'secret' }
+    );
     const tools = await app.request(
       '/mcp',
       {
@@ -699,9 +708,12 @@ describe('worker routes', () => {
       },
       { DB: db, ADMIN_TOKEN: 'secret' }
     );
+    const initializedBody = (await initialized.json()) as { result: { capabilities: { tools: Record<string, never> } } };
     const toolsBody = (await tools.json()) as { result: { tools: Array<{ name: string }> } };
     const callBody = (await call.json()) as { result: { structuredContent: { rankedListings: unknown[] } } };
 
+    assert.equal(initialized.status, 200);
+    assert.deepEqual(initializedBody.result.capabilities, { tools: {} });
     assert.equal(tools.status, 200);
     assert.ok(toolsBody.result.tools.some((tool) => tool.name === 'get_ranked_listings'));
     assert.equal(call.status, 200);
@@ -740,11 +752,16 @@ describe('worker routes', () => {
 
   it('lists MCP tool metadata through the protected preview route', async () => {
     const response = await app.request('/api/admin/mcp/tools', { headers: { authorization: 'Bearer secret' } }, env({ adminToken: 'secret' }));
-    const body = (await response.json()) as { tools: Array<{ name: string; requiredArguments: string[] }> };
+    const body = (await response.json()) as { tools: Array<{ name: string; requiredArguments: string[]; inputSchema: { type: string; required: string[] } }> };
 
     assert.equal(response.status, 200);
     assert.ok(body.tools.some((tool) => tool.name === 'get_ranked_listings'));
     assert.deepEqual(body.tools.find((tool) => tool.name === 'get_monitoring_summary')?.requiredArguments, [
+      'searchId',
+      'since',
+      'staleBefore'
+    ]);
+    assert.deepEqual(body.tools.find((tool) => tool.name === 'get_monitoring_summary')?.inputSchema.required, [
       'searchId',
       'since',
       'staleBefore'

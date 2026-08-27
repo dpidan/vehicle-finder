@@ -14,13 +14,27 @@ const savedSearchRow = {
 };
 
 describe('minimal MCP HTTP transport', () => {
+  it('initializes with tools-only capabilities', async () => {
+    const response = await handleMcpHttpRequest(fakeDb(), { jsonrpc: '2.0', id: 'init-1', method: 'initialize' });
+    const body = (await response.json()) as {
+      id: string;
+      result: { protocolVersion: string; serverInfo: { name: string }; capabilities: { tools: Record<string, never> } };
+    };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.id, 'init-1');
+    assert.equal(body.result.serverInfo.name, 'vehicle-finder');
+    assert.deepEqual(body.result.capabilities, { tools: {} });
+  });
+
   it('lists tools in a JSON-RPC envelope', async () => {
     const response = await handleMcpHttpRequest(fakeDb(), { jsonrpc: '2.0', id: 'tools-1', method: 'tools/list' });
-    const body = (await response.json()) as { id: string; result: { tools: Array<{ name: string }> } };
+    const body = (await response.json()) as { id: string; result: { tools: Array<{ name: string; inputSchema: { type: string } }> } };
 
     assert.equal(response.status, 200);
     assert.equal(body.id, 'tools-1');
     assert.ok(body.result.tools.some((tool) => tool.name === 'get_ranked_listings'));
+    assert.equal(body.result.tools.find((tool) => tool.name === 'get_ranked_listings')?.inputSchema.type, 'object');
   });
 
   it('calls tools in a JSON-RPC envelope', async () => {
@@ -45,7 +59,7 @@ describe('minimal MCP HTTP transport', () => {
 
   it('returns JSON-RPC errors for invalid requests, methods, params, and tool errors', async () => {
     const invalidRequest = await handleMcpHttpRequest(fakeDb(), []);
-    const unsupportedMethod = await handleMcpHttpRequest(fakeDb(), { jsonrpc: '2.0', id: 'x', method: 'initialize' });
+    const unsupportedMethod = await handleMcpHttpRequest(fakeDb(), { jsonrpc: '2.0', id: 'x', method: 'resources/list' });
     const invalidParams = await handleMcpHttpRequest(fakeDb(), { jsonrpc: '2.0', id: 'x', method: 'tools/call', params: [] });
     const unknownTool = await handleMcpHttpRequest(fakeDb(), {
       jsonrpc: '2.0',
