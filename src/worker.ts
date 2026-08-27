@@ -17,6 +17,7 @@ import {
   writeSearchEvaluations
 } from './services/search-service.js';
 import { manualImportToCandidate, type ManualImportInput } from './sources/manual-import.js';
+import { handleMcpHttpRequest, parseMcpJsonRequest } from './mcp/http.js';
 import { callMcpTool, mcpTools } from './mcp/tools.js';
 import { cypressDealerCarSearchSeeds } from './sources/dealer-car-search-seeds.js';
 import { dealerCarSearchSource } from './sources/dealer-car-search-source.js';
@@ -31,6 +32,19 @@ export interface Env {
 export const app = new Hono<{ Bindings: Env }>();
 
 app.get('/health', (c) => c.json({ ok: true }));
+
+app.post('/mcp', async (c) => {
+  const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
+
+  if (unauthorized) {
+    return c.json({ error: unauthorized }, unauthorized === 'admin-token-not-configured' ? 503 : 401);
+  }
+
+  const body = await parseMcpJsonRequest(c.req.raw);
+  return body === 'invalid-json'
+    ? Response.json({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } })
+    : handleMcpHttpRequest(c.env.DB, body);
+});
 
 app.get('/api/sample-listings', async (c) =>
   c.json({

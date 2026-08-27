@@ -666,6 +666,78 @@ describe('worker routes', () => {
     assert.equal(wrongTokenCall.status, 401);
   });
 
+  it('requires the admin token for the MCP transport route', async () => {
+    const missingToken = await app.request('/mcp', { method: 'POST' }, env());
+    const wrongToken = await app.request('/mcp', { method: 'POST' }, env({ adminToken: 'secret' }));
+
+    assert.equal(missingToken.status, 503);
+    assert.equal(wrongToken.status, 401);
+  });
+
+  it('handles MCP transport JSON-RPC requests', async () => {
+    const db = env({ adminToken: 'secret', persistedListings: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+    const tools = await app.request(
+      '/mcp',
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer secret', 'content-type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 'tools', method: 'tools/list' })
+      },
+      { DB: db, ADMIN_TOKEN: 'secret' }
+    );
+    const call = await app.request(
+      '/mcp',
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer secret', 'content-type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 'call',
+          method: 'tools/call',
+          params: { name: 'get_ranked_listings', arguments: { searchId: 'family-replacement-vehicle' } }
+        })
+      },
+      { DB: db, ADMIN_TOKEN: 'secret' }
+    );
+    const toolsBody = (await tools.json()) as { result: { tools: Array<{ name: string }> } };
+    const callBody = (await call.json()) as { result: { structuredContent: { rankedListings: unknown[] } } };
+
+    assert.equal(tools.status, 200);
+    assert.ok(toolsBody.result.tools.some((tool) => tool.name === 'get_ranked_listings'));
+    assert.equal(call.status, 200);
+    assert.equal(callBody.result.structuredContent.rankedListings.length, 2);
+    assert.equal(db.writes.length, 0);
+  });
+
+  it('returns MCP JSON-RPC errors for parse and request errors', async () => {
+    const invalidJson = await app.request(
+      '/mcp',
+      { method: 'POST', headers: { authorization: 'Bearer secret', 'content-type': 'application/json' }, body: '{' },
+      env({ adminToken: 'secret' })
+    );
+    const invalidRequest = await app.request(
+      '/mcp',
+      { method: 'POST', headers: { authorization: 'Bearer secret', 'content-type': 'application/json' }, body: '[]' },
+      env({ adminToken: 'secret' })
+    );
+    const unknownTool = await app.request(
+      '/mcp',
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer secret', 'content-type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 'bad-tool', method: 'tools/call', params: { name: 'nope' } })
+      },
+      env({ adminToken: 'secret' })
+    );
+
+    assert.equal(invalidJson.status, 200);
+    assert.equal(((await invalidJson.json()) as { error: { code: number } }).error.code, -32700);
+    assert.equal(invalidRequest.status, 200);
+    assert.equal(((await invalidRequest.json()) as { error: { code: number } }).error.code, -32600);
+    assert.equal(unknownTool.status, 200);
+    assert.deepEqual(((await unknownTool.json()) as { error: { data: unknown } }).error.data, { toolError: 'unknown-tool' });
+  });
+
   it('lists MCP tool metadata through the protected preview route', async () => {
     const response = await app.request('/api/admin/mcp/tools', { headers: { authorization: 'Bearer secret' } }, env({ adminToken: 'secret' }));
     const body = (await response.json()) as { tools: Array<{ name: string; requiredArguments: string[] }> };
