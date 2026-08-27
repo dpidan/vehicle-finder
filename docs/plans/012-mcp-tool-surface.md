@@ -8,10 +8,10 @@ API.
 
 ## Scope
 
-- Start with read-only tools backed by existing saved-search, listing,
-  evaluation, workflow, and monitoring services.
-- Read workflow state through MCP now; defer workflow mutations until
-  authentication and audit behavior are decided.
+- Start with saved-search, listing, evaluation, workflow, and monitoring tools
+  backed by existing services.
+- Keep workflow mutation limited to the existing admin-token protected MCP
+  boundary until per-user authentication and audit behavior are decided.
 - Keep tool names stable, explicit, and saved-search scoped where user
   preferences affect results.
 - Defer SDK wiring until the contract is reviewed.
@@ -149,12 +149,30 @@ Input:
 - `since`
 - `staleBefore`
 
+### `set_listing_disposition`
+
+Update workflow state for one listing within one saved search.
+
+Backs onto:
+
+- `setListingDisposition`
+- `PUT /api/searches/:searchId/listings/:listingId/disposition`
+
+Input:
+
+- `searchId`
+- `listingId`
+- `state`
+- `rejectionReason`
+- `nextActionType`
+- `nextActionDueAt`
+- `nextActionNote`
+
 ## Deferred
 
 - MCP SDK dependency and endpoint wiring.
-- Authentication mechanics; tools should still use the same family-user
-  authorization boundary as the dashboard/API.
-- Mutation tools for workflow updates.
+- Per-user authentication and audit mechanics beyond the current admin-token
+  family deployment boundary.
 - Admin collection or refresh tools.
 - Streaming responses.
 - MCP resources and prompts.

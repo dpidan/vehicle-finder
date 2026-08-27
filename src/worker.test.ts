@@ -721,6 +721,38 @@ describe('worker routes', () => {
     assert.equal(db.writes.length, 0);
   });
 
+  it('updates listing disposition through the MCP transport route', async () => {
+    const db = env({ adminToken: 'secret' }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+    const response = await app.request(
+      '/mcp',
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer secret', 'content-type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 'workflow',
+          method: 'tools/call',
+          params: {
+            name: 'set_listing_disposition',
+            arguments: {
+              searchId: 'family-replacement-vehicle',
+              listingId: 'listing-sienna',
+              state: 'favorite',
+              nextActionType: 'ask-out-the-door-price'
+            }
+          }
+        })
+      },
+      { DB: db, ADMIN_TOKEN: 'secret' }
+    );
+    const body = (await response.json()) as { result: { structuredContent: { disposition: { state: string } } } };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.result.structuredContent.disposition.state, 'favorite');
+    assert.equal(db.writes.length, 1);
+    assert.match(db.writes[0]?.sql ?? '', /INSERT INTO listing_dispositions/);
+  });
+
   it('returns MCP JSON-RPC errors for parse and request errors', async () => {
     const invalidJson = await app.request(
       '/mcp',
@@ -768,7 +800,7 @@ describe('worker routes', () => {
     ]);
   });
 
-  it('calls MCP read tools through the protected preview route', async () => {
+  it('calls MCP tools through the protected preview route', async () => {
     const db = env({ adminToken: 'secret', persistedListings: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
     const noArgs = await app.request(
       '/api/admin/mcp/tools/list_saved_searches/call',

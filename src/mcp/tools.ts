@@ -1,13 +1,17 @@
+import type { ListingDispositionState, NextActionType } from '../domain/entities.js';
 import { filterThresholdMatches, formatMonitoringDigest, isIsoDateTime, type MonitoringSummary } from '../services/monitoring-service.js';
 import {
   getListingDetail,
   getListingDisposition,
   getSavedSearch,
+  listingExists,
   listLatestSearchEvaluations,
   listListingChanges,
   listSavedSearches,
   listStaleListings,
-  rankPersistedListingsForSavedSearch
+  rankPersistedListingsForSavedSearch,
+  setListingDisposition,
+  type ListingDispositionInput
 } from '../services/search-service.js';
 
 export const mcpToolNames = [
@@ -19,7 +23,8 @@ export const mcpToolNames = [
   'get_latest_evaluations',
   'get_listing_disposition',
   'get_monitoring_summary',
-  'get_monitoring_digest'
+  'get_monitoring_digest',
+  'set_listing_disposition'
 ] as const;
 
 export type McpToolName = (typeof mcpToolNames)[number];
@@ -49,7 +54,13 @@ export const mcpTools: McpToolDefinition[] = [
   tool('get_latest_evaluations', 'Fetch latest saved-search listing evaluations.', ['searchId']),
   tool('get_listing_disposition', 'Fetch workflow state for one listing.', ['searchId', 'listingId']),
   tool('get_monitoring_summary', 'Fetch recent monitoring signals for one saved search.', ['searchId', 'since', 'staleBefore']),
-  tool('get_monitoring_digest', 'Fetch a plain text monitoring digest.', ['searchId', 'since', 'staleBefore'])
+  tool('get_monitoring_digest', 'Fetch a plain text monitoring digest.', ['searchId', 'since', 'staleBefore']),
+  tool('set_listing_disposition', 'Update workflow state for one listing.', ['searchId', 'listingId', 'state'], [
+    'rejectionReason',
+    'nextActionType',
+    'nextActionDueAt',
+    'nextActionNote'
+  ])
 ];
 
 export async function callMcpTool(db: D1Database, name: string, args: Record<string, unknown> = {}): Promise<McpToolResult> {
@@ -119,6 +130,23 @@ export async function callMcpTool(db: D1Database, name: string, args: Record<str
           ? ok({ text: formatMonitoringDigest(search.name, summary.data as MonitoringSummary) })
           : summary;
       });
+    case 'set_listing_disposition': {
+      const input = dispositionInput(args);
+      const searchId = stringArg(args, 'searchId');
+      const listingId = stringArg(args, 'listingId');
+
+      if (!searchId || !listingId || !input) {
+        return invalidArguments();
+      }
+
+      return withSearch(db, searchId, async (search) => {
+        if (!(await listingExists(db, listingId))) {
+          return notFound();
+        }
+
+        return ok({ disposition: await setListingDisposition(db, search.id, listingId, input, new Date().toISOString()) });
+      });
+    }
   }
 }
 
@@ -126,14 +154,21 @@ function isMcpToolName(name: string): name is McpToolName {
   return (mcpToolNames as readonly string[]).includes(name);
 }
 
-function tool(name: McpToolName, description: string, requiredArguments: string[]): McpToolDefinition {
+function tool(
+  name: McpToolName,
+  description: string,
+  requiredArguments: string[],
+  optionalArguments: string[] = []
+): McpToolDefinition {
+  const argumentsList = [...requiredArguments, ...optionalArguments];
+
   return {
     name,
     description,
     requiredArguments,
     inputSchema: {
       type: 'object',
-      properties: Object.fromEntries(requiredArguments.map((argument) => [argument, { type: 'string', description: argumentDescription(argument) }])),
+      properties: Object.fromEntries(argumentsList.map((argument) => [argument, { type: 'string', description: argumentDescription(argument) }])),
       required: requiredArguments,
       additionalProperties: false
     }
@@ -145,7 +180,67 @@ function argumentDescription(argument: string): string {
     ? 'ISO timestamp.'
     : argument === 'searchId'
       ? 'Saved search ID.'
+      : argument === 'state'
+        ? 'Workflow state.'
+      : argument === 'rejectionReason'
+        ? 'Required when state is rejected.'
+      : argument === 'nextActionType'
+        ? 'Optional next action type.'
+      : argument === 'nextActionDueAt'
+        ? 'Optional ISO timestamp.'
+      : argument === 'nextActionNote'
+        ? 'Optional next action note.'
       : 'Listing ID.';
+}
+
+function dispositionInput(args: Record<string, unknown>): ListingDispositionInput | undefined {
+  const state = stringArg(args, 'state');
+  const rejectionReason = stringArg(args, 'rejectionReason');
+  const nextActionTypeArg = stringArg(args, 'nextActionType');
+  const nextActionDueAt = stringArg(args, 'nextActionDueAt');
+  const nextActionNote = stringArg(args, 'nextActionNote');
+
+  if (!isDispositionState(state) || (state === 'rejected' && !rejectionReason) || (state !== 'rejected' && rejectionReason)) {
+    return undefined;
+  }
+
+  if (nextActionDueAt && !isIsoDateTime(nextActionDueAt)) {
+    return undefined;
+  }
+
+  const nextActionType = nextActionTypeArg ? parseNextActionType(nextActionTypeArg) : undefined;
+
+  if (nextActionTypeArg && !nextActionType) {
+    return undefined;
+  }
+
+  const input: ListingDispositionInput = { state };
+
+  if (rejectionReason) {
+    input.rejectionReason = rejectionReason;
+  }
+
+  if (nextActionType) {
+    input.nextAction = {
+      type: nextActionType,
+      ...(nextActionDueAt ? { dueAt: nextActionDueAt } : {}),
+      ...(nextActionNote ? { note: nextActionNote } : {})
+    };
+  }
+
+  return input;
+}
+
+function isDispositionState(value: string | undefined): value is ListingDispositionState {
+  return ['new', 'interested', 'favorite', 'contacted', 'inspection', 'rejected', 'sold'].includes(value ?? '');
+}
+
+function isNextActionType(value: string): value is NextActionType {
+  return ['request-vin', 'ask-maintenance-records', 'ask-out-the-door-price', 'schedule-inspection', 'follow-up', 'compare', 'none'].includes(value);
+}
+
+function parseNextActionType(value: string): NextActionType | undefined {
+  return isNextActionType(value) ? value : undefined;
 }
 
 async function withSearch(

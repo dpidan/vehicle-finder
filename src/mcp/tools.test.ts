@@ -26,6 +26,10 @@ describe('MCP read tool handlers', () => {
       mcpTools.find((tool) => tool.name === 'get_monitoring_summary')?.inputSchema.required,
       ['searchId', 'since', 'staleBefore']
     );
+    assert.deepEqual(
+      mcpTools.find((tool) => tool.name === 'set_listing_disposition')?.inputSchema.required,
+      ['searchId', 'listingId', 'state']
+    );
   });
 
   it('rejects unknown tools and invalid arguments without throwing', async () => {
@@ -42,6 +46,23 @@ describe('MCP read tool handlers', () => {
       }),
       { ok: false, error: 'invalid-arguments' }
     );
+    assert.deepEqual(
+      await callMcpTool(db, 'set_listing_disposition', {
+        searchId: 'family-replacement-vehicle',
+        listingId: 'listing-sienna',
+        state: 'rejected'
+      }),
+      { ok: false, error: 'invalid-arguments' }
+    );
+    assert.deepEqual(
+      await callMcpTool(db, 'set_listing_disposition', {
+        searchId: 'family-replacement-vehicle',
+        listingId: 'listing-sienna',
+        state: 'favorite',
+        rejectionReason: 'Too far away'
+      }),
+      { ok: false, error: 'invalid-arguments' }
+    );
   });
 
   it('returns not found for missing saved searches and listings', async () => {
@@ -54,6 +75,41 @@ describe('MCP read tool handlers', () => {
       await callMcpTool(db, 'get_listing_disposition', { searchId: 'missing', listingId: 'listing-sienna' }),
       { ok: false, error: 'not-found' }
     );
+    assert.deepEqual(
+      await callMcpTool(db, 'set_listing_disposition', {
+        searchId: 'missing',
+        listingId: 'listing-sienna',
+        state: 'favorite'
+      }),
+      { ok: false, error: 'not-found' }
+    );
+    assert.deepEqual(
+      await callMcpTool(db, 'set_listing_disposition', {
+        searchId: 'family-replacement-vehicle',
+        listingId: 'missing',
+        state: 'favorite'
+      }),
+      { ok: false, error: 'not-found' }
+    );
+  });
+
+  it('updates listing disposition through the mutation tool', async () => {
+    const db = fakeDb({ listingExists: true });
+    const result = await callMcpTool(db, 'set_listing_disposition', {
+      searchId: 'family-replacement-vehicle',
+      listingId: 'listing-sienna',
+      state: 'contacted',
+      nextActionType: 'schedule-inspection',
+      nextActionDueAt: '2026-08-27T15:00:00.000Z',
+      nextActionNote: 'Ask Corbs for availability'
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(((result as { ok: true; data: { disposition: { state: string } } }).data.disposition).state, 'contacted');
+    assert.equal(db.writes.length, 1);
+    assert.match(db.writes[0]?.sql ?? '', /INSERT INTO listing_dispositions/);
+    assert.equal(db.writes[0]?.values[3], 'contacted');
+    assert.match(String(db.writes[0]?.values[5]), /schedule-inspection/);
   });
 
   it('dispatches saved search, ranking, detail, snapshot, evaluation, and disposition reads', async () => {
@@ -124,6 +180,7 @@ interface FakeOptions {
   noNotificationThresholds?: boolean;
   evaluations?: boolean;
   disposition?: boolean;
+  listingExists?: boolean;
 }
 
 function fakeDb(options: FakeOptions = {}): D1Database & { writes: Array<{ sql: string; values: unknown[] }> } {
@@ -141,6 +198,7 @@ function fakeDb(options: FakeOptions = {}): D1Database & { writes: Array<{ sql: 
           first: async () => {
             if (sql.includes('FROM saved_searches')) return id === savedSearchRow.id ? searchRow : null;
             if (options.listingDetail && sql.includes('WHERE listings.id = ?')) return id === 'listing-sienna' ? persistedListingRow : null;
+            if (sql.includes('SELECT id FROM listings')) return options.listingExists && id === 'listing-sienna' ? { id } : null;
             if (options.disposition && sql.includes('FROM listing_dispositions')) {
               return id === savedSearchRow.id && listingId === 'listing-sienna' ? dispositionRow : null;
             }
