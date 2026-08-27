@@ -123,8 +123,8 @@ Each source is implemented behind an adapter and classified by access type, such
 
 ### Phase 3 — interactive dashboard
 
-- Done: search selector, ranked result list, filtering/sorting, listing detail view, score-factor explanations, favorite/interested/contacted/inspection/rejected workflow with rejection reasons, next-action tracking, candidate comparison, and manual-import preview.
-- Remaining: listing photos and save-from-preview manual import.
+- Done: search selector, ranked result list, filtering/sorting, listing detail view, photos, score-factor explanations, favorite/interested/contacted/inspection/rejected workflow with rejection reasons, next-action tracking, candidate comparison, manual-import preview/save, and admin refresh.
+- Remaining: richer photo acquisition from source detail pages.
 
 ### Phase 4 — monitoring
 

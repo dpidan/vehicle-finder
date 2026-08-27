@@ -45,7 +45,7 @@
 29. Done — search selector.
 30. Done — ranked result list.
 31. Done — Vehicle vs Deal Score explanation.
-32. Partial — listing details and manual-import preview; photos/save-from-preview still pending.
+32. Done — listing details, photos, manual-import preview, and save-from-preview.
 33. Done — favorites / contacted / inspection / rejected states.
 34. Done — next action and follow-up tracking basics.
 35. Done — rejection reasons.
@@ -59,6 +59,10 @@
 40. Partial — score-threshold signals in API/MCP/dashboard; delivery still pending.
 41. Partial — stale-listing signals in API/MCP/dashboard; delivery still pending.
 42. Partial — plain text digest API/MCP; delivery/scheduling still pending.
+
+## Dashboard operations
+
+48. Done — admin-token-protected saved-search refresh from the dashboard.
 
 ## Assistant access
 
