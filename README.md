@@ -32,6 +32,7 @@ The project is intended to aggregate candidate vehicles from multiple sources, d
 - `docs/SCORING_MODEL.md` — Vehicle Score and Deal Score definitions.
 - `docs/MODEL_YEAR_KNOWLEDGE.md` — initial Honda/Toyota model-year risk matrix.
 - `docs/ARCHITECTURE.md` — current technical architecture direction.
+- `docs/MCP_CONNECTION.md` — local and remote MCP connection notes.
 - `docs/BACKLOG.md` — ordered implementation backlog.
 - `docs/decisions/` — architecture decision records as the design matures.
 - `docs/research/` — source-specific research and evidence.
@@ -47,14 +48,32 @@ npm run db:seed:local
 npm run dev
 ```
 
-Initial endpoints:
+Public endpoints:
 
 - `GET /health`
 - `GET /api/sample-listings`
 - `GET /api/searches`
 - `GET /api/searches/:id`
 - `GET /api/searches/:id/ranked-sample-listings`
+- `GET /api/searches/:id/ranked-listings`
+- `GET /api/searches/:id/evaluations/latest`
+- `GET /api/searches/:id/listing-changes`
+- `GET /api/searches/:id/stale-listings`
+- `GET /api/searches/:id/monitoring-summary`
+- `GET /api/searches/:id/monitoring-digest`
+- `GET /api/listings/:id`
+- `GET /api/searches/:searchId/listings/:listingId/disposition`
+- `PUT /api/searches/:searchId/listings/:listingId/disposition`
 - `POST /api/manual-imports/preview`
+
+Protected endpoints use `Authorization: Bearer <ADMIN_TOKEN>`:
+
+- `POST /mcp`
+- `POST /api/admin/sources/dealer-car-search/collect`
+- `POST /api/admin/searches/:id/evaluations`
+- `POST /api/admin/searches/:id/refresh`
+- `GET /api/admin/mcp/tools`
+- `POST /api/admin/mcp/tools/:name/call`
 
 ## Fixture scoring
 
@@ -76,5 +95,6 @@ Carsforsale.com-powered dealer seeds and prints normalized listing candidates.
 
 ## Status
 
-Early technical spike. Domain types, the initial D1 schema/seed data, and a minimal Cloudflare Worker + Hono API scaffold exist.
-Sample fixture listings can be ranked with an early explainable scoring pass.
+Early technical spike. Domain types, the initial D1 schema/seed data, a minimal
+Cloudflare Worker + Hono API, scheduled refresh, seeded dealer collection,
+ranking, monitoring, workflow state, and a protected MCP-shaped endpoint exist.

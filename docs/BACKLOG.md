@@ -62,11 +62,11 @@
 
 ## Assistant access
 
-43. Define MCP tool surface for saved searches, ranked candidates, listing details, score explanations, and listing history.
-44. Implement a Streamable HTTP `/mcp` endpoint backed by the same domain services as the dashboard/API.
-45. Implement read-only MCP tools.
-46. Add authenticated mutation tools for workflow state updates.
-47. Document ChatGPT connection/setup steps for family users.
+43. Done — define MCP tool surface for saved searches, ranked candidates, listing details, score explanations, and listing history.
+44. Done — implement a minimal Streamable-HTTP-shaped `/mcp` endpoint backed by the same domain services as the dashboard/API.
+45. Done — implement read-oriented MCP tools.
+46. Done — add admin-token-protected mutation tools for workflow state updates.
+47. Done — document ChatGPT connection/setup steps for family users.
 
 ## Later research
 
