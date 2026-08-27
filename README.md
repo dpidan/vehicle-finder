@@ -32,6 +32,7 @@ The project is intended to aggregate candidate vehicles from multiple sources, d
 - `docs/SCORING_MODEL.md` — Vehicle Score and Deal Score definitions.
 - `docs/MODEL_YEAR_KNOWLEDGE.md` — initial Honda/Toyota model-year risk matrix.
 - `docs/ARCHITECTURE.md` — current technical architecture direction.
+- `docs/FRONTEND_GUIDELINES.md` — initial dashboard design-system and styling guidance.
 - `docs/MCP_CONNECTION.md` — local and remote MCP connection notes.
 - `docs/BACKLOG.md` — ordered implementation backlog.
 - `docs/decisions/` — architecture decision records as the design matures.

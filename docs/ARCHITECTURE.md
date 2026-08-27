@@ -58,6 +58,12 @@ The initial web route shape should keep one Cloudflare Worker deployment:
 Use Workers Assets for the React SPA when the dashboard is added, with Hono
 continuing to own the API, MCP, and scheduled surfaces.
 
+Frontend styling should start with plain CSS, CSS custom properties, and CSS
+Modules. Keep early dashboard components local and small; add Base UI for
+complex accessible primitives when native HTML becomes awkward. Do not add
+Tailwind at the start, but keep design tokens portable enough to map to
+Tailwind CSS v4 later if utility classes become worth the dependency.
+
 Waku, TanStack Start, RedwoodSDK, Astro, and similar frameworks remain revisit candidates if the dashboard grows enough to need richer routing, SSR, streaming, or framework-managed React integration. Avoid making React Server Components or server actions the core data model unless a later product requirement clearly justifies that tradeoff.
 
 ## Repository shape
