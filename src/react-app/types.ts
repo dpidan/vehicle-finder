@@ -26,7 +26,16 @@ export interface RankedListingSummary {
 export interface EffectiveCostEstimate {
   askingPrice: number;
   maintenanceReserve: number;
+  maintenanceItems: MaintenanceItemEstimate[];
+  maintenanceItemsTotal: number;
   total: number;
+}
+
+export interface MaintenanceItemEstimate {
+  key: string;
+  label: string;
+  estimatedCost: number;
+  matchedText: string;
 }
 
 export interface ScoreFactor {

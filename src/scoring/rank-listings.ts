@@ -16,8 +16,31 @@ export interface RankedListing {
 export interface EffectiveCostEstimate {
   askingPrice: number;
   maintenanceReserve: number;
+  maintenanceItems: MaintenanceItemEstimate[];
+  maintenanceItemsTotal: number;
   total: number;
 }
+
+export interface MaintenanceItemEstimate {
+  key: string;
+  label: string;
+  estimatedCost: number;
+  matchedText: string;
+}
+
+const maintenancePatterns: Array<{
+  key: string;
+  label: string;
+  estimatedCost: number;
+  patterns: RegExp[];
+}> = [
+  { key: 'tires', label: 'Tires', estimatedCost: 800, patterns: [/\bneeds? (?:new )?tires?\b/, /\btires? (?:are )?(?:worn|bald)\b/] },
+  { key: 'brakes', label: 'Brakes', estimatedCost: 600, patterns: [/\bneeds? (?:new )?brakes?\b/, /\bbrakes? (?:are )?(?:worn|squeaking)\b/] },
+  { key: 'battery', label: 'Battery', estimatedCost: 250, patterns: [/\bneeds? (?:a )?(?:new )?battery\b/, /\bbattery (?:is )?(?:dead|bad|weak)\b/] },
+  { key: 'windshield', label: 'Windshield', estimatedCost: 500, patterns: [/\bcracked windshield\b/, /\bneeds? (?:a )?(?:new )?windshield\b/] },
+  { key: 'timing-belt', label: 'Timing belt service', estimatedCost: 1200, patterns: [/\btiming belt (?:is )?(?:due|needed)\b/, /\bneeds? timing belt\b/] },
+  { key: 'check-engine-diagnostic', label: 'Check-engine diagnostic', estimatedCost: 200, patterns: [/\bcheck engine light\b/, /\bcel (?:is )?(?:on|illuminated)\b/] }
+];
 
 export function rankListingsForSearch(search: SavedSearchConfig, listings: ListingCandidate[]): RankedListing[] {
   return listings
@@ -96,6 +119,11 @@ function scoreListing(search: SavedSearchConfig, listing: ListingCandidate): Ran
     if (search.budgets.absoluteMax && effectiveCost.total > search.budgets.absoluteMax) {
       flags.push('effective-cost-over-budget');
     }
+    if (effectiveCost.maintenanceItemsTotal > (search.workflow?.immediateMaintenanceBudget ?? Number.POSITIVE_INFINITY)) {
+      flags.push('immediate-maintenance-over-reserve');
+      factors.push(factor('immediate-maintenance-over-reserve', 'score.immediateMaintenanceOverReserve', -6));
+      dealScore -= 6;
+    }
   }
 
   if (!listing.vehicle.vin) {
@@ -144,7 +172,7 @@ function mileageScoreImpact(search: SavedSearchConfig, listing: ListingCandidate
 function priceScoreImpact(search: SavedSearchConfig, listing: ListingCandidate): number {
   const price = listing.price?.amount;
 
-  if (!price) {
+  if (price === undefined) {
     return -5;
   }
 
@@ -180,6 +208,8 @@ function hasSuspiciouslyLowPrice(search: SavedSearchConfig, listing: ListingCand
 function effectiveCostEstimate(search: SavedSearchConfig, listing: ListingCandidate): EffectiveCostEstimate | undefined {
   const askingPrice = listing.price?.amount;
   const maintenanceReserve = search.workflow?.immediateMaintenanceBudget;
+  const maintenanceItems = estimateMaintenanceItems(listing);
+  const maintenanceItemsTotal = maintenanceItems.reduce((total, item) => total + item.estimatedCost, 0);
 
   if (askingPrice === undefined || maintenanceReserve === undefined) {
     return undefined;
@@ -188,8 +218,29 @@ function effectiveCostEstimate(search: SavedSearchConfig, listing: ListingCandid
   return {
     askingPrice,
     maintenanceReserve,
-    total: askingPrice + maintenanceReserve
+    maintenanceItems,
+    maintenanceItemsTotal,
+    total: askingPrice + maintenanceReserve + maintenanceItemsTotal
   };
+}
+
+function estimateMaintenanceItems(listing: ListingCandidate): MaintenanceItemEstimate[] {
+  const description = listing.rawDescription?.toLowerCase() ?? '';
+  const items: MaintenanceItemEstimate[] = [];
+
+  for (const candidate of maintenancePatterns) {
+    const match = candidate.patterns.map((pattern) => description.match(pattern)?.[0]).find(Boolean);
+    if (match) {
+      items.push({
+        key: candidate.key,
+        label: candidate.label,
+        estimatedCost: candidate.estimatedCost,
+        matchedText: match
+      });
+    }
+  }
+
+  return items;
 }
 
 function effectiveCostScoreImpact(search: SavedSearchConfig, total: number): number {

@@ -64,6 +64,17 @@ effectivePurchaseCost =
 
 This adds a modest Deal Score adjustment and flags listings whose reserve-aware total exceeds the saved search's absolute maximum. Specific repair estimates remain deferred until repairs can be captured with evidence.
 
+When listing text explicitly names an immediate need, the known item estimate is added on top of the maintenance reserve:
+
+```text
+effectivePurchaseCost =
+  askingPrice
+  + immediateMaintenanceBudget
+  + estimatedImmediateMaintenanceItems
+```
+
+The first implementation only matches direct phrases such as needed tires, worn brakes, dead battery, cracked windshield, timing belt due, and check-engine diagnostics. Mileage-only guesses are intentionally excluded.
+
 ## Explainability
 
 Every computed score should persist its factors, for example:

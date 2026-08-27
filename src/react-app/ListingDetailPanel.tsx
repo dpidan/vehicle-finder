@@ -92,6 +92,21 @@ export function ListingDetailPanel({
               ) : (
                 <p className={styles.subtle}>No score factors stored for this listing.</p>
               )}
+              {ranking.effectiveCost?.maintenanceItems.length ? (
+                <>
+                  <h3>Estimated immediate maintenance</h3>
+                  <ol className={styles.factorList}>
+                    {ranking.effectiveCost.maintenanceItems.map((item) => (
+                      <li key={item.key}>
+                        <span className={styles.negativeImpact}>{formatMoney({ amount: item.estimatedCost, currency: 'USD' })}</span>
+                        <span>
+                          {item.label} ({item.matchedText})
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </>
+              ) : null}
             </>
           ) : null}
           {detail.risks.length ? (
@@ -197,6 +212,7 @@ function factorLabel(factor: ScoreFactor): string {
     'budget-fit': 'Budget fit',
     'clean-title': 'Clean title',
     'effective-purchase-cost': 'Effective purchase cost',
+    'immediate-maintenance-over-reserve': 'Immediate maintenance over reserve',
     'maintenance-evidence': 'Maintenance evidence',
     'mileage-fit': 'Mileage fit',
     'missing-maintenance-evidence': 'Missing maintenance evidence',
@@ -216,6 +232,9 @@ function inspectionChecklist(detail: ListingDetail, ranking: RankedListingSummar
     ...(ranking?.flags.includes('missing-maintenance-evidence') ? ['Ask for maintenance records or service history documentation.'] : []),
     ...(ranking?.flags.includes('suspiciously-low-price')
       ? ['Verify why the price is unusually low before treating it as a bargain.']
+      : []),
+    ...(ranking?.flags.includes('immediate-maintenance-over-reserve')
+      ? ['Get a written repair estimate for listed immediate maintenance items.']
       : []),
     ...(ranking?.flags.includes('title-status-mismatch') ? ['Verify title status against the seller paperwork and listing details.'] : []),
     ...(detail.listing.price ? ['Confirm out-the-door price and required fees in writing.'] : ['Ask for current asking price in writing.']),

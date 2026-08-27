@@ -89,6 +89,8 @@ describe('rankListingsForSearch', () => {
     assert.deepEqual(ranked?.effectiveCost, {
       askingPrice: 16_500,
       maintenanceReserve: 800,
+      maintenanceItems: [],
+      maintenanceItemsTotal: 0,
       total: 17_300
     });
     assert.equal(ranked?.factors.find((factor) => factor.key === 'effective-purchase-cost')?.scoreImpact, -8);
@@ -108,5 +110,27 @@ describe('rankListingsForSearch', () => {
     ]);
 
     assert.ok(ranked?.flags.includes('suspiciously-low-price'));
+  });
+
+  it('adds explicit immediate maintenance items to effective cost', () => {
+    const [ranked] = rankListingsForSearch(familySearchDefaults, [
+      {
+        source: { name: 'test', access: 'manual-import' },
+        url: 'https://example.test/brakes-and-tires',
+        title: '2014 Honda Odyssey',
+        vehicle: { year: 2014, make: 'Honda', model: 'Odyssey', vin: '12345678901234567' },
+        price: { amount: 9_000, currency: 'USD' },
+        rawDescription: 'Runs well but needs tires and brakes are worn.',
+        capturedAt: '2026-08-27T00:00:00.000Z'
+      }
+    ]);
+
+    assert.equal(ranked?.effectiveCost?.maintenanceItemsTotal, 1_400);
+    assert.equal(ranked?.effectiveCost?.total, 11_200);
+    assert.deepEqual(
+      ranked?.effectiveCost?.maintenanceItems.map((item) => item.key),
+      ['tires', 'brakes']
+    );
+    assert.ok(ranked?.flags.includes('immediate-maintenance-over-reserve'));
   });
 });

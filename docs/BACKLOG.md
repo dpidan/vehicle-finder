@@ -36,8 +36,8 @@
 23. Add recall lookup where appropriate.
 24. Partial — structured model/year risk records seeded, shown in listing detail, and used in scoring; evidence weighting still pending.
 25. Add estimated immediate-maintenance items.
-26. Add effective-purchase-cost calculation.
-27. Add anomaly / "why is this cheap?" flags.
+26. Done — effective-purchase-cost calculation using asking price plus saved-search maintenance reserve.
+27. Partial — anomaly / "why is this cheap?" flags include low-price transparency checks; market-comparable pricing still pending.
 28. Partial — inspection guidance shown in listing detail; persisted checklist state still pending.
 
 ## Dashboard
