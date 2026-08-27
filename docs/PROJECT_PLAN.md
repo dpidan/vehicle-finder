@@ -116,10 +116,10 @@ Each source is implemented behind an adapter and classified by access type, such
 - VIN decoding/enrichment.
 - Recall lookup.
 - Listing snapshots and price history.
-- Maintenance/risk knowledge.
+- Partial: maintenance/risk knowledge surfaced in listing detail through seeded model-year risk records.
 - Effective purchase-cost calculation.
 - "Why is this cheap?" anomaly flags.
-- Inspection guidance and verification questions derived from known risks and missing data.
+- Partial: inspection guidance and verification questions derived from known risks and missing data.
 
 ### Phase 3 — interactive dashboard
 
