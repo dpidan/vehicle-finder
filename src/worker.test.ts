@@ -262,6 +262,75 @@ describe('worker routes', () => {
     assert.deepEqual(body.thresholdMatches, []);
   });
 
+  it('returns a plain text monitoring digest', async () => {
+    const db = env({ listingChanges: true, staleListings: true, evaluations: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+    const response = await app.request(
+      '/api/searches/family-replacement-vehicle/monitoring-digest?since=2026-08-26T12:00:00.000Z&staleBefore=2026-08-26T12:00:00.000Z',
+      {},
+      { DB: db }
+    );
+    const body = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-type') ?? '', /^text\/plain/);
+    assert.match(body, /Family replacement vehicle monitoring digest/);
+    assert.match(body, /New listings: 1/);
+    assert.match(body, /2013 Honda Odyssey/);
+    assert.match(body, /Price drops: 1/);
+    assert.match(body, /\$10,900 -> \$9,900/);
+    assert.match(body, /Stale listings: 1/);
+    assert.match(body, /Score threshold matches: 1/);
+    assert.match(body, /2015 Toyota Sienna XLE vehicle 82, deal 91/);
+    assert.equal(db.writes.length, 0);
+  });
+
+  it('returns an empty monitoring digest without broken sections', async () => {
+    const response = await app.request(
+      '/api/searches/family-replacement-vehicle/monitoring-digest?since=2026-08-26T12:00:00.000Z&staleBefore=2026-08-26T12:00:00.000Z',
+      {},
+      env()
+    );
+    const body = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(body, /New listings: 0/);
+    assert.match(body, /Price drops: 0/);
+    assert.match(body, /Stale listings: 0/);
+    assert.match(body, /Score threshold matches: 0/);
+  });
+
+  it('validates monitoring digest requests', async () => {
+    const missingWindow = await app.request(
+      '/api/searches/family-replacement-vehicle/monitoring-digest?since=2026-08-26T12:00:00.000Z',
+      {},
+      env({ listingChanges: true, staleListings: true, evaluations: true })
+    );
+    const invalidWindow = await app.request(
+      '/api/searches/family-replacement-vehicle/monitoring-digest?since=not-a-date&staleBefore=2026-08-26T12:00:00.000Z',
+      {},
+      env({ listingChanges: true, staleListings: true, evaluations: true })
+    );
+    const invalidStaleBefore = await app.request(
+      '/api/searches/family-replacement-vehicle/monitoring-digest?since=2026-08-26T12:00:00.000Z&staleBefore=not-a-date',
+      {},
+      env({ listingChanges: true, staleListings: true, evaluations: true })
+    );
+    const missingSearch = await app.request(
+      '/api/searches/missing/monitoring-digest?since=2026-08-26T12:00:00.000Z&staleBefore=2026-08-26T12:00:00.000Z',
+      {},
+      env({ listingChanges: true, staleListings: true, evaluations: true })
+    );
+
+    assert.equal(missingWindow.status, 400);
+    assert.deepEqual(await missingWindow.json(), { error: 'invalid-stale-before' });
+    assert.equal(invalidWindow.status, 400);
+    assert.deepEqual(await invalidWindow.json(), { error: 'invalid-since' });
+    assert.equal(invalidStaleBefore.status, 400);
+    assert.deepEqual(await invalidStaleBefore.json(), { error: 'invalid-stale-before' });
+    assert.equal(missingSearch.status, 404);
+    assert.deepEqual(await missingSearch.json(), { error: 'not-found' });
+  });
+
   it('returns listing detail with recent snapshots', async () => {
     const response = await app.request('/api/listings/listing-sienna', {}, env({ listingDetail: true }));
     const body = (await response.json()) as {
