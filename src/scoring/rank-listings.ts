@@ -82,6 +82,9 @@ function scoreListing(search: SavedSearchConfig, listing: ListingCandidate): Ran
   const priceImpact = priceScoreImpact(search, listing);
   dealScore += priceImpact;
   factors.push(factor('budget-fit', 'score.budgetFit', priceImpact));
+  if (hasSuspiciouslyLowPrice(search, listing)) {
+    flags.push('suspiciously-low-price');
+  }
 
   const effectiveCost = effectiveCostEstimate(search, listing);
   if (effectiveCost) {
@@ -158,6 +161,20 @@ function priceScoreImpact(search: SavedSearchConfig, listing: ListingCandidate):
   }
 
   return -20;
+}
+
+function hasSuspiciouslyLowPrice(search: SavedSearchConfig, listing: ListingCandidate): boolean {
+  const price = listing.price?.amount;
+  const cashTarget = search.budgets.cashTarget;
+
+  if (price === undefined || cashTarget === undefined || price > cashTarget * 0.6) {
+    return false;
+  }
+
+  const description = listing.rawDescription?.toLowerCase() ?? '';
+  const hasMaintenanceEvidence = description.includes('maintenance records') || description.includes('service documented');
+
+  return !listing.vehicle.vin || !listing.titleStatus || !hasMaintenanceEvidence;
 }
 
 function effectiveCostEstimate(search: SavedSearchConfig, listing: ListingCandidate): EffectiveCostEstimate | undefined {

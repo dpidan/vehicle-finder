@@ -94,4 +94,19 @@ describe('rankListingsForSearch', () => {
     assert.equal(ranked?.factors.find((factor) => factor.key === 'effective-purchase-cost')?.scoreImpact, -8);
     assert.ok(ranked?.flags.includes('effective-cost-over-budget'));
   });
+
+  it('flags very cheap listings with missing transparency signals', () => {
+    const [ranked] = rankListingsForSearch(familySearchDefaults, [
+      {
+        source: { name: 'test', access: 'manual-import' },
+        url: 'https://example.test/cheap-pilot',
+        title: '2011 Honda Pilot',
+        vehicle: { year: 2011, make: 'Honda', model: 'Pilot' },
+        price: { amount: 5_500, currency: 'USD' },
+        capturedAt: '2026-08-27T00:00:00.000Z'
+      }
+    ]);
+
+    assert.ok(ranked?.flags.includes('suspiciously-low-price'));
+  });
 });

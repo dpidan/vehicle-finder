@@ -214,6 +214,9 @@ function inspectionChecklist(detail: ListingDetail, ranking: RankedListingSummar
     ...detail.risks.flatMap((risk) => risk.inspectFor),
     ...(!detail.listing.vehicle.vin ? ['Request and verify the VIN before committing time or money.'] : []),
     ...(ranking?.flags.includes('missing-maintenance-evidence') ? ['Ask for maintenance records or service history documentation.'] : []),
+    ...(ranking?.flags.includes('suspiciously-low-price')
+      ? ['Verify why the price is unusually low before treating it as a bargain.']
+      : []),
     ...(ranking?.flags.includes('title-status-mismatch') ? ['Verify title status against the seller paperwork and listing details.'] : []),
     ...(detail.listing.price ? ['Confirm out-the-door price and required fees in writing.'] : ['Ask for current asking price in writing.']),
     'Arrange an independent pre-purchase inspection before purchase.'

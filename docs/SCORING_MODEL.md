@@ -126,3 +126,5 @@ Scoring should be supplemented with explicit flags such as:
 - Seller refusal of independent inspection.
 - Immediate repairs above saved-search maintenance reserve.
 - Stale listing or uncertain availability.
+
+Initial implementation includes `suspiciously-low-price` when a listing is priced at or below 60% of the saved search cash target and is also missing basic transparency signals such as VIN, title status, or maintenance evidence. This is a verification prompt, not a direct score penalty. Market-comparable pricing should replace or refine this heuristic later.
