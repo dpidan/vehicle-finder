@@ -10,15 +10,15 @@
 6. Define typed attribute/evidence model for extensible facts.
 7. Decide initial authentication approach for the first private users while preserving a path to public accounts.
 
-## Next — technical spike
+## Done — technical spike
 
-8. Scaffold a minimal Cloudflare Worker + Hono + D1 project.
-9. Define thin domain services behind the Hono routes so API, MCP, and future clients share behavior.
-10. Add React/Vite only after API/database skeleton is working, using regular API calls for data.
-11. Implement migrations and seed one user + initial family search.
-12. Build a fake/sample source adapter and fixture dataset.
-13. Add manual import preview for pasted VIN/URL/listing details.
-14. Add a repeatable fixture-scoring command before connecting live sources.
+8. Done — scaffold a minimal Cloudflare Worker + Hono + D1 project.
+9. Done — define thin domain services behind the Hono routes so API, MCP, and future clients share behavior.
+10. Done — add React/Vite after API/database skeleton is working, using regular API calls for data.
+11. Done — implement migrations and seed one user + initial family search.
+12. Done — build a fake/sample source adapter and fixture dataset.
+13. Done — add manual import preview for pasted VIN/URL/listing details.
+14. Done — add a repeatable fixture-scoring command before connecting live sources.
 
 ## First live data
 
@@ -42,23 +42,23 @@
 
 ## Dashboard
 
-29. Search selector / user selector.
-30. Ranked result list.
-31. Vehicle vs Deal Score explanation.
-32. Listing details and photos.
-33. Favorites / contacted / inspection / rejected states.
+29. Done — search selector.
+30. Done — ranked result list.
+31. Done — Vehicle vs Deal Score explanation.
+32. Partial — listing details; photos still pending.
+33. Done — favorites / contacted / inspection / rejected states.
 34. Next action and follow-up tracking.
-35. Rejection reasons.
+35. Done — rejection reasons.
 36. Candidate comparison.
 
 ## Monitoring
 
-37. Scheduled collection.
-38. New-listing alerts.
-39. Price-drop alerts.
-40. Score-threshold notifications.
-41. Stale-listing alerts.
-42. Periodic digest/report.
+37. Done — scheduled collection.
+38. Partial — new-listing signals in API/MCP/dashboard; delivery still pending.
+39. Partial — price-drop signals in API/MCP/dashboard; delivery still pending.
+40. Partial — score-threshold signals in API/MCP/dashboard; delivery still pending.
+41. Partial — stale-listing signals in API/MCP/dashboard; delivery still pending.
+42. Partial — plain text digest API/MCP; delivery/scheduling still pending.
 
 ## Assistant access
 

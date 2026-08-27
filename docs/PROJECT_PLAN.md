@@ -123,20 +123,13 @@ Each source is implemented behind an adapter and classified by access type, such
 
 ### Phase 3 — interactive dashboard
 
-- User/search selector.
-- Filtering and sorting.
-- Listing detail view.
-- Favorite/interested/contacted/inspection/rejected workflow.
-- Next action and follow-up tracking.
-- Rejection reasons.
-- Compare candidates.
+- Done: search selector, ranked result list, filtering/sorting, listing detail view, score-factor explanations, and favorite/interested/contacted/inspection/rejected workflow with rejection reasons.
+- Remaining: listing photos, next action and follow-up tracking, and candidate comparison.
 
 ### Phase 4 — monitoring
 
-- Scheduled collection.
-- New-listing and price-drop detection.
-- Search-specific notification thresholds.
-- Digest/reporting options.
+- Done: scheduled collection, new-listing and price-drop detection, stale-listing detection, score-threshold matching, a plain text digest, and dashboard summary counts.
+- Remaining: actual notification delivery, configurable monitoring windows, and richer digest/report presentation.
 
 ### Phase 5 — assistant access
 
