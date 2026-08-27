@@ -1,0 +1,42 @@
+import type { ListingDetail, ListingDisposition, ListingDispositionState, RankedListingSummary, SavedSearchSummary } from './types.js';
+
+export async function fetchSavedSearches(): Promise<SavedSearchSummary[]> {
+  const { searches } = await fetchJson<{ searches: SavedSearchSummary[] }>('/api/searches');
+  return searches;
+}
+
+export async function fetchRankedListings(searchId: string): Promise<RankedListingSummary[]> {
+  const { rankedListings } = await fetchJson<{ rankedListings: RankedListingSummary[] }>(`/api/searches/${searchId}/ranked-listings`);
+  return rankedListings;
+}
+
+export function fetchListingDetail(listingId: string): Promise<ListingDetail> {
+  return fetchJson<ListingDetail>(`/api/listings/${listingId}`);
+}
+
+export async function saveListingDisposition(
+  searchId: string,
+  listingId: string,
+  state: ListingDispositionState,
+  rejectionReason?: string
+): Promise<ListingDisposition> {
+  const { disposition } = await fetchJson<{ disposition: ListingDisposition }>(
+    `/api/searches/${searchId}/listings/${listingId}/disposition`,
+    {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ state, ...(rejectionReason ? { rejectionReason } : {}) })
+    }
+  );
+  return disposition;
+}
+
+async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init);
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
+}
