@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { importListingCandidates } from './services/inventory-service.js';
 import { filterThresholdMatches, formatMonitoringDigest, isIsoDateTime, type MonitoringSummary } from './services/monitoring-service.js';
+import { decodeVin } from './services/vin-decoder-service.js';
 import {
   getSavedSearch,
   getListingDetail,
@@ -329,6 +330,26 @@ app.post('/api/admin/searches/:id/refresh', async (c) => {
   });
 });
 
+app.post('/api/admin/vin-decodes', async (c) => {
+  const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
+
+  if (unauthorized) {
+    return c.json({ error: unauthorized }, unauthorized === 'admin-token-not-configured' ? 503 : 401);
+  }
+
+  const body = (await c.req.json()) as { vin?: unknown; modelYear?: unknown };
+
+  if (typeof body.vin !== 'string' || (body.modelYear !== undefined && !isValidModelYear(body.modelYear))) {
+    return c.json({ error: 'invalid-vin-decode' }, 400);
+  }
+
+  try {
+    return c.json(await decodeVin(c.env.DB, body.vin, body.modelYear as number | undefined, new Date().toISOString()));
+  } catch (error) {
+    return c.json({ error: 'vin-decode-failed', message: errorMessage(error) }, 400);
+  }
+});
+
 app.get('/api/admin/mcp/tools', (c) => {
   const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
 
@@ -462,6 +483,10 @@ function isDispositionInput(value: Partial<ListingDispositionInput>): value is L
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isValidModelYear(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 1981 && value <= 2100;
 }
 
 export async function refreshEnabledSavedSearches(db: D1Database, refreshedAt: string): Promise<{

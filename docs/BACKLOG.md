@@ -32,7 +32,7 @@
 
 ## Enrichment
 
-22. Add cached VIN decoding.
+22. Partial — cached VIN decoding supports admin-triggered single-VIN decode; automatic batch enrichment still pending.
 23. Add recall lookup where appropriate.
 24. Partial — structured model/year risk records seeded, shown in listing detail, and used in scoring; evidence weighting still pending.
 25. Add estimated immediate-maintenance items.

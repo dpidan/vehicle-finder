@@ -622,6 +622,67 @@ describe('worker routes', () => {
     }
   });
 
+  it('requires the admin token for VIN decoding', async () => {
+    const response = await app.request('/api/admin/vin-decodes', { method: 'POST' }, env());
+
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { error: 'admin-token-not-configured' });
+  });
+
+  it('validates VIN decode requests', async () => {
+    const response = await app.request(
+      '/api/admin/vin-decodes',
+      {
+        method: 'POST',
+        body: JSON.stringify({ vin: 'bad', modelYear: 1970 }),
+        headers: { authorization: 'Bearer secret', 'content-type': 'application/json' }
+      },
+      env({ adminToken: 'secret' })
+    );
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), { error: 'invalid-vin-decode' });
+  });
+
+  it('decodes and caches a VIN with the admin token', async () => {
+    const db = env({ adminToken: 'secret' }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      Response.json({
+        Results: [
+          {
+            Make: 'HONDA',
+            Model: 'Odyssey',
+            Trim: 'EX-L',
+            ErrorCode: '0',
+            ErrorText: '0 - VIN decoded clean. Check Digit (9th position) is correct'
+          }
+        ]
+      })) as typeof fetch;
+
+    try {
+      const response = await app.request(
+        '/api/admin/vin-decodes',
+        {
+          method: 'POST',
+          body: JSON.stringify({ vin: '5fnrl5h60gb000001', modelYear: 2016 }),
+          headers: { authorization: 'Bearer secret', 'content-type': 'application/json' }
+        },
+        { DB: db, ADMIN_TOKEN: 'secret' }
+      );
+      const body = (await response.json()) as { source: string; decode: { vin: string; make: string; model: string } };
+
+      assert.equal(response.status, 200);
+      assert.equal(body.source, 'live');
+      assert.equal(body.decode.vin, '5FNRL5H60GB000001');
+      assert.equal(body.decode.make, 'HONDA');
+      assert.equal(body.decode.model, 'Odyssey');
+      assert.ok(db.writes.some((write) => write.sql.startsWith('INSERT INTO vin_decodes')));
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('refreshes enabled saved searches for scheduled collection', async () => {
     const originalFetch = globalThis.fetch;
 
