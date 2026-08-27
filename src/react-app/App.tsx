@@ -29,7 +29,10 @@ function DashboardShell() {
   const [searches, setSearches] = useState<SavedSearchSummary[]>([]);
   const [selectedSearchId, setSelectedSearchId] = useState('');
   const [rankedListings, setRankedListings] = useState<RankedListingSummary[]>([]);
+  const [selectedListingId, setSelectedListingId] = useState('');
+  const [listingDetail, setListingDetail] = useState<ListingDetail | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading');
+  const [detailStatus, setDetailStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
 
   useEffect(() => {
     let cancelled = false;
@@ -62,6 +65,7 @@ function DashboardShell() {
       .then(({ rankedListings }) => {
         if (cancelled) return;
         setRankedListings(rankedListings);
+        setSelectedListingId(rankedListings[0]?.listingId ?? '');
         setStatus('ready');
       })
       .catch(() => {
@@ -72,6 +76,31 @@ function DashboardShell() {
       cancelled = true;
     };
   }, [searches.length, selectedSearchId]);
+
+  useEffect(() => {
+    if (!selectedListingId) {
+      setListingDetail(null);
+      setDetailStatus('idle');
+      return;
+    }
+
+    let cancelled = false;
+    setDetailStatus('loading');
+
+    fetchJson<ListingDetail>(`/api/listings/${selectedListingId}`)
+      .then((detail) => {
+        if (cancelled) return;
+        setListingDetail(detail);
+        setDetailStatus('ready');
+      })
+      .catch(() => {
+        if (!cancelled) setDetailStatus('error');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedListingId]);
 
   const selectedSearch = searches.find((search) => search.id === selectedSearchId);
 
@@ -100,47 +129,65 @@ function DashboardShell() {
         <Metric label="Best vehicle" value={bestScore(rankedListings, 'vehicleScore')} />
       </section>
 
-      <section className={styles.listPanel}>
-        <div className={styles.panelHeader}>
-          <h2>Ranked listings</h2>
-          <span className={styles.status}>{statusLabel(status)}</span>
-        </div>
-        {status === 'ready' && rankedListings.length > 0 ? (
-          <div className={styles.tableWrap}>
-            <table className={styles.listingTable}>
-              <thead>
-                <tr>
-                  <th>Listing</th>
-                  <th>Scores</th>
-                  <th>Price</th>
-                  <th>Mileage</th>
-                  <th>Seller</th>
-                  <th>State</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rankedListings.map((item) => (
-                  <ListingRow key={item.listingId} item={item} />
-                ))}
-              </tbody>
-            </table>
+      <div className={styles.workspace}>
+        <section className={styles.listPanel}>
+          <div className={styles.panelHeader}>
+            <h2>Ranked listings</h2>
+            <span className={styles.status}>{statusLabel(status)}</span>
           </div>
-        ) : (
-          <div className={styles.emptyState}>
-            <h2>{emptyTitle(status)}</h2>
-            <p>{emptyMessage(status)}</p>
-          </div>
-        )}
-      </section>
+          {status === 'ready' && rankedListings.length > 0 ? (
+            <div className={styles.tableWrap}>
+              <table className={styles.listingTable}>
+                <thead>
+                  <tr>
+                    <th>Listing</th>
+                    <th>Scores</th>
+                    <th>Price</th>
+                    <th>Mileage</th>
+                    <th>Seller</th>
+                    <th>State</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rankedListings.map((item) => (
+                    <ListingRow
+                      key={item.listingId}
+                      item={item}
+                      selected={item.listingId === selectedListingId}
+                      onSelect={() => setSelectedListingId(item.listingId)}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className={styles.emptyState}>
+              <h2>{emptyTitle(status)}</h2>
+              <p>{emptyMessage(status)}</p>
+            </div>
+          )}
+        </section>
+
+        <ListingDetailPanel detail={listingDetail} status={detailStatus} />
+      </div>
     </main>
   );
 }
 
-function ListingRow({ item }: { item: RankedListingSummary }) {
+function ListingRow({
+  item,
+  selected,
+  onSelect
+}: {
+  item: RankedListingSummary;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   const listing = item.rankedListing.listing;
 
   return (
-    <tr>
+    <tr className={selected ? styles.selectedRow : undefined}>
       <td>
         <a className={styles.listingTitle} href={listing.url} target="_blank" rel="noreferrer">
           {listing.title}
@@ -160,7 +207,76 @@ function ListingRow({ item }: { item: RankedListingSummary }) {
       <td>
         <span className={styles.status}>{item.disposition?.state ?? 'new'}</span>
       </td>
+      <td>
+        <button className={styles.secondaryButton} type="button" onClick={onSelect}>
+          View
+        </button>
+      </td>
     </tr>
+  );
+}
+
+function ListingDetailPanel({
+  detail,
+  status
+}: {
+  detail: ListingDetail | null;
+  status: 'idle' | 'loading' | 'ready' | 'error';
+}) {
+  const listing = detail?.listing;
+
+  return (
+    <aside className={styles.detailPanel}>
+      <div className={styles.panelHeader}>
+        <h2>Listing detail</h2>
+        <span className={styles.status}>{status === 'idle' ? 'None' : statusLabel(status)}</span>
+      </div>
+      {status === 'ready' && listing ? (
+        <div className={styles.detailBody}>
+          <a className={styles.detailTitle} href={listing.url} target="_blank" rel="noreferrer">
+            {listing.title}
+          </a>
+          <div className={styles.detailGrid}>
+            <DetailItem label="Vehicle" value={vehicleLabel(listing.vehicle)} />
+            <DetailItem label="VIN" value={listing.vehicle.vin ?? 'Missing'} />
+            <DetailItem label="Price" value={formatMoney(listing.price)} />
+            <DetailItem label="Mileage" value={listing.mileage ? `${listing.mileage.toLocaleString()} mi` : 'Unknown'} />
+            <DetailItem label="Title" value={listing.titleStatus ?? 'Unknown'} />
+            <DetailItem label="Status" value={listing.status ?? 'Unknown'} />
+            <DetailItem label="Seller" value={listing.seller?.name ?? 'Unknown'} />
+            <DetailItem label="Source" value={listing.source.name} />
+          </div>
+          <h3>Recent snapshots</h3>
+          {detail.snapshots.length ? (
+            <ol className={styles.snapshotList}>
+              {detail.snapshots.map((snapshot) => (
+                <li key={snapshot.id}>
+                  <time dateTime={snapshot.capturedAt}>{formatDate(snapshot.capturedAt)}</time>
+                  <span>{formatMoney(snapshot.price)}</span>
+                  <span>{snapshot.mileage ? `${snapshot.mileage.toLocaleString()} mi` : 'Unknown mileage'}</span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className={styles.subtle}>No snapshots yet.</p>
+          )}
+        </div>
+      ) : (
+        <div className={styles.emptyState}>
+          <h2>{detailEmptyTitle(status)}</h2>
+          <p>{detailEmptyMessage(status)}</p>
+        </div>
+      )}
+    </aside>
+  );
+}
+
+function DetailItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className={styles.detailItem}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   );
 }
 
@@ -211,6 +327,22 @@ function formatMoney(price: ListingCandidate['price']): string {
   return price ? new Intl.NumberFormat('en-US', { style: 'currency', currency: price.currency, maximumFractionDigits: 0 }).format(price.amount) : 'Unknown';
 }
 
+function formatDate(value: string): string {
+  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+}
+
+function detailEmptyTitle(status: 'idle' | 'loading' | 'ready' | 'error'): string {
+  return status === 'loading' ? 'Loading detail.' : status === 'error' ? 'Could not load listing.' : 'Select a listing.';
+}
+
+function detailEmptyMessage(status: 'idle' | 'loading' | 'ready' | 'error'): string {
+  return status === 'loading'
+    ? 'Fetching detail and snapshots from the Worker API.'
+    : status === 'error'
+      ? 'The listing may no longer exist in the local database.'
+      : 'Choose a row from ranked listings to inspect source and history details.';
+}
+
 interface SavedSearchSummary {
   id: string;
   name: string;
@@ -227,9 +359,14 @@ interface RankedListingSummary {
 }
 
 interface ListingCandidate {
+  source: {
+    name: string;
+  };
   url: string;
   title: string;
+  status?: string;
   vehicle: {
+    vin?: string;
     year?: number;
     make?: string;
     model?: string;
@@ -240,7 +377,18 @@ interface ListingCandidate {
     currency: 'USD';
   };
   mileage?: number;
+  titleStatus?: string;
   seller?: {
     name: string;
   };
+}
+
+interface ListingDetail {
+  listing: ListingCandidate;
+  snapshots: Array<{
+    id: string;
+    capturedAt: string;
+    price?: ListingCandidate['price'];
+    mileage?: number;
+  }>;
 }
