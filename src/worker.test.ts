@@ -909,6 +909,57 @@ describe('worker routes', () => {
     assert.ok(body.rankedListing.dealScore > 0);
   });
 
+  it('requires the admin token for saving manual imports', async () => {
+    const response = await app.request('/api/admin/manual-imports', { method: 'POST' }, env());
+
+    assert.equal(response.status, 503);
+    assert.deepEqual(await response.json(), { error: 'admin-token-not-configured' });
+  });
+
+  it('saves a manual import and refreshes evaluations', async () => {
+    const db = env({ adminToken: 'secret' }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+    const response = await app.request(
+      '/api/admin/manual-imports',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          searchId: 'family-replacement-vehicle',
+          url: 'https://example.test/manual-sienna',
+          title: '2015 Toyota Sienna XLE',
+          year: 2015,
+          make: 'Toyota',
+          model: 'Sienna',
+          price: 14900,
+          mileage: 93000,
+          titleStatus: 'clean'
+        }),
+        headers: { authorization: 'Bearer secret', 'content-type': 'application/json' }
+      },
+      { DB: db, ADMIN_TOKEN: 'secret' }
+    );
+    const body = (await response.json()) as { import: { insertedListings: number; snapshotCount: number } };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.import.insertedListings, 1);
+    assert.equal(body.import.snapshotCount, 1);
+    assert.ok(db.writes.some((write) => write.sql.startsWith('INSERT INTO listings')));
+    assert.ok(db.writes.some((write) => write.sql.startsWith('INSERT INTO listing_snapshots')));
+  });
+
+  it('rejects invalid saved manual imports', async () => {
+    const response = await app.request(
+      '/api/admin/manual-imports',
+      {
+        method: 'POST',
+        body: JSON.stringify({ searchId: 'family-replacement-vehicle', url: '', title: 'Missing URL' }),
+        headers: { authorization: 'Bearer secret', 'content-type': 'application/json' }
+      },
+      env({ adminToken: 'secret' })
+    );
+
+    assert.equal(response.status, 400);
+  });
+
   it('rejects invalid manual import preview payloads', async () => {
     const response = await app.request(
       '/api/manual-imports/preview',

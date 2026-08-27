@@ -390,6 +390,41 @@ app.post('/api/manual-imports/preview', async (c) => {
   });
 });
 
+app.post('/api/admin/manual-imports', async (c) => {
+  const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
+
+  if (unauthorized) {
+    return c.json({ error: unauthorized }, unauthorized === 'admin-token-not-configured' ? 503 : 401);
+  }
+
+  const body = (await c.req.json()) as ManualImportInput & { searchId: string };
+  const search = await getSavedSearch(c.env.DB, body.searchId);
+
+  if (!search) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  let candidate;
+  const importedAt = new Date().toISOString();
+
+  try {
+    candidate = manualImportToCandidate(body, importedAt);
+  } catch (error) {
+    return c.json({ error: 'invalid-manual-import', message: errorMessage(error) }, 400);
+  }
+
+  const importResult = await importListingCandidates(c.env.DB, [candidate]);
+  const rankedListings = await rankPersistedListingsForSavedSearch(c.env.DB, search);
+  const evaluation = await writeSearchEvaluations(c.env.DB, search.id, rankedListings, importedAt);
+
+  return c.json({
+    searchId: search.id,
+    importedAt,
+    import: importResult,
+    evaluation
+  });
+});
+
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Invalid manual import payload.';
 }

@@ -532,9 +532,16 @@
   font-weight: 700;
 }
 
+.formSuccess {
+  margin: 0;
+  padding: 0 var(--space-4) var(--space-4);
+  color: #216c3b;
+  font-weight: 700;
+}
+
 .manualPreview {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(0, auto));
+  grid-template-columns: minmax(220px, 1fr) repeat(4, minmax(0, auto));
   gap: var(--space-3);
   padding: var(--space-4);
   border-top: 1px solid var(--color-border);

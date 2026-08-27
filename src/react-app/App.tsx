@@ -163,7 +163,7 @@ function DashboardShell() {
         listings={comparedListings}
         onRemove={(listingId) => setCompareListingIds((ids) => ids.filter((id) => id !== listingId))}
       />
-      <ManualImportPanel searchId={selectedSearchId} />
+      <ManualImportPanel searchId={selectedSearchId} onSaved={() => refreshListings(selectedSearchId)} />
 
       <div className={styles.workspace}>
         <section className={styles.listPanel}>
@@ -225,6 +225,19 @@ function DashboardShell() {
       setWorkflowStatus('Workflow state saved.');
     } catch {
       setWorkflowStatus('Could not save workflow state.');
+    }
+  }
+
+  async function refreshListings(searchId: string) {
+    setStatus('loading');
+
+    try {
+      const rankedListings = await fetchRankedListings(searchId);
+      setRankedListings(rankedListings);
+      setSelectedListingId((current) => (rankedListings.some((item) => item.listingId === current) ? current : (rankedListings[0]?.listingId ?? '')));
+      setStatus('ready');
+    } catch {
+      setStatus('error');
     }
   }
 

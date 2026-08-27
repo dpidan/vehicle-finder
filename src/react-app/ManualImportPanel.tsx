@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { previewManualImport } from './api.js';
+import { previewManualImport, saveManualImport } from './api.js';
 import { formatMoney, vehicleLabel } from './format.js';
 import styles from './App.module.css';
 import type { ManualImportPreview } from './types.js';
 
-export function ManualImportPanel({ searchId }: { searchId: string }) {
+export function ManualImportPanel({ searchId, onSaved }: { searchId: string; onSaved: () => void }) {
   const [preview, setPreview] = useState<ManualImportPreview | null>(null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [lastPayload, setLastPayload] = useState<Record<string, string | number> | null>(null);
 
   return (
     <section className={styles.manualImportPanel}>
@@ -89,8 +91,13 @@ export function ManualImportPanel({ searchId }: { searchId: string }) {
             <strong>{formatMoney(preview.candidate.price)}</strong>
             <span>{preview.candidate.mileage ? `${preview.candidate.mileage.toLocaleString()} mi` : 'Unknown mileage'}</span>
           </div>
+          <button className={styles.secondaryButton} type="button" disabled={saveStatus === 'saving'} onClick={submitSave}>
+            Save import
+          </button>
         </div>
       ) : null}
+      {saveStatus === 'saved' ? <p className={styles.formSuccess}>Manual listing saved.</p> : null}
+      {saveStatus === 'error' ? <p className={styles.formError}>Could not save this listing.</p> : null}
     </section>
   );
 
@@ -99,10 +106,34 @@ export function ManualImportPanel({ searchId }: { searchId: string }) {
     setStatus('loading');
 
     try {
-      setPreview(await previewManualImport(searchId, formPayload(new FormData(event.currentTarget))));
+      const payload = formPayload(new FormData(event.currentTarget));
+      setLastPayload(payload);
+      setPreview(await previewManualImport(searchId, payload));
       setStatus('ready');
+      setSaveStatus('idle');
     } catch {
       setStatus('error');
+    }
+  }
+
+  async function submitSave() {
+    if (!lastPayload) return;
+
+    const adminToken = window.prompt('Admin token')?.trim();
+
+    if (!adminToken) {
+      setSaveStatus('error');
+      return;
+    }
+
+    setSaveStatus('saving');
+
+    try {
+      await saveManualImport(searchId, lastPayload, adminToken);
+      setSaveStatus('saved');
+      onSaved();
+    } catch {
+      setSaveStatus('error');
     }
   }
 }

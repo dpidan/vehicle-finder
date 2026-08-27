@@ -106,3 +106,17 @@ export interface ManualImportPreview {
   candidate: ListingCandidate;
   rankedListing: RankedListingSummary['rankedListing'];
 }
+
+export interface ManualImportSaveResult {
+  searchId: string;
+  importedAt: string;
+  import: {
+    candidateCount: number;
+    insertedListings: number;
+    updatedListings: number;
+    snapshotCount: number;
+  };
+  evaluation: {
+    insertedEvaluations: number;
+  };
+}

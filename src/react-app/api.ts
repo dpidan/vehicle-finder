@@ -3,6 +3,7 @@ import type {
   ListingDisposition,
   ListingDispositionState,
   ManualImportPreview,
+  ManualImportSaveResult,
   MonitoringSummary,
   NextAction,
   RankedListingSummary,
@@ -36,6 +37,14 @@ export function previewManualImport(searchId: string, input: Record<string, stri
   return fetchJson<ManualImportPreview>('/api/manual-imports/preview', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ searchId, ...input })
+  });
+}
+
+export function saveManualImport(searchId: string, input: Record<string, string | number>, adminToken: string): Promise<ManualImportSaveResult> {
+  return fetchJson<ManualImportSaveResult>('/api/admin/manual-imports', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${adminToken}`, 'content-type': 'application/json' },
     body: JSON.stringify({ searchId, ...input })
   });
 }
