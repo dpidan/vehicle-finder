@@ -27,6 +27,7 @@ export function ListingDetailPanel({
   status: 'idle' | 'loading' | 'ready' | 'error';
 }) {
   const listing = detail?.listing;
+  const inspectionItems = detail && listing ? inspectionChecklist(detail, ranking) : [];
   const [nextActionType, setNextActionType] = useState<NextActionType>('none');
   const [nextActionDueAt, setNextActionDueAt] = useState('');
   const [nextActionNote, setNextActionNote] = useState('');
@@ -110,6 +111,16 @@ export function ListingDetailPanel({
               </ol>
             </>
           ) : null}
+          {inspectionItems.length ? (
+            <>
+              <h3>Inspection checklist</h3>
+              <ul className={styles.checklist}>
+                {inspectionItems.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </>
+          ) : null}
           <h3>Next action</h3>
           <form className={styles.nextActionForm} onSubmit={saveNextAction}>
             <label>
@@ -191,6 +202,19 @@ function factorLabel(factor: ScoreFactor): string {
   };
 
   return labels[factor.key] ?? factor.key.replaceAll('-', ' ');
+}
+
+function inspectionChecklist(detail: ListingDetail, ranking: RankedListingSummary['rankedListing'] | null): string[] {
+  const items = [
+    ...detail.risks.flatMap((risk) => risk.inspectFor),
+    ...(!detail.listing.vehicle.vin ? ['Request and verify the VIN before committing time or money.'] : []),
+    ...(ranking?.flags.includes('missing-maintenance-evidence') ? ['Ask for maintenance records or service history documentation.'] : []),
+    ...(ranking?.flags.includes('title-status-mismatch') ? ['Verify title status against the seller paperwork and listing details.'] : []),
+    ...(detail.listing.price ? ['Confirm out-the-door price and required fees in writing.'] : ['Ask for current asking price in writing.']),
+    'Arrange an independent pre-purchase inspection before purchase.'
+  ];
+
+  return Array.from(new Set(items));
 }
 
 function DetailItem({ label, value }: { label: string; value: string }) {
