@@ -1,6 +1,7 @@
 import type { ListingCandidate, ListingDisposition, ListingDispositionState, ModelYearRisk, NextAction, SavedSearch } from '../domain/entities.js';
 import type { SavedSearchConfig } from '../domain/search-config.js';
 import { rankListingsForSearch, type RankedListing } from '../scoring/rank-listings.js';
+import { getCachedRecallLookupForVehicle, type RecallLookup } from './recall-service.js';
 import { collectSampleListings } from '../sources/sample-source.js';
 
 export interface SavedSearchRow {
@@ -66,6 +67,7 @@ interface SnapshotRow {
 export interface ListingDetail {
   listing: ListingCandidate;
   risks: ModelYearRisk[];
+  recallLookup?: RecallLookup;
   snapshots: Array<{
     id: string;
     capturedAt: string;
@@ -512,10 +514,12 @@ export async function getListingDetail(db: D1Database, id: string): Promise<List
     .bind(id)
     .all<SnapshotRow>();
   const risks = await listModelYearRisksForVehicle(db, row.make, row.model, row.year);
+  const recallLookup = await getCachedRecallLookupForVehicle(db, row.year, row.make, row.model);
 
   return {
     listing: withoutListingId(toListingCandidate(row)),
     risks,
+    ...(recallLookup ? { recallLookup } : {}),
     snapshots: results.map(toSnapshot)
   };
 }

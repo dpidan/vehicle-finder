@@ -100,6 +100,7 @@ export interface ListingCandidate {
 export interface ListingDetail {
   listing: ListingCandidate;
   risks: ModelYearRisk[];
+  recallLookup?: RecallLookup;
   snapshots: Array<{
     id: string;
     capturedAt: string;
@@ -107,6 +108,24 @@ export interface ListingDetail {
     mileage?: number;
     photoUrls?: string[];
   }>;
+}
+
+export interface RecallLookup {
+  lookupKey: string;
+  modelYear: number;
+  make: string;
+  model: string;
+  recalls: RecallRecord[];
+  checkedAt: string;
+}
+
+export interface RecallRecord {
+  campaignNumber?: string;
+  component?: string;
+  summary?: string;
+  consequence?: string;
+  remedy?: string;
+  reportReceivedDate?: string;
 }
 
 export interface ModelYearRisk {

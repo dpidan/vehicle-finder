@@ -79,6 +79,19 @@ export function recallLookupKey(modelYear: number, make: string, model: string):
   return `${modelYear}:${make.trim().toLowerCase()}:${model.trim().toLowerCase()}`;
 }
 
+export async function getCachedRecallLookupForVehicle(
+  db: D1Database,
+  modelYear: number | null | undefined,
+  make: string | null | undefined,
+  model: string | null | undefined
+): Promise<RecallLookup | undefined> {
+  if (!modelYear || !make || !model) {
+    return undefined;
+  }
+
+  return getCachedRecallLookup(db, recallLookupKey(modelYear, make, model));
+}
+
 async function getCachedRecallLookup(db: D1Database, lookupKey: string): Promise<RecallLookup | undefined> {
   const row = await db.prepare(`SELECT * FROM vehicle_recalls WHERE lookup_key = ?`).bind(lookupKey).first<RecallLookupRow>();
   return row ? rowToLookup(row) : undefined;

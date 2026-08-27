@@ -332,10 +332,11 @@ describe('worker routes', () => {
   });
 
   it('returns listing detail with recent snapshots', async () => {
-    const response = await app.request('/api/listings/listing-sienna', {}, env({ listingDetail: true, modelYearRisks: true }));
+    const response = await app.request('/api/listings/listing-sienna', {}, env({ listingDetail: true, modelYearRisks: true, recallLookup: true }));
     const body = (await response.json()) as {
       listing: { title: string; vehicle: { vin: string }; seller: { phone: string }; price: { amount: number }; mileage: number };
       risks: Array<{ issue: string; inspectFor: string[] }>;
+      recallLookup: { recalls: Array<{ campaignNumber: string; component: string }> };
       snapshots: Array<{ capturedAt: string; price: { amount: number }; mileage: number }>;
     };
 
@@ -347,6 +348,8 @@ describe('worker routes', () => {
     assert.equal(body.listing.mileage, 93000);
     assert.equal(body.risks[0]?.issue, 'Generally preferred years, with power sliding-door operation still worth checking.');
     assert.deepEqual(body.risks[0]?.inspectFor, ['Test both power sliding doors']);
+    assert.equal(body.recallLookup.recalls[0]?.campaignNumber, '16V858000');
+    assert.equal(body.recallLookup.recalls[0]?.component, 'STRUCTURE');
     assert.deepEqual(
       body.snapshots.map((snapshot) => snapshot.capturedAt),
       ['2026-08-26T13:00:00.000Z', '2026-08-26T12:00:00.000Z']
@@ -1132,6 +1135,7 @@ function env(
     evaluations?: boolean;
     modelYearRisks?: boolean;
     vinDecodeRows?: boolean;
+    recallLookup?: boolean;
   } = {}
 ): Env {
   const writes: Array<{ sql: string; values: unknown[] }> = [];
@@ -1151,6 +1155,7 @@ function env(
               if (sql.includes('FROM saved_searches')) return id === savedSearchRow.id ? searchRow : null;
               if (sql === 'SELECT id FROM listings WHERE id = ?') return id === 'listing-sienna' ? { id } : null;
               if (options.listingDetail && sql.includes('WHERE listings.id = ?')) return id === 'listing-sienna' ? betterPersistedListingRow : null;
+              if (options.recallLookup && sql.includes('FROM vehicle_recalls')) return recallLookupRow;
               if (options.disposition && sql.includes('FROM listing_dispositions')) {
                 return options.disposition === 'existing' && id === savedSearchRow.id && listingId === 'listing-sienna' ? dispositionRow : null;
               }
@@ -1276,6 +1281,15 @@ const modelYearRiskRow = {
   inspect_for_json: JSON.stringify(['Test both power sliding doors']),
   remediation_json: null,
   evidence_ids_json: JSON.stringify([])
+};
+
+const recallLookupRow = {
+  lookup_key: '2015:toyota:sienna',
+  model_year: 2015,
+  make: 'Toyota',
+  model: 'Sienna',
+  recalls_json: JSON.stringify([{ campaignNumber: '16V858000', component: 'STRUCTURE', raw: {} }]),
+  checked_at: '2026-08-27T00:00:00.000Z'
 };
 
 const dispositionRow = {

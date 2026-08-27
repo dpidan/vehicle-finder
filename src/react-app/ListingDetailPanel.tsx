@@ -129,6 +129,23 @@ export function ListingDetailPanel({
               </ol>
             </>
           ) : null}
+          {detail.recallLookup ? (
+            <>
+              <h3>Recall notes</h3>
+              {detail.recallLookup.recalls.length ? (
+                <ol className={styles.riskList}>
+                  {detail.recallLookup.recalls.slice(0, 5).map((recall) => (
+                    <li key={recall.campaignNumber ?? recall.summary ?? recall.component}>
+                      <strong>{recall.campaignNumber ?? 'Recall'}</strong>
+                      <span>{[recall.component, recall.summary].filter(Boolean).join(': ')}</span>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className={styles.subtle}>No cached recalls for this year, make, and model.</p>
+              )}
+            </>
+          ) : null}
           {inspectionItems.length ? (
             <>
               <h3>Inspection checklist</h3>
@@ -228,6 +245,7 @@ function factorLabel(factor: ScoreFactor): string {
 function inspectionChecklist(detail: ListingDetail, ranking: RankedListingSummary['rankedListing'] | null): string[] {
   const items = [
     ...detail.risks.flatMap((risk) => risk.inspectFor),
+    ...(detail.recallLookup?.recalls.length ? ['Check recall applicability and remedy status by VIN before purchase.'] : []),
     ...(!detail.listing.vehicle.vin ? ['Request and verify the VIN before committing time or money.'] : []),
     ...(ranking?.flags.includes('missing-maintenance-evidence') ? ['Ask for maintenance records or service history documentation.'] : []),
     ...(ranking?.flags.includes('suspiciously-low-price')

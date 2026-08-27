@@ -33,7 +33,7 @@
 ## Enrichment
 
 22. Partial — cached VIN decoding supports admin-triggered single-VIN decode and saved-search VIN enrichment; automatic scheduled enrichment still pending.
-23. Partial — cached NHTSA recall lookup by model year/make/model; UI/scoring integration still pending.
+23. Partial — cached NHTSA recall lookup by model year/make/model and listing-detail display; scoring integration still pending.
 24. Partial — structured model/year risk records seeded, shown in listing detail, and used in scoring; evidence weighting still pending.
 25. Add estimated immediate-maintenance items.
 26. Done — effective-purchase-cost calculation using asking price plus saved-search maintenance reserve.
