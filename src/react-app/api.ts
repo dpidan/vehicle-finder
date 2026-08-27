@@ -2,12 +2,14 @@ import type {
   ListingDetail,
   ListingDisposition,
   ListingDispositionState,
+  DecodeSearchVinsResult,
   ManualImportInput,
   ManualImportPreview,
   ManualImportSaveResult,
   MonitoringSummary,
   NextAction,
   RankedListingSummary,
+  RecallLookupResult,
   SavedSearchSummary,
   SearchRefreshResult
 } from './types.js';
@@ -64,6 +66,24 @@ export function refreshSearch(searchId: string, adminToken: string): Promise<Sea
   return fetchJson<SearchRefreshResult>(`/api/admin/searches/${searchId}/refresh`, {
     method: 'POST',
     headers: { authorization: `Bearer ${adminToken}` }
+  });
+}
+
+export function decodeSavedSearchVins(searchId: string, adminToken: string): Promise<DecodeSearchVinsResult> {
+  return fetchJson<DecodeSearchVinsResult>(`/api/admin/searches/${searchId}/vin-decodes`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${adminToken}` }
+  });
+}
+
+export function lookupRecallsForVehicle(
+  input: { modelYear: number; make: string; model: string },
+  adminToken: string
+): Promise<RecallLookupResult> {
+  return fetchJson<RecallLookupResult>('/api/admin/recalls', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${adminToken}`, 'content-type': 'application/json' },
+    body: JSON.stringify(input)
   });
 }
 

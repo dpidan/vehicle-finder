@@ -5,7 +5,7 @@
 1. Done — add configurable monitoring windows instead of fixed dashboard defaults.
 2. Add notification delivery for monitoring digests.
 3. Improve dashboard digest/report presentation.
-4. Add admin/dashboard controls for explicit VIN and recall enrichment.
+4. Done — added admin/dashboard controls for explicit VIN and recall enrichment.
 5. Decide whether recall/model-year risk signals should affect scoring now or remain inspection-only.
 6. Add persisted inspection checklist state if the manual checklist starts carrying real workflow weight.
 
@@ -72,7 +72,7 @@
 ## Dashboard operations
 
 49. Done — admin-token-protected saved-search refresh from the dashboard.
-50. Partial — admin-triggered VIN and recall enrichment API exists; dashboard controls still pending.
+50. Done — admin-triggered VIN and recall enrichment API and dashboard controls exist.
 
 ## Assistant access
 

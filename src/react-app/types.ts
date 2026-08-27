@@ -128,6 +128,22 @@ export interface RecallRecord {
   reportReceivedDate?: string;
 }
 
+export interface DecodeSearchVinsResult {
+  searchId: string;
+  candidateCount: number;
+  decodedCount: number;
+  cachedCount: number;
+  failed: Array<{
+    vin: string;
+    error: string;
+  }>;
+}
+
+export interface RecallLookupResult {
+  source: 'cache' | 'live';
+  lookup: RecallLookup;
+}
+
 export interface ModelYearRisk {
   id: string;
   make: string;

@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
 import {
+  decodeSavedSearchVins,
   defaultMonitoringWindow,
   fetchListingDetail,
   fetchMonitoringSummary,
   fetchRankedListings,
   fetchSavedSearches,
+  lookupRecallsForVehicle,
   refreshSearch,
   saveListingDisposition,
   type MonitoringWindow
 } from './api.js';
 import { bestScore, emptyMessage, emptyTitle, filterAndSortListings, statusLabel } from './format.js';
 import { ComparisonPanel } from './ComparisonPanel.js';
+import { EnrichmentPanel } from './EnrichmentPanel.js';
 import { ListingDetailPanel } from './ListingDetailPanel.js';
 import { ListingTable } from './ListingTable.js';
 import { ManualImportPanel } from './ManualImportPanel.js';
@@ -39,6 +42,8 @@ function DashboardShell() {
   const [monitoringWindow, setMonitoringWindow] = useState<MonitoringWindow>(() => defaultMonitoringWindow());
   const [workflowStatus, setWorkflowStatus] = useState('');
   const [refreshStatus, setRefreshStatus] = useState<'idle' | 'refreshing' | 'error'>('idle');
+  const [enrichmentStatus, setEnrichmentStatus] = useState<'idle' | 'running' | 'ready' | 'error'>('idle');
+  const [enrichmentMessage, setEnrichmentMessage] = useState('');
   const [stateFilter, setStateFilter] = useState<ListingDispositionState | 'all'>('all');
   const [sortMode, setSortMode] = useState<SortMode>('deal');
   const [compareListingIds, setCompareListingIds] = useState<string[]>([]);
@@ -131,6 +136,7 @@ function DashboardShell() {
 
   const selectedSearch = searches.find((search) => search.id === selectedSearchId);
   const selectedRanking = rankedListings.find((item) => item.listingId === selectedListingId) ?? null;
+  const selectedVehicle = listingDetail?.listing.vehicle;
   const visibleListings = filterAndSortListings(rankedListings, stateFilter, sortMode);
   const comparedListings = compareListingIds
     .map((listingId) => rankedListings.find((item) => item.listingId === listingId))
@@ -171,6 +177,14 @@ function DashboardShell() {
         status={monitoringStatus}
         window={monitoringWindow}
         onWindowChange={setMonitoringWindow}
+      />
+      <EnrichmentPanel
+        canDecodeVins={Boolean(selectedSearchId)}
+        canLookupRecalls={Boolean(selectedVehicle?.year && selectedVehicle.make && selectedVehicle.model)}
+        message={enrichmentMessage}
+        status={enrichmentStatus}
+        onDecodeVins={runVinDecode}
+        onLookupRecalls={runRecallLookup}
       />
       <ComparisonPanel
         listings={comparedListings}
@@ -274,6 +288,71 @@ function DashboardShell() {
     } catch {
       setRefreshStatus('error');
       setWorkflowStatus('Could not refresh search.');
+    }
+  }
+
+  async function runVinDecode() {
+    const adminToken = window.prompt('Admin token')?.trim();
+
+    if (!adminToken) {
+      setEnrichmentStatus('error');
+      return;
+    }
+
+    setEnrichmentStatus('running');
+    setEnrichmentMessage('');
+    setWorkflowStatus('Decoding VINs.');
+
+    try {
+      const result = await decodeSavedSearchVins(selectedSearchId, adminToken);
+      setEnrichmentStatus('ready');
+      setEnrichmentMessage(
+        `${result.decodedCount.toLocaleString()} decoded, ${result.cachedCount.toLocaleString()} cached, ${result.failed.length.toLocaleString()} failed.`
+      );
+      setWorkflowStatus('VIN enrichment complete.');
+    } catch {
+      setEnrichmentStatus('error');
+      setEnrichmentMessage('Could not decode VINs.');
+      setWorkflowStatus('Could not decode VINs.');
+    }
+  }
+
+  async function runRecallLookup() {
+    const vehicle = listingDetail?.listing.vehicle;
+
+    if (!vehicle?.year || !vehicle.make || !vehicle.model) {
+      setEnrichmentStatus('error');
+      setEnrichmentMessage('Selected listing needs year, make, and model.');
+      return;
+    }
+
+    const adminToken = window.prompt('Admin token')?.trim();
+
+    if (!adminToken) {
+      setEnrichmentStatus('error');
+      return;
+    }
+
+    setEnrichmentStatus('running');
+    setEnrichmentMessage('');
+    setWorkflowStatus('Looking up recalls.');
+
+    try {
+      const result = await lookupRecallsForVehicle(
+        { modelYear: vehicle.year, make: vehicle.make, model: vehicle.model },
+        adminToken
+      );
+      setEnrichmentStatus('ready');
+      setEnrichmentMessage(`${result.lookup.recalls.length.toLocaleString()} recall notes from ${result.source}.`);
+      if (selectedListingId) {
+        setListingDetail(await fetchListingDetail(selectedListingId));
+        setDetailStatus('ready');
+      }
+      setWorkflowStatus('Recall enrichment complete.');
+    } catch {
+      setEnrichmentStatus('error');
+      setEnrichmentMessage('Could not lookup recalls.');
+      setWorkflowStatus('Could not lookup recalls.');
     }
   }
 
