@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { importListingCandidates } from './services/inventory-service.js';
 import { filterThresholdMatches, formatMonitoringDigest, isIsoDateTime, type MonitoringSummary } from './services/monitoring-service.js';
-import { decodeVin } from './services/vin-decoder-service.js';
+import { decodeSavedSearchVins, decodeVin } from './services/vin-decoder-service.js';
 import {
   getSavedSearch,
   getListingDetail,
@@ -348,6 +348,22 @@ app.post('/api/admin/vin-decodes', async (c) => {
   } catch (error) {
     return c.json({ error: 'vin-decode-failed', message: errorMessage(error) }, 400);
   }
+});
+
+app.post('/api/admin/searches/:id/vin-decodes', async (c) => {
+  const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
+
+  if (unauthorized) {
+    return c.json({ error: unauthorized }, unauthorized === 'admin-token-not-configured' ? 503 : 401);
+  }
+
+  const search = await getSavedSearch(c.env.DB, c.req.param('id'));
+
+  if (!search) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  return c.json(await decodeSavedSearchVins(c.env.DB, search.id, new Date().toISOString()));
 });
 
 app.get('/api/admin/mcp/tools', (c) => {

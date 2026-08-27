@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { decodeVin, normalizeVin } from './vin-decoder-service.js';
+import { decodeSavedSearchVins, decodeVin, normalizeVin } from './vin-decoder-service.js';
 
 describe('vin decoder service', () => {
   it('normalizes and validates VINs', () => {
@@ -40,9 +40,32 @@ describe('vin decoder service', () => {
     assert.equal(live.decode.model, 'Odyssey');
     assert.equal(cached.decode.decodedAt, '2026-08-27T00:00:00.000Z');
   });
+
+  it('decodes VINs for a saved search and reports cache hits', async () => {
+    const db = fakeVinDecodeDb([{ vin: '5FNRL5H60GB000001', year: 2016 }]);
+    let fetchCount = 0;
+    const fetcher = async () => {
+      fetchCount += 1;
+      return Response.json({ Results: [{ Make: 'HONDA', Model: 'Odyssey' }] });
+    };
+
+    const live = await decodeSavedSearchVins(db, 'family-replacement-vehicle', '2026-08-27T00:00:00.000Z', fetcher);
+    const cached = await decodeSavedSearchVins(db, 'family-replacement-vehicle', '2026-08-28T00:00:00.000Z', fetcher);
+
+    assert.equal(fetchCount, 1);
+    assert.deepEqual(live, {
+      searchId: 'family-replacement-vehicle',
+      candidateCount: 1,
+      decodedCount: 1,
+      cachedCount: 0,
+      failed: []
+    });
+    assert.equal(cached.decodedCount, 0);
+    assert.equal(cached.cachedCount, 1);
+  });
 });
 
-function fakeVinDecodeDb(): D1Database {
+function fakeVinDecodeDb(searchRows: Array<{ vin: string; year: number | null }> = []): D1Database {
   const rows = new Map<string, Record<string, unknown>>();
 
   return {
@@ -66,11 +89,12 @@ function fakeVinDecodeDb(): D1Database {
             decoded_at: values[12]
           });
           return { success: true };
-        }
+        },
+        all: async () => ({ results: searchRows })
       }),
       first: async () => null,
       run: async () => ({ success: true }),
-      all: async () => ({ results: [] })
+      all: async () => ({ results: searchRows })
     })
   } as unknown as D1Database;
 }

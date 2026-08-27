@@ -19,6 +19,19 @@ export interface DecodeVinResult {
   decode: VinDecode;
 }
 
+export interface DecodeSearchVinsResult {
+  searchId: string;
+  candidateCount: number;
+  decodedCount: number;
+  cachedCount: number;
+  failed: Array<{ vin: string; error: string }>;
+}
+
+interface SearchVinRow {
+  vin: string;
+  year: number | null;
+}
+
 interface VinDecodeRow {
   vin: string;
   model_year: number | null;
@@ -37,6 +50,49 @@ interface VinDecodeRow {
 
 interface VpicResponse {
   Results?: Array<Record<string, unknown>>;
+}
+
+export async function decodeSavedSearchVins(
+  db: D1Database,
+  searchId: string,
+  decodedAt: string,
+  fetcher: typeof fetch = fetch
+): Promise<DecodeSearchVinsResult> {
+  const { results } = await db
+    .prepare(
+      `SELECT DISTINCT vehicles.vin, vehicles.year
+       FROM listings
+       JOIN vehicles ON vehicles.id = listings.vehicle_id
+       JOIN search_evaluations ON search_evaluations.listing_id = listings.id
+       WHERE search_evaluations.saved_search_id = ?
+         AND vehicles.vin IS NOT NULL
+       ORDER BY vehicles.vin
+       LIMIT 50`
+    )
+    .bind(searchId)
+    .all<SearchVinRow>();
+  const result: DecodeSearchVinsResult = {
+    searchId,
+    candidateCount: results.length,
+    decodedCount: 0,
+    cachedCount: 0,
+    failed: []
+  };
+
+  for (const row of results) {
+    try {
+      const decoded = await decodeVin(db, row.vin, row.year ?? undefined, decodedAt, fetcher);
+      if (decoded.source === 'cache') {
+        result.cachedCount += 1;
+      } else {
+        result.decodedCount += 1;
+      }
+    } catch (error) {
+      result.failed.push({ vin: row.vin, error: errorMessage(error) });
+    }
+  }
+
+  return result;
 }
 
 export async function decodeVin(
@@ -166,4 +222,8 @@ function rowToDecode(row: VinDecodeRow): VinDecode {
     raw: JSON.parse(row.raw_json) as Record<string, unknown>,
     decodedAt: row.decoded_at
   };
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'VIN decode failed.';
 }

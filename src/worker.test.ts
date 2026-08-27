@@ -683,6 +683,30 @@ describe('worker routes', () => {
     }
   });
 
+  it('decodes VINs for a saved search with the admin token', async () => {
+    const db = env({ adminToken: 'secret', vinDecodeRows: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async () => Response.json({ Results: [{ Make: 'TOYOTA', Model: 'Sienna' }] })) as typeof fetch;
+
+    try {
+      const response = await app.request(
+        '/api/admin/searches/family-replacement-vehicle/vin-decodes',
+        { method: 'POST', headers: { authorization: 'Bearer secret' } },
+        { DB: db, ADMIN_TOKEN: 'secret' }
+      );
+      const body = (await response.json()) as { candidateCount: number; decodedCount: number; cachedCount: number; failed: unknown[] };
+
+      assert.equal(response.status, 200);
+      assert.equal(body.candidateCount, 1);
+      assert.equal(body.decodedCount, 1);
+      assert.equal(body.cachedCount, 0);
+      assert.deepEqual(body.failed, []);
+      assert.ok(db.writes.some((write) => write.sql.startsWith('INSERT INTO vin_decodes')));
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('refreshes enabled saved searches for scheduled collection', async () => {
     const originalFetch = globalThis.fetch;
 
@@ -1057,6 +1081,7 @@ function env(
     disposition?: true | 'existing';
     evaluations?: boolean;
     modelYearRisks?: boolean;
+    vinDecodeRows?: boolean;
   } = {}
 ): Env {
   const writes: Array<{ sql: string; values: unknown[] }> = [];
@@ -1095,6 +1120,8 @@ function env(
                     ? [staleListingRow]
                   : options.modelYearRisks && sql.includes('FROM model_year_risks')
                     ? [modelYearRiskRow]
+                  : options.vinDecodeRows && sql.includes('SELECT DISTINCT vehicles.vin')
+                    ? [{ vin: '5TDYK3DC0FS000001', year: 2015 }]
                   : options.listingDetail && id === 'listing-sienna' && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
                   ? snapshotRows
                   : []
