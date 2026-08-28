@@ -6,6 +6,7 @@ import {
   fetchMonitoringSummary,
   fetchRankedListings,
   fetchSavedSearches,
+  fetchSourceFeeds,
   lookupRecallsForVehicle,
   refreshSearch,
   saveListingDisposition,
@@ -20,8 +21,18 @@ import { ManualImportPanel } from './ManualImportPanel.js';
 import { Metric } from './Metric.js';
 import { MonitoringSummaryPanel } from './MonitoringSummaryPanel.js';
 import { PublicHome } from './PublicHome.js';
+import { SourceFeedsPanel } from './SourceFeedsPanel.js';
 import styles from './App.module.css';
-import type { ListingDetail, ListingDispositionState, MonitoringSummary, NextAction, RankedListingSummary, SavedSearchSummary, SortMode } from './types.js';
+import type {
+  ListingDetail,
+  ListingDispositionState,
+  MonitoringSummary,
+  NextAction,
+  RankedListingSummary,
+  SavedSearchSummary,
+  SortMode,
+  SourceFeedSummary
+} from './types.js';
 
 export function App() {
   const isDashboard = window.location.pathname.startsWith('/app');
@@ -44,6 +55,8 @@ function DashboardShell() {
   const [refreshStatus, setRefreshStatus] = useState<'idle' | 'refreshing' | 'error'>('idle');
   const [enrichmentStatus, setEnrichmentStatus] = useState<'idle' | 'running' | 'ready' | 'error'>('idle');
   const [enrichmentMessage, setEnrichmentMessage] = useState('');
+  const [sourceFeeds, setSourceFeeds] = useState<SourceFeedSummary[]>([]);
+  const [sourceFeedStatus, setSourceFeedStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [stateFilter, setStateFilter] = useState<ListingDispositionState | 'all'>('all');
   const [sortMode, setSortMode] = useState<SortMode>('deal');
   const [compareListingIds, setCompareListingIds] = useState<string[]>([]);
@@ -186,6 +199,7 @@ function DashboardShell() {
         onDecodeVins={runVinDecode}
         onLookupRecalls={runRecallLookup}
       />
+      <SourceFeedsPanel feeds={sourceFeeds} status={sourceFeedStatus} onLoad={loadSourceFeeds} />
       <ComparisonPanel
         listings={comparedListings}
         onRemove={(listingId) => setCompareListingIds((ids) => ids.filter((id) => id !== listingId))}
@@ -283,11 +297,34 @@ function DashboardShell() {
       await refreshSearch(selectedSearchId, adminToken);
       await refreshListings(selectedSearchId);
       await refreshMonitoring(selectedSearchId, monitoringWindow);
+      await loadSourceFeedsWithToken(adminToken);
       setRefreshStatus('idle');
       setWorkflowStatus('Search refreshed.');
     } catch {
       setRefreshStatus('error');
       setWorkflowStatus('Could not refresh search.');
+    }
+  }
+
+  async function loadSourceFeeds() {
+    const adminToken = window.prompt('Admin token')?.trim();
+
+    if (!adminToken) {
+      setSourceFeedStatus('error');
+      return;
+    }
+
+    await loadSourceFeedsWithToken(adminToken);
+  }
+
+  async function loadSourceFeedsWithToken(adminToken: string) {
+    setSourceFeedStatus('loading');
+
+    try {
+      setSourceFeeds(await fetchSourceFeeds(adminToken));
+      setSourceFeedStatus('ready');
+    } catch {
+      setSourceFeedStatus('error');
     }
   }
 

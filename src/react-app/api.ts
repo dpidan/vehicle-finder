@@ -11,7 +11,8 @@ import type {
   RankedListingSummary,
   RecallLookupResult,
   SavedSearchSummary,
-  SearchRefreshResult
+  SearchRefreshResult,
+  SourceFeedSummary
 } from './types.js';
 
 export async function fetchSavedSearches(): Promise<SavedSearchSummary[]> {
@@ -67,6 +68,13 @@ export function refreshSearch(searchId: string, adminToken: string): Promise<Sea
     method: 'POST',
     headers: { authorization: `Bearer ${adminToken}` }
   });
+}
+
+export async function fetchSourceFeeds(adminToken: string): Promise<SourceFeedSummary[]> {
+  const { feeds } = await fetchJson<{ feeds: SourceFeedSummary[] }>('/api/admin/source-feeds', {
+    headers: { authorization: `Bearer ${adminToken}` }
+  });
+  return feeds;
 }
 
 export function decodeSavedSearchVins(searchId: string, adminToken: string): Promise<DecodeSearchVinsResult> {

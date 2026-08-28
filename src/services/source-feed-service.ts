@@ -78,15 +78,22 @@ async function collectSourceFeeds(
       continue;
     }
 
-    const collected = await adapter.collect({
-      sellerSeeds: adapterFeeds.map(feedToSellerSeed),
-      collectedAt
-    });
-    if (updateHealth) {
-      await Promise.all(adapterFeeds.map((feed) => updateSourceFeedSuccess(db, feed.id, collectedAt)));
+    try {
+      const collected = await adapter.collect({
+        sellerSeeds: adapterFeeds.map(feedToSellerSeed),
+        collectedAt
+      });
+      if (updateHealth) {
+        await Promise.all(adapterFeeds.map((feed) => updateSourceFeedSuccess(db, feed.id, collectedAt)));
+      }
+      candidates.push(...collected);
+      collectedCountByAdapter[adapterKey] = collected.length;
+    } catch (error) {
+      if (updateHealth) {
+        await Promise.all(adapterFeeds.map((feed) => updateSourceFeedError(db, feed.id, collectedAt, errorMessage(error))));
+      }
+      collectedCountByAdapter[adapterKey] = 0;
     }
-    candidates.push(...collected);
-    collectedCountByAdapter[adapterKey] = collected.length;
   }
 
   return { feeds, candidates, collectedCountByAdapter };
@@ -127,6 +134,21 @@ async function updateSourceFeedSuccess(db: D1Database, feedId: string, collected
     )
     .bind(collectedAt, collectedAt, feedId)
     .run();
+}
+
+async function updateSourceFeedError(db: D1Database, feedId: string, collectedAt: string, error: string): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE source_feeds
+       SET last_collected_at = ?, last_status = 'error', last_error = ?, updated_at = ?
+       WHERE id = ?`
+    )
+    .bind(collectedAt, error.slice(0, 500), collectedAt, feedId)
+    .run();
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function groupFeedsByAdapter(feeds: SourceFeed[]): Array<[SourceAdapterKey, SourceFeed[]]> {

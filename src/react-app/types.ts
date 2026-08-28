@@ -146,6 +146,20 @@ export interface RecallLookupResult {
   lookup: RecallLookup;
 }
 
+export interface SourceFeedSummary {
+  id: string;
+  name: string;
+  adapterKey: string;
+  access: string;
+  status: 'active' | 'paused' | 'blocked' | 'retired';
+  inventoryUrl: string;
+  websiteUrl?: string;
+  collectionPriority: number;
+  lastCollectedAt?: string;
+  lastStatus?: string;
+  lastError?: string;
+}
+
 export interface ModelYearRisk {
   id: string;
   make: string;
