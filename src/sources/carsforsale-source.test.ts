@@ -7,7 +7,7 @@ describe('parseCarsforsaleInventory', () => {
     const listings = parseCarsforsaleInventory(
       `
         <div>
-          <a>2018 Honda Accord EX-L w/Navi</a>
+          <a href="/vehicle/details/abc123">2018 Honda Accord EX-L w/Navi</a>
           <a>Apply Now</a>
           <p>Price</p>
           <p>$16,750</p>
@@ -15,7 +15,7 @@ describe('parseCarsforsaleInventory', () => {
           <p>124,588</p>
         </div>
         <div>
-          <a>2016 Toyota Corolla S Plus</a>
+          <a href="/vehicle/details/def456">2016 Toyota Corolla S Plus</a>
           <p>Price</p>
           <p>$10,995</p>
           <p>Mileage</p>
@@ -36,6 +36,8 @@ describe('parseCarsforsaleInventory', () => {
     assert.equal(listings[0]?.vehicle.make, 'Honda');
     assert.equal(listings[0]?.price?.amount, 16750);
     assert.equal(listings[0]?.mileage, 124588);
+    assert.equal(listings[0]?.url, 'https://www.vsamotorcars.com/vehicle/details/abc123');
+    assert.equal(listings[0]?.evidence?.[0]?.url, listings[0]?.url);
     assert.equal(listings[1]?.vehicle.model, 'Corolla S Plus');
   });
 

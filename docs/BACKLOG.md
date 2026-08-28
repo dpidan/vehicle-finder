@@ -34,7 +34,7 @@
 
 21. Done — researched local dealer platforms around Cypress, TX enough to select a first structured source.
 22. Done — defined a minimal dealer-discovery input using explicit dealer seed lists.
-23. Pull forward — expand source coverage after dashboard digest presentation, either by finding more healthy Dealer Car Search seeds or choosing the next permitted platform adapter.
+23. In progress — expand source coverage after dashboard digest presentation, starting by preserving vehicle detail URLs in existing adapters, then finding another healthy seed or permitted platform adapter.
 24. Done — picked Dealer Car Search as the first structured dealer platform.
 25. Done — implemented a compliant Dealer Car Search adapter.
 26. Done — added canonicalization and VIN-based deduplication.
