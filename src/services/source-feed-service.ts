@@ -44,10 +44,34 @@ export interface CollectionRunResult {
 export async function collectActiveSourceFeeds(db: D1Database, collectedAt: string): Promise<CollectionRunResult> {
   const feeds = await listSourceFeeds(db, 'active');
   const activeFeeds = feeds.length ? feeds : fallbackDealerCarSearchFeeds(collectedAt);
+  return collectSourceFeeds(db, activeFeeds, collectedAt, true);
+}
+
+export async function collectSourceFeed(
+  db: D1Database,
+  feedId: string,
+  collectedAt: string,
+  updateHealth = false
+): Promise<CollectionRunResult | null> {
+  const feed = (await listSourceFeeds(db)).find((sourceFeed) => sourceFeed.id === feedId);
+
+  if (!feed) {
+    return null;
+  }
+
+  return collectSourceFeeds(db, [feed], collectedAt, updateHealth);
+}
+
+async function collectSourceFeeds(
+  db: D1Database,
+  feeds: SourceFeed[],
+  collectedAt: string,
+  updateHealth: boolean
+): Promise<CollectionRunResult> {
   const candidates: ListingCandidate[] = [];
   const collectedCountByAdapter: Partial<Record<SourceAdapterKey, number>> = {};
 
-  for (const [adapterKey, adapterFeeds] of groupFeedsByAdapter(activeFeeds)) {
+  for (const [adapterKey, adapterFeeds] of groupFeedsByAdapter(feeds)) {
     const adapter = sourceAdapters[adapterKey];
 
     if (!adapter) {
@@ -58,12 +82,14 @@ export async function collectActiveSourceFeeds(db: D1Database, collectedAt: stri
       sellerSeeds: adapterFeeds.map(feedToSellerSeed),
       collectedAt
     });
-    await Promise.all(adapterFeeds.map((feed) => updateSourceFeedSuccess(db, feed.id, collectedAt)));
+    if (updateHealth) {
+      await Promise.all(adapterFeeds.map((feed) => updateSourceFeedSuccess(db, feed.id, collectedAt)));
+    }
     candidates.push(...collected);
     collectedCountByAdapter[adapterKey] = collected.length;
   }
 
-  return { feeds: activeFeeds, candidates, collectedCountByAdapter };
+  return { feeds, candidates, collectedCountByAdapter };
 }
 
 export async function listSourceFeeds(db: D1Database, status?: SourceFeedStatus): Promise<SourceFeed[]> {

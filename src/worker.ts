@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { importListingCandidates } from './services/inventory-service.js';
-import { collectActiveSourceFeeds, listSourceFeeds } from './services/source-feed-service.js';
+import { collectActiveSourceFeeds, collectSourceFeed, listSourceFeeds } from './services/source-feed-service.js';
 import { filterThresholdMatches, formatMonitoringDigest, isIsoDateTime, type MonitoringSummary } from './services/monitoring-service.js';
 import { decodeSavedSearchVins, decodeVin } from './services/vin-decoder-service.js';
 import {
@@ -287,6 +287,35 @@ app.get('/api/admin/source-feeds', async (c) => {
   return c.json({ feeds: await listSourceFeeds(c.env.DB) });
 });
 
+app.post('/api/admin/source-feeds/:id/collect', async (c) => {
+  const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
+
+  if (unauthorized) {
+    return c.json({ error: unauthorized }, unauthorized === 'admin-token-not-configured' ? 503 : 401);
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const shouldImport = isRecord(body) && body.import === true;
+  const collectedAt = new Date().toISOString();
+  const sourceRun = await collectSourceFeed(c.env.DB, c.req.param('id'), collectedAt, shouldImport);
+
+  if (!sourceRun) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  const vinOverlap = await summarizeVinOverlap(c.env.DB, sourceRun.candidates);
+  const importResult = shouldImport ? await importListingCandidates(c.env.DB, sourceRun.candidates) : undefined;
+
+  return c.json({
+    collectedAt,
+    feed: sourceRun.feeds[0],
+    collectedCount: sourceRun.candidates.length,
+    collectedCountByAdapter: sourceRun.collectedCountByAdapter,
+    vinOverlap,
+    ...(importResult ? { import: importResult } : {})
+  });
+});
+
 app.post('/api/admin/searches/:id/evaluations', async (c) => {
   const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
 
@@ -531,6 +560,33 @@ function isDispositionInput(value: Partial<ListingDispositionInput>): value is L
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+async function summarizeVinOverlap(
+  db: D1Database,
+  candidates: Array<{ vehicle: { vin?: string } }>
+): Promise<{ candidatesWithVin: number; existingVinCount: number; newVinCount: number; existingVins: string[]; newVins: string[] }> {
+  const vins = Array.from(new Set(candidates.map((candidate) => candidate.vehicle.vin?.toUpperCase()).filter((vin): vin is string => Boolean(vin))));
+  const existingVins: string[] = [];
+
+  for (const vin of vins) {
+    const existing = await db.prepare(`SELECT vin FROM vehicles WHERE vin = ? LIMIT 1`).bind(vin).first<{ vin: string }>();
+
+    if (existing?.vin) {
+      existingVins.push(existing.vin);
+    }
+  }
+
+  const existingVinSet = new Set(existingVins);
+  const newVins = vins.filter((vin) => !existingVinSet.has(vin));
+
+  return {
+    candidatesWithVin: vins.length,
+    existingVinCount: existingVins.length,
+    newVinCount: newVins.length,
+    existingVins,
+    newVins
+  };
 }
 
 function isValidModelYear(value: unknown): value is number {
