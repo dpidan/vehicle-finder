@@ -1,6 +1,7 @@
 import styles from './App.module.css';
 import type { MonitoringWindow } from './api.js';
-import type { MonitoringSummary } from './types.js';
+import { formatDate, formatMoney } from './format.js';
+import type { ListingChangeSummary, MonitoringSummary, SearchEvaluationSummary, StaleListingSummary } from './types.js';
 
 export function MonitoringSummaryPanel({
   summary,
@@ -47,6 +48,14 @@ export function MonitoringSummaryPanel({
         <Signal label="Stale" value={summary?.staleListings.length ?? 0} />
         <Signal label="Score hits" value={summary?.thresholdMatches.length ?? 0} />
       </div>
+      {summary ? (
+        <div className={styles.monitoringDigest}>
+          <DigestSection title="New listings" items={summary.changes.newListings} empty="No new listings in this window." renderItem={renderNewListing} />
+          <DigestSection title="Price drops" items={summary.changes.priceDrops} empty="No price drops in this window." renderItem={renderPriceDrop} />
+          <DigestSection title="Score hits" items={summary.thresholdMatches} empty="No score threshold matches." renderItem={renderThresholdMatch} />
+          <DigestSection title="Stale listings" items={summary.staleListings} empty="No stale listings." renderItem={renderStaleListing} />
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -62,5 +71,74 @@ function Signal({ label, value }: { label: string; value: number }) {
       <span>{label}</span>
       <strong>{value.toLocaleString()}</strong>
     </div>
+  );
+}
+
+function DigestSection<T>({
+  empty,
+  items,
+  renderItem,
+  title
+}: {
+  empty: string;
+  items: T[];
+  renderItem: (item: T) => React.ReactNode;
+  title: string;
+}) {
+  return (
+    <section className={styles.digestSection}>
+      <h3>{title}</h3>
+      {items.length ? <ol>{items.slice(0, 5).map(renderItem)}</ol> : <p className={styles.subtle}>{empty}</p>}
+    </section>
+  );
+}
+
+function renderNewListing(listing: ListingChangeSummary) {
+  return (
+    <li key={listing.listingId}>
+      <a href={listing.url} target="_blank" rel="noreferrer">
+        {listing.title}
+      </a>
+      <span>{formatMoney(listing.currentPrice)}</span>
+    </li>
+  );
+}
+
+function renderPriceDrop(listing: ListingChangeSummary) {
+  return (
+    <li key={listing.listingId}>
+      <a href={listing.url} target="_blank" rel="noreferrer">
+        {listing.title}
+      </a>
+      <span>
+        {formatMoney(listing.previousPrice)} to {formatMoney(listing.currentPrice)}
+      </span>
+    </li>
+  );
+}
+
+function renderThresholdMatch(evaluation: SearchEvaluationSummary) {
+  return (
+    <li key={evaluation.listingId}>
+      <a href={evaluation.listing.url} target="_blank" rel="noreferrer">
+        {evaluation.listing.title}
+      </a>
+      <span>
+        Deal {evaluation.dealScore} | Vehicle {evaluation.vehicleScore}
+      </span>
+    </li>
+  );
+}
+
+function renderStaleListing(listing: StaleListingSummary) {
+  return (
+    <li key={listing.listingId}>
+      <a href={listing.url} target="_blank" rel="noreferrer">
+        {listing.title}
+      </a>
+      <span>
+        {formatMoney(listing.price)} | last seen {formatDate(listing.lastSeenAt)}
+      </span>
+    </li>
   );
 }

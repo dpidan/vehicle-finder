@@ -162,11 +162,46 @@ export interface MonitoringSummary {
   since: string;
   staleBefore: string;
   changes: {
-    newListings: unknown[];
-    priceDrops: unknown[];
+    newListings: ListingChangeSummary[];
+    priceDrops: ListingChangeSummary[];
   };
-  staleListings: unknown[];
-  thresholdMatches: unknown[];
+  staleListings: StaleListingSummary[];
+  thresholdMatches: SearchEvaluationSummary[];
+}
+
+export interface ListingChangeSummary {
+  listingId: string;
+  title: string;
+  url: string;
+  detectedAt: string;
+  currentPrice?: ListingCandidate['price'];
+  previousPrice?: ListingCandidate['price'];
+}
+
+export interface StaleListingSummary {
+  listingId: string;
+  title: string;
+  url: string;
+  lastSeenAt: string;
+  price?: ListingCandidate['price'];
+}
+
+export interface SearchEvaluationSummary {
+  id: string;
+  savedSearchId: string;
+  listingId: string;
+  vehicleId: string;
+  scoreVersion: string;
+  vehicleScore: number;
+  dealScore: number;
+  factors: ScoreFactor[];
+  flags: string[];
+  evaluatedAt: string;
+  listing: {
+    title: string;
+    url: string;
+  };
+  vehicle: ListingCandidate['vehicle'];
 }
 
 export interface ManualImportPreview {

@@ -3,7 +3,7 @@
 ## Now — monitoring operations
 
 1. Done — add configurable monitoring windows instead of fixed dashboard defaults.
-2. Improve dashboard digest/report presentation using the verified local live dataset.
+2. Done — improved dashboard digest/report presentation using the verified local live dataset.
 3. Add notification delivery for monitoring digests after the dashboard digest shape is useful.
 4. Done — added admin/dashboard controls for explicit VIN and recall enrichment.
 5. Done — added data-readiness checklist, inspection SQL, and seed/source smoke tests before first DB population.
