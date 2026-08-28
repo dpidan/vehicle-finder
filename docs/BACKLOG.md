@@ -3,8 +3,8 @@
 ## Now — monitoring operations
 
 1. Done — add configurable monitoring windows instead of fixed dashboard defaults.
-2. Add notification delivery for monitoring digests.
-3. Improve dashboard digest/report presentation.
+2. Improve dashboard digest/report presentation using the verified local live dataset.
+3. Add notification delivery for monitoring digests after the dashboard digest shape is useful.
 4. Done — added admin/dashboard controls for explicit VIN and recall enrichment.
 5. Done — added data-readiness checklist, inspection SQL, and seed/source smoke tests before first DB population.
 6. Decide whether recall/model-year risk signals should affect scoring now or remain inspection-only.
@@ -34,7 +34,7 @@
 
 21. Done — researched local dealer platforms around Cypress, TX enough to select a first structured source.
 22. Done — defined a minimal dealer-discovery input using explicit dealer seed lists.
-23. Later — research compliant business/dealer discovery targets for finding franchise and independent dealers within a radius.
+23. Pull forward — expand source coverage after dashboard digest presentation, either by finding more healthy Dealer Car Search seeds or choosing the next permitted platform adapter.
 24. Done — picked Dealer Car Search as the first structured dealer platform.
 25. Done — implemented a compliant Dealer Car Search adapter.
 26. Done — added canonicalization and VIN-based deduplication.
@@ -89,7 +89,7 @@
 - Facebook Marketplace compliant integration/import options.
 - Autotrader/Cars.com/CarGurus permitted alert/API/feed options.
 - Dealer-platform adapter reuse opportunities.
-- Business-search APIs for automatic dealer discovery within a saved-search radius.
+- Business-search APIs for automatic dealer discovery within a saved-search radius, after at least one more manual/seeded source path is useful.
 - Optional paid vehicle-history data and whether it provides enough incremental value.
 - Richer repair-cost catalog for immediate-maintenance estimates.
 - MCP authentication options on Cloudflare.

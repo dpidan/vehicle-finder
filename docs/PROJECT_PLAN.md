@@ -129,7 +129,11 @@ Each source is implemented behind an adapter and classified by access type, such
 ### Phase 4 — monitoring
 
 - Done: scheduled collection, new-listing and price-drop detection, stale-listing detection, score-threshold matching, a plain text digest, and dashboard summary counts.
-- Remaining: actual notification delivery, configurable monitoring windows, and richer digest/report presentation.
+- Remaining: richer digest/report presentation and actual notification delivery.
+
+### Near-term execution focus
+
+Use the verified local live dataset to improve the dashboard monitoring digest first. Then expand source coverage with another permitted collector/adapter or more healthy seeded dealers. After the dashboard can explain real monitoring signals and the source path is stable, populate Worker D1 and run one protected remote refresh.
 
 ### Phase 5 — assistant access
 
