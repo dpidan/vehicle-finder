@@ -22,6 +22,10 @@ dealer-owned pages returned HTTP 403 from plain fetch.
 successfully and normalized 25 listings with title, price, mileage, VIN,
 seller, source URL, and capture timestamp.
 
+Updated on 2026-08-28: listing URLs now prefer the individual `/vdp/...`
+vehicle detail page exposed on each inventory card instead of the shared
+inventory page.
+
 ## Deferred
 
 - Automated dealer discovery.

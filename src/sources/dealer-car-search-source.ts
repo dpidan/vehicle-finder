@@ -23,21 +23,24 @@ export function parseDealerCarSearchInventory(
   seed: SellerSeed,
   capturedAt: CollectionContext['collectedAt']
 ): ListingCandidate[] {
-  const lines = htmlToText(html).split('\n');
+  const fallbackUrl = seed.inventoryUrl ?? seed.websiteUrl ?? '';
+  const cards = html.match(/<div class="[^"]*\bi17r-vehicle\b[\s\S]*?(?=<div class="[^"]*\bi17r-vehicle\b|$)/g) ?? [html];
 
-  return lines.flatMap((line, index) => {
-    const title = parseTitleLine(line);
+  return cards.flatMap((card, index) => {
+    const titleLink = parseTitleLink(card, fallbackUrl);
+    const lines = htmlToText(card).split('\n');
+    const title = titleLink?.title ?? lines.map(parseTitleLine).find(Boolean);
 
     if (!title) {
       return [];
     }
 
-    const detail = lines.slice(index + 1, index + 18).join('\n');
+    const detail = lines.join('\n');
     const price = parsePrice(detail);
     const mileage = parseMileage(detail);
     const vin = parseVin(detail);
     const vehicle = parseVehicleTitle(title);
-    const url = seed.inventoryUrl ?? seed.websiteUrl ?? '';
+    const url = titleLink?.url ?? fallbackUrl;
 
     return {
       source,
@@ -51,7 +54,7 @@ export function parseDealerCarSearchInventory(
       ...(mileage > 0 ? { mileage } : {}),
       ...(seed.location ? { location: seed.location } : {}),
       capturedAt,
-      evidence: [{ label: `${seed.name} inventory page`, url, confidence: 0.65 }]
+      evidence: [{ label: `${seed.name} vehicle listing`, url, confidence: titleLink ? 0.75 : 0.65 }]
     };
   });
 }
@@ -91,6 +94,13 @@ function htmlToText(html: string): string {
 function parseTitleLine(line: string): string | undefined {
   const title = line.match(/\b((?:19|20)\d{2}\s+[A-Z][^\n$|]+?)\s*$/)?.[1]?.trim();
   return title && !title.includes(' for Sale') ? title : undefined;
+}
+
+function parseTitleLink(html: string, baseUrl: string): { title: string; url: string } | undefined {
+  const [, href, label] = html.match(/<a\b[^>]*href="([^"]+)"[^>]*>\s*((?:19|20)\d{2}[\s\S]*?)<\/a>/i) ?? [];
+  const title = htmlToText(label ?? '').split('\n').map(parseTitleLine).find(Boolean);
+
+  return href && title ? { title, url: new URL(href, baseUrl).toString() } : undefined;
 }
 
 function parseVehicleTitle(title: string): ListingCandidate['vehicle'] {

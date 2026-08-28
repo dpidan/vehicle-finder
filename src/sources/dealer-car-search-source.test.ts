@@ -7,7 +7,7 @@ describe('parseDealerCarSearchInventory', () => {
     const listings = parseDealerCarSearchInventory(
       `
         <div>
-          <a>2017 Toyota Sienna XLE</a>
+          <a href="/vdp/12345/Used-2017-Toyota-Sienna-XLE-for-sale-in-Houston-TX">2017 Toyota Sienna XLE</a>
           <span>Price</span><span>$15,995</span>
           <span>Stock #: A1234</span>
           <span>Mileage:</span><span>109,421</span>
@@ -32,5 +32,7 @@ describe('parseDealerCarSearchInventory', () => {
     assert.equal(listings[0]?.vehicle.vin, '5TDYZ3DC1HS000001');
     assert.equal(listings[0]?.price?.amount, 15995);
     assert.equal(listings[0]?.mileage, 109421);
+    assert.equal(listings[0]?.url, 'https://www.tradelanemotors.com/vdp/12345/Used-2017-Toyota-Sienna-XLE-for-sale-in-Houston-TX');
+    assert.equal(listings[0]?.evidence?.[0]?.url, listings[0]?.url);
   });
 });
