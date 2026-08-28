@@ -1,6 +1,7 @@
 import type { CollectionContext, ListingCandidate, ListingSource, SellerSeed } from '../domain/entities.js';
 
 const source = { name: 'dealer.com seeded dealer', access: 'structured-web' } as const;
+const maxPagesPerSeed = 25;
 
 interface DealerComVehicle {
   uuid?: string;
@@ -17,21 +18,48 @@ interface DealerComVehicle {
   trackingAttributes?: Array<{ name?: string; value?: string; normalizedValue?: string }>;
 }
 
+interface DealerComPageInfo {
+  totalCount?: number;
+  pageSize?: number;
+  pageStart?: number;
+}
+
+interface DealerComInventoryData {
+  WIS?: {
+    pageInfo?: DealerComPageInfo;
+    inventory?: DealerComVehicle[];
+  };
+}
+
 export const dealerComSource: ListingSource = {
   name: source.name,
   access: source.access,
   collect: async (context) => {
     const seeds = context.sellerSeeds?.filter((seed) => seed.inventoryUrl) ?? [];
-    const pages = await Promise.all(
-      seeds.map(async (seed) => ({
-        seed,
-        html: await fetchInventoryHtml(seed)
-      }))
-    );
+    const pages = await Promise.all(seeds.map((seed) => collectSeedPages(seed)));
 
     return pages.flatMap(({ seed, html }) => parseDealerComInventory(html, seed, context.collectedAt));
   }
 };
+
+async function collectSeedPages(seed: SellerSeed): Promise<{ seed: SellerSeed; html: string }> {
+  const firstPage = await fetchInventoryHtml(seed);
+  const firstInfo = extractInventoryData(firstPage)?.WIS?.pageInfo;
+  const pageSize = firstInfo?.pageSize ?? 0;
+  const totalCount = firstInfo?.totalCount ?? 0;
+
+  if (!seed.inventoryUrl || pageSize <= 0 || totalCount <= pageSize) {
+    return { seed, html: firstPage };
+  }
+
+  const starts = [];
+  for (let start = pageSize; start < totalCount && starts.length < maxPagesPerSeed - 1; start += pageSize) {
+    starts.push(start);
+  }
+
+  const remainingPages = await Promise.all(starts.map((start) => fetchInventoryHtml(seed, start)));
+  return { seed, html: [firstPage, ...remainingPages].join('\n') };
+}
 
 export function parseDealerComInventory(
   html: string,
@@ -80,26 +108,36 @@ export function parseDealerComInventory(
 }
 
 function extractVehicles(html: string): DealerComVehicle[] {
-  const match = html.match(/DDC\.WS\.state\['ws-inv-data'\]\['inventory-data-bus\d+'\] = (\{[\s\S]*?\});/);
-
-  if (!match?.[1]) {
-    return [];
-  }
-
-  return (JSON.parse(match[1]) as { WIS?: { inventory?: DealerComVehicle[] } }).WIS?.inventory ?? [];
+  return extractInventoryPages(html).flatMap((page) => page.WIS?.inventory ?? []);
 }
 
-async function fetchInventoryHtml(seed: SellerSeed): Promise<string> {
+function extractInventoryPages(html: string): DealerComInventoryData[] {
+  return Array.from(
+    html.matchAll(/DDC\.WS\.state\['ws-inv-data'\]\['inventory-data-bus\d+'\] = (\{[\s\S]*?\});/g),
+    (match) => JSON.parse(match[1] ?? '{}') as DealerComInventoryData
+  );
+}
+
+function extractInventoryData(html: string): DealerComInventoryData | undefined {
+  return extractInventoryPages(html)[0];
+}
+
+async function fetchInventoryHtml(seed: SellerSeed, start?: number): Promise<string> {
   if (!seed.inventoryUrl) {
     return '';
   }
 
-  const response = await fetch(seed.inventoryUrl, {
+  const url = new URL(seed.inventoryUrl);
+  if (start !== undefined) {
+    url.searchParams.set('start', String(start));
+  }
+
+  const response = await fetch(url, {
     headers: { 'user-agent': 'vehicle-finder/0.1 low-frequency family vehicle search' }
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status} for ${seed.inventoryUrl}`);
+    throw new Error(`HTTP ${response.status} for ${url}`);
   }
 
   return response.text();

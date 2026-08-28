@@ -52,4 +52,24 @@ describe('parseDealerComInventory', () => {
     );
     assert.equal(listings[0]?.evidence?.[0]?.url, listings[0]?.url);
   });
+
+  it('normalizes multiple embedded Dealer.com inventory pages', () => {
+    const listings = parseDealerComInventory(
+      `
+        <script>DDC.WS.state['ws-inv-data']['inventory-data-bus1'] = {"WIS":{"pageInfo":{"totalCount":2,"pageSize":1,"pageStart":0},"inventory":[{"vin":"5FNRL6H70JB005771","year":2018,"make":"Honda","model":"Odyssey","title":["2018 Honda Odyssey EX-L"],"link":"/used/Honda/Odyssey.htm","trackingPricing":{"salePrice":"17890"},"trackingAttributes":[{"name":"odometer","value":"110,842"}]}]}};</script>
+        <script>DDC.WS.state['ws-inv-data']['inventory-data-bus1'] = {"WIS":{"pageInfo":{"totalCount":2,"pageSize":1,"pageStart":1},"inventory":[{"vin":"5TDJKRFH3FS206418","year":2015,"make":"Toyota","model":"Highlander","title":["2015 Toyota Highlander XLE V6"],"link":"/used/Toyota/Highlander.htm","trackingPricing":{"salePrice":"17990"},"trackingAttributes":[{"name":"odometer","value":"98,128"}]}]}};</script>
+      `,
+      {
+        name: 'Autostrade',
+        type: 'dealer',
+        websiteUrl: 'https://www.autostradetx.net',
+        inventoryUrl: 'https://www.autostradetx.net/used-inventory/index.htm'
+      },
+      '2026-08-28T12:00:00.000Z'
+    );
+
+    assert.equal(listings.length, 2);
+    assert.equal(listings[0]?.vehicle.model, 'Odyssey');
+    assert.equal(listings[1]?.vehicle.model, 'Highlander');
+  });
 });

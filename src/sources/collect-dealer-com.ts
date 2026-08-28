@@ -11,7 +11,8 @@ console.log(
     {
       source: dealerComSource.name,
       listingCount: listings.length,
-      listings: listings.map((listing) => ({
+      shownListingCount: Math.min(listings.length, 25),
+      listings: listings.slice(0, 25).map((listing) => ({
         title: listing.title,
         price: listing.price,
         mileage: listing.mileage,
@@ -19,7 +20,8 @@ console.log(
         vin: listing.vehicle.vin,
         seller: listing.seller?.name,
         url: listing.url
-      }))
+      })),
+      omittedListingCount: Math.max(0, listings.length - 25)
     },
     null,
     2

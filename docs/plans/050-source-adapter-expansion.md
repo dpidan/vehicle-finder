@@ -6,9 +6,9 @@ Expand source coverage without changing the canonical import path.
 
 ## Current Chunk
 
-- Find nearby Kathy Ln / Cypress dealer-owned inventory pages and only add them to automated collection if the existing plain-fetch collector can reach them.
-- Add one standalone aggregator dealer-profile adapter so we can compare source quality and VIN dedupe before mixing it into scheduled refresh.
-- Keep DealerCenter sources as follow-up adapter candidates until their plain-fetch shape is proven.
+- Verify Dealer.com source completeness before treating its embedded first-page inventory as a reliable feed.
+- Use normal Dealer.com pagination links/query parameters where available; do not add browser automation or anti-bot behavior.
+- Keep large-source filtering as a collection optimization only; our saved-search eligibility filter remains the final gate.
 
 ## Next Candidate Chunks
 
@@ -17,7 +17,10 @@ Expand source coverage without changing the canonical import path.
 3. Done — added Mr. King and Mrs. Queens Auto Finance LLC after a collector-style fetch returned HTTP 200.
 4. Done — add a standalone CarGurus seeded dealer-profile adapter for nearby Cypress dealers.
 5. Done — added a paused Dealer.com source-feed adapter for Autostrade to extract embedded WIS inventory records.
-6. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
+6. Done — investigated Dealer.com completeness; first-page WIS inventory can be partial when `pageInfo.totalCount` exceeds `pageInfo.pageSize`.
+7. Add source-quality metadata if we need to expose parsed count vs reported count in the dashboard.
+8. Explore Dealer.com source-side make/model/year filters only after pagination is proven and only when the site exposes stable ordinary filter URLs.
+9. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
 
 ## Guardrails
 
@@ -37,3 +40,5 @@ Mr. King and Mrs. Queens Auto Finance LLC was added to the automated Dealer Car 
 CarGurus dealer-profile collection was added as a standalone source type using explicit Cypress-area seeds for Toyo Financial Group and VSA Motorcars. `npm run collect:cargurus` returned 35 normalized listings with VIN, price, mileage, exterior color, seller, and CarGurus listing/profile URL. Keep it out of scheduled refresh until duplicate behavior, field quality, and source terms are reviewed.
 
 Dealer.com collection was added as a standalone source type using Autostrade as the first explicit source feed. The adapter reads Dealer.com's embedded WIS inventory JSON and extracts title, vehicle detail URL, price, mileage, VIN, exterior color, seller, and status. The feed is seeded as `paused` so it can be manually collected and compared against existing VIN dedupe behavior before joining scheduled refresh.
+
+Dealer.com completeness review found that Autostrade's initial inventory page exposed `pageInfo.totalCount: 137`, `pageInfo.pageSize: 24`, and `pageInfo.pageStart: 0`, so the original 24-listing adapter result was only the first page. The adapter now follows ordinary `?start=` pagination up to a bounded page limit and combines all embedded WIS inventory pages before normalization. For very large dealers, prefer source-side filters only when they are stable and visible in normal page/filter URLs; still apply our own saved-search filter after import because source filters are inconsistent across platforms.
