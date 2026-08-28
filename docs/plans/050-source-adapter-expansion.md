@@ -6,9 +6,9 @@ Expand source coverage without changing the canonical import path.
 
 ## Current Chunk
 
-- Verify Dealer.com source completeness before treating its embedded first-page inventory as a reliable feed.
-- Use normal Dealer.com pagination links/query parameters where available; do not add browser automation or anti-bot behavior.
-- Keep large-source filtering as a collection optimization only; our saved-search eligibility filter remains the final gate.
+- Decide whether paginated Dealer.com belongs in Worker refresh or should stay as an off-Worker/manual source.
+- Import paused source feeds only after they pass source-quality and runtime checks.
+- Add more source types before more seeds of the same blocked runtime shape.
 
 ## Next Candidate Chunks
 
@@ -18,9 +18,11 @@ Expand source coverage without changing the canonical import path.
 4. Done — add a standalone CarGurus seeded dealer-profile adapter for nearby Cypress dealers.
 5. Done — added a paused Dealer.com source-feed adapter for Autostrade to extract embedded WIS inventory records.
 6. Done — investigated Dealer.com completeness; first-page WIS inventory can be partial when `pageInfo.totalCount` exceeds `pageInfo.pageSize`.
-7. Add source-quality metadata if we need to expose parsed count vs reported count in the dashboard.
-8. Explore Dealer.com source-side make/model/year filters only after pagination is proven and only when the site exposes stable ordinary filter URLs.
-9. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
+7. Done — ran the paginated Dealer.com feed through the local Worker source-feed endpoint; Worker fetch returned HTTP 403, so no candidates were imported.
+8. Add source-quality metadata if we need to expose parsed count vs reported count in the dashboard.
+9. Explore Dealer.com source-side make/model/year filters only after pagination is proven and only when the site exposes stable ordinary filter URLs.
+10. Add another source type before adding more Dealer.com seeds, because the Dealer.com shape is currently Node-readable but Worker-blocked.
+11. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
 
 ## Guardrails
 
@@ -42,3 +44,5 @@ CarGurus dealer-profile collection was added as a standalone source type using e
 Dealer.com collection was added as a standalone source type using Autostrade as the first explicit source feed. The adapter reads Dealer.com's embedded WIS inventory JSON and extracts title, vehicle detail URL, price, mileage, VIN, exterior color, seller, and status. The feed is seeded as `paused` so it can be manually collected and compared against existing VIN dedupe behavior before joining scheduled refresh.
 
 Dealer.com completeness review found that Autostrade's initial inventory page exposed `pageInfo.totalCount: 137`, `pageInfo.pageSize: 24`, and `pageInfo.pageStart: 0`, so the original 24-listing adapter result was only the first page. The adapter now follows ordinary `?start=` pagination up to a bounded page limit and combines all embedded WIS inventory pages before normalization. For very large dealers, prefer source-side filters only when they are stable and visible in normal page/filter URLs; still apply our own saved-search filter after import because source filters are inconsistent across platforms.
+
+Dealer.com Worker-readiness review found a runtime split: `npm run collect:dealer-com` in Node collected 137 Autostrade listings, but `POST /api/admin/source-feeds/feed-dealer-com-autostrade/collect` through the local Worker returned HTTP 403 from the dealer site and inserted 0 candidates. The source health path correctly marked the paused feed as `error`, and a follow-up saved-search evaluation still wrote 5 current matches from existing active feeds. Keep Dealer.com paused/off-schedule until collection either runs through a permitted Worker-compatible path or is explicitly handled by an off-Worker job that posts normalized candidates back to the app.
