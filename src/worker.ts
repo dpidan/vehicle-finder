@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { importListingCandidates } from './services/inventory-service.js';
+import { collectActiveSourceFeeds, listSourceFeeds } from './services/source-feed-service.js';
 import { filterThresholdMatches, formatMonitoringDigest, isIsoDateTime, type MonitoringSummary } from './services/monitoring-service.js';
 import { decodeSavedSearchVins, decodeVin } from './services/vin-decoder-service.js';
 import {
@@ -276,6 +277,16 @@ app.post('/api/admin/sources/dealer-car-search/collect', async (c) => {
   return c.json({ collectedAt, source: dealerCarSearchSource.name, collectedCount: candidates.length, import: importResult });
 });
 
+app.get('/api/admin/source-feeds', async (c) => {
+  const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
+
+  if (unauthorized) {
+    return c.json({ error: unauthorized }, unauthorized === 'admin-token-not-configured' ? 503 : 401);
+  }
+
+  return c.json({ feeds: await listSourceFeeds(c.env.DB) });
+});
+
 app.post('/api/admin/searches/:id/evaluations', async (c) => {
   const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
 
@@ -313,10 +324,8 @@ app.post('/api/admin/searches/:id/refresh', async (c) => {
   }
 
   const refreshedAt = new Date().toISOString();
-  const candidates = await dealerCarSearchSource.collect({
-    sellerSeeds: cypressDealerCarSearchSeeds,
-    collectedAt: refreshedAt
-  });
+  const sourceRun = await collectActiveSourceFeeds(c.env.DB, refreshedAt);
+  const candidates = sourceRun.candidates;
   const importResult = await importListingCandidates(c.env.DB, candidates);
   const rankedListings = await rankPersistedListingsForSavedSearch(c.env.DB, search);
   const evaluationResult = await writeSearchEvaluations(c.env.DB, search.id, rankedListings, refreshedAt);
@@ -324,7 +333,9 @@ app.post('/api/admin/searches/:id/refresh', async (c) => {
   return c.json({
     searchId: search.id,
     refreshedAt,
-    source: dealerCarSearchSource.name,
+    source: Object.keys(sourceRun.collectedCountByAdapter).join(', ') || dealerCarSearchSource.name,
+    feeds: sourceRun.feeds.map((feed) => ({ id: feed.id, name: feed.name, adapterKey: feed.adapterKey })),
+    collectedCountByAdapter: sourceRun.collectedCountByAdapter,
     collectedCount: candidates.length,
     import: importResult,
     evaluation: evaluationResult
@@ -532,10 +543,8 @@ export async function refreshEnabledSavedSearches(db: D1Database, refreshedAt: s
   evaluatedSearches: number;
   insertedEvaluations: number;
 }> {
-  const candidates = await dealerCarSearchSource.collect({
-    sellerSeeds: cypressDealerCarSearchSeeds,
-    collectedAt: refreshedAt
-  });
+  const sourceRun = await collectActiveSourceFeeds(db, refreshedAt);
+  const candidates = sourceRun.candidates;
   const imported = await importListingCandidates(db, candidates);
   let evaluatedSearches = 0;
   let insertedEvaluations = 0;

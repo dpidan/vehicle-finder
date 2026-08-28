@@ -2,6 +2,7 @@ PRAGMA foreign_keys = OFF;
 
 DROP TABLE IF EXISTS vehicle_recalls;
 DROP TABLE IF EXISTS vin_decodes;
+DROP TABLE IF EXISTS source_feeds;
 DROP TABLE IF EXISTS model_year_risks;
 DROP TABLE IF EXISTS attribute_values;
 DROP TABLE IF EXISTS attribute_definitions;

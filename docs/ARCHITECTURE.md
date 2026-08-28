@@ -19,6 +19,7 @@ Cloudflare D1
   ├── listings
   ├── listing snapshots
   ├── sellers
+  ├── source feeds
   ├── attribute definitions / values
   ├── evidence records
   ├── model-year knowledge
@@ -111,6 +112,8 @@ Saved Search B ──> Evaluation B
 Facts about a vehicle/listing are global. Preferences and scores are search-specific.
 
 Make/model affinity, body-style fit, buyer urgency, financing posture, maintenance budget, travel flexibility, and risk tolerance belong to saved-search configuration. They should not leak into canonical vehicle/listing records.
+
+Source feeds are global collection inputs. A feed records which adapter should collect an inventory URL, whether that feed is active/paused/blocked/retired, and recent collection health. A feed may link to a canonical seller, but it is not the seller itself; this allows one seller to have multiple feeds without duplicating seller identity.
 
 ## MCP interface
 

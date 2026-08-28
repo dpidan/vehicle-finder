@@ -14,7 +14,8 @@ describe('data readiness', () => {
         '0002_listing_photos.sql',
         '0003_vin_decodes.sql',
         '0004_vehicle_recalls.sql',
-        '0005_listing_exterior_color.sql'
+        '0005_listing_exterior_color.sql',
+        '0006_source_feeds.sql'
       ]
     );
   });
@@ -22,6 +23,7 @@ describe('data readiness', () => {
   it('has local reset and inspection scripts', () => {
     assert.match(readFileSync('scripts/db-reset-local.sql', 'utf8'), /DROP TABLE IF EXISTS users/);
     assert.match(readFileSync('scripts/db-inspection.sql', 'utf8'), /SELECT COUNT\(\*\) AS listings FROM listings/);
+    assert.match(readFileSync('scripts/db-inspection.sql', 'utf8'), /SELECT COUNT\(\*\) AS source_feeds FROM source_feeds/);
   });
 
   it('seeds the initial family search shape', () => {
@@ -41,7 +43,10 @@ describe('data readiness', () => {
       '"CR-V"',
       'risk-honda-odyssey-2011-2013-vcm',
       'risk-honda-pilot-2012-2013-vcm',
-      'risk-toyota-sienna-2015-2016-sliding-doors'
+      'risk-toyota-sienna-2015-2016-sliding-doors',
+      'feed-dealer-car-search-trade-lane-motors',
+      'feed-cargurus-toyo-financial-group',
+      "'paused'"
     ]) {
       assert.match(seed, new RegExp(escapeRegExp(expected)));
     }

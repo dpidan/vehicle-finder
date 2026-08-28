@@ -7,6 +7,8 @@ export type LocaleCode = string;
 
 export type ListingStatus = 'active' | 'pending' | 'sold' | 'removed' | 'unknown';
 export type SourceAccess = 'official-api' | 'structured-web' | 'notification-import' | 'browser-assisted' | 'manual-import';
+export type SourceAdapterKey = 'dealer-car-search' | 'carsforsale' | 'cargurus' | 'manual-import';
+export type SourceFeedStatus = 'active' | 'paused' | 'blocked' | 'retired';
 export type ModelYearRiskCategory = 'engine' | 'transmission' | 'electrical' | 'body' | 'maintenance' | 'safety';
 export type ModelYearRiskRating = 'preferred' | 'good' | 'neutral' | 'caution' | 'avoid-unless-remediated';
 
@@ -64,6 +66,25 @@ export interface Seller {
   phone?: string;
   websiteUrl?: string;
   location?: GeoPoint;
+  createdAt: IsoDateTime;
+  updatedAt: IsoDateTime;
+}
+
+export interface SourceFeed {
+  id: EntityId;
+  sellerId?: EntityId;
+  seller?: SellerSeed;
+  name: string;
+  adapterKey: SourceAdapterKey;
+  access: SourceAccess;
+  status: SourceFeedStatus;
+  inventoryUrl: string;
+  websiteUrl?: string;
+  collectionPriority: number;
+  lastCollectedAt?: IsoDateTime;
+  lastStatus?: string;
+  lastError?: string;
+  notes?: string;
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
 }

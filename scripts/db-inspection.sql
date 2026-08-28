@@ -2,6 +2,7 @@ SELECT COUNT(*) AS users FROM users;
 SELECT COUNT(*) AS saved_searches FROM saved_searches;
 SELECT COUNT(*) AS vehicles FROM vehicles;
 SELECT COUNT(*) AS sellers FROM sellers;
+SELECT COUNT(*) AS source_feeds FROM source_feeds;
 SELECT COUNT(*) AS listings FROM listings;
 SELECT COUNT(*) AS listing_snapshots FROM listing_snapshots;
 SELECT COUNT(*) AS search_evaluations FROM search_evaluations;
@@ -9,6 +10,17 @@ SELECT COUNT(*) AS listing_dispositions FROM listing_dispositions;
 SELECT COUNT(*) AS model_year_risks FROM model_year_risks;
 SELECT COUNT(*) AS vin_decodes FROM vin_decodes;
 SELECT COUNT(*) AS vehicle_recalls FROM vehicle_recalls;
+
+SELECT
+  id,
+  name,
+  adapter_key,
+  status,
+  collection_priority,
+  last_collected_at,
+  last_status
+FROM source_feeds
+ORDER BY collection_priority, name;
 
 SELECT
   l.id AS listing_id,

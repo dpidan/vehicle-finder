@@ -231,6 +231,8 @@ export interface SearchRefreshResult {
   searchId: string;
   refreshedAt: string;
   source: string;
+  feeds?: Array<{ id: string; name: string; adapterKey: string }>;
+  collectedCountByAdapter?: Record<string, number>;
   collectedCount: number;
   import: ManualImportSaveResult['import'];
   evaluation: ManualImportSaveResult['evaluation'];

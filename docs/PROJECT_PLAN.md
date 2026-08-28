@@ -88,7 +88,7 @@ Planned source categories include:
 - Nextdoor, subject to current API/access terms and available marketplace-search capabilities.
 - Manual import workflows for sources that are difficult to automate, including pasted URLs, VINs, listing text, or screenshots where supported.
 
-Each source is implemented behind an adapter and classified by access type, such as official API, structured web data, notification import, supplied seed list, or browser-assisted workflow. Dealer discovery should be its own step from inventory collection: first identify candidate sellers within the search radius, then run the appropriate inventory adapter for each seller when permitted.
+Each source is implemented behind an adapter and classified by access type, such as official API, structured web data, notification import, supplied seed list, or browser-assisted workflow. Collection inputs live in `source_feeds`, which stores the adapter key, inventory URL, status, priority, and source health fields while optionally linking to a canonical seller. Dealer discovery should be its own step from inventory collection: first identify candidate sellers within the search radius, then create or update source feeds for each seller when permitted.
 
 ## Product phases
 
@@ -133,7 +133,7 @@ Each source is implemented behind an adapter and classified by access type, such
 
 ### Near-term execution focus
 
-Use the verified local live dataset to improve the dashboard monitoring digest first. Then expand source coverage with another permitted collector/adapter or more healthy seeded dealers. After the dashboard can explain real monitoring signals and the source path is stable, populate Worker D1 and run one protected remote refresh.
+Use the verified local live dataset to improve the dashboard monitoring digest first. Then expand source coverage through the `source_feeds` registry with another permitted collector/adapter or more healthy seeded dealers. After the dashboard can explain real monitoring signals and the source path is stable, populate Worker D1 and run one protected remote refresh.
 
 ### Phase 5 — assistant access
 
