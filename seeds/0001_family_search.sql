@@ -96,6 +96,18 @@ VALUES
     '12212 Cypress N. Houston RD #1, Cypress, TX 77429',
     '2026-08-28T00:00:00.000Z',
     '2026-08-28T00:00:00.000Z'
+  ),
+  (
+    'seller-autostrade',
+    'dealer',
+    'Autostrade',
+    '832-717-6226',
+    'https://www.autostradetx.net',
+    NULL,
+    NULL,
+    '23539 State Highway 249, Tomball, TX 77375-8233',
+    '2026-08-28T00:00:00.000Z',
+    '2026-08-28T00:00:00.000Z'
   )
 ON CONFLICT(id) DO UPDATE SET
   type = excluded.type,
@@ -365,6 +377,20 @@ VALUES
     'https://www.toyofg.com',
     100,
     'Standalone adapter-development feed; review dedupe and terms before scheduled refresh.',
+    '2026-08-28T00:00:00.000Z',
+    '2026-08-28T00:00:00.000Z'
+  ),
+  (
+    'feed-dealer-com-autostrade',
+    'seller-autostrade',
+    'Autostrade Dealer.com',
+    'dealer-com',
+    'structured-web',
+    'paused',
+    'https://www.autostradetx.net/used-inventory/index.htm',
+    'https://www.autostradetx.net',
+    105,
+    'Standalone Dealer.com adapter-development feed; plain fetch exposes DDC WIS inventory JSON.',
     '2026-08-28T00:00:00.000Z',
     '2026-08-28T00:00:00.000Z'
   ),

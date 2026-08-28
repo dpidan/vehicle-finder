@@ -1,5 +1,6 @@
 import type { ListingCandidate, ListingSource, SellerSeed, SourceAdapterKey, SourceFeed, SourceFeedStatus } from '../domain/entities.js';
 import { cargurusSource } from '../sources/cargurus-source.js';
+import { dealerComSource } from '../sources/dealer-com-source.js';
 import { dealerCarSearchSource } from '../sources/dealer-car-search-source.js';
 import { cypressDealerCarSearchSeeds } from '../sources/dealer-car-search-seeds.js';
 
@@ -7,6 +8,7 @@ type SourceAdapterMap = Partial<Record<SourceAdapterKey, ListingSource>>;
 
 const sourceAdapters: SourceAdapterMap = {
   'dealer-car-search': dealerCarSearchSource,
+  'dealer-com': dealerComSource,
   cargurus: cargurusSource
 };
 

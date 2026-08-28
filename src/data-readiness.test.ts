@@ -15,7 +15,8 @@ describe('data readiness', () => {
         '0003_vin_decodes.sql',
         '0004_vehicle_recalls.sql',
         '0005_listing_exterior_color.sql',
-        '0006_source_feeds.sql'
+        '0006_source_feeds.sql',
+        '0007_source_feeds_dealer_com.sql'
       ]
     );
   });
@@ -53,6 +54,7 @@ describe('data readiness', () => {
       'risk-ford-explorer-2013-2017-rear-toe-link',
       'feed-dealer-car-search-trade-lane-motors',
       'feed-cargurus-toyo-financial-group',
+      'feed-dealer-com-autostrade',
       "'paused'"
     ]) {
       assert.match(seed, new RegExp(escapeRegExp(expected)));

@@ -40,6 +40,7 @@ Other useful nearby dealer platforms:
 |---|---|---|---|
 | Trade Lane Motors | Dealer Car Search | https://www.tradelanemotors.com/newandusedcars?clearall=1 plus homepage footer link to Dealer Car Search login | Good second adapter target. Inventory HTML exposed title, trim, price, stock number, mileage, drivetrain, transmission, VIN, engine, color, phone, and detail links during research. |
 | Autostrade | Dealer.com | https://www.autostradetx.net/used-inventory/index.htm plus page footer `Website by Dealer.com` | Separate investigation needed. The fetched inventory page exposed dealer info and an inventory shell, but not enough listing-card data in the text snapshot. |
+| Autostrade | Dealer.com embedded WIS data | https://www.autostradetx.net/used-inventory/index.htm | Follow-up fetch review found `DDC.WS.state['ws-inv-data']` inventory JSON with first-page vehicle records, including title, detail URL, price, mileage, VIN, color, and status. Added as a paused source-feed adapter-development seed. |
 
 Franchise/dealer-group pages are still useful as future targets, but should not
 be first:

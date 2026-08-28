@@ -7,7 +7,7 @@ export type LocaleCode = string;
 
 export type ListingStatus = 'active' | 'pending' | 'sold' | 'removed' | 'unknown';
 export type SourceAccess = 'official-api' | 'structured-web' | 'notification-import' | 'browser-assisted' | 'manual-import';
-export type SourceAdapterKey = 'dealer-car-search' | 'carsforsale' | 'cargurus' | 'manual-import';
+export type SourceAdapterKey = 'dealer-car-search' | 'dealer-com' | 'carsforsale' | 'cargurus' | 'manual-import';
 export type SourceFeedStatus = 'active' | 'paused' | 'blocked' | 'retired';
 export type ModelYearRiskCategory = 'engine' | 'transmission' | 'electrical' | 'body' | 'maintenance' | 'safety';
 export type ModelYearRiskRating = 'preferred' | 'good' | 'neutral' | 'caution' | 'avoid-unless-remediated';

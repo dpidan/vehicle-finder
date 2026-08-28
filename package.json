@@ -17,6 +17,7 @@
     "db:inspect:remote": "wrangler d1 execute vehicle-finder --remote --file scripts/db-inspection.sql",
     "collect:carsforsale": "tsx src/sources/collect-carsforsale.ts",
     "collect:cargurus": "tsx src/sources/collect-cargurus.ts",
+    "collect:dealer-com": "tsx src/sources/collect-dealer-com.ts",
     "collect:dealer-car-search": "tsx src/sources/collect-dealer-car-search.ts",
     "score:fixtures": "tsx src/scoring/fixture-report.ts",
     "typecheck": "tsc --noEmit",
