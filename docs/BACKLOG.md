@@ -6,8 +6,9 @@
 2. Add notification delivery for monitoring digests.
 3. Improve dashboard digest/report presentation.
 4. Done — added admin/dashboard controls for explicit VIN and recall enrichment.
-5. Decide whether recall/model-year risk signals should affect scoring now or remain inspection-only.
-6. Add persisted inspection checklist state if the manual checklist starts carrying real workflow weight.
+5. Done — added data-readiness checklist, inspection SQL, and seed/source smoke tests before first DB population.
+6. Decide whether recall/model-year risk signals should affect scoring now or remain inspection-only.
+7. Add persisted inspection checklist state if the manual checklist starts carrying real workflow weight.
 
 ## Done — definitions
 

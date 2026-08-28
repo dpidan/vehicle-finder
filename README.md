@@ -34,6 +34,7 @@ The project is intended to aggregate candidate vehicles from multiple sources, d
 - `docs/ARCHITECTURE.md` — current technical architecture direction.
 - `docs/FRONTEND_GUIDELINES.md` — initial dashboard design-system and styling guidance.
 - `docs/MCP_CONNECTION.md` — local and remote MCP connection notes.
+- `docs/DATA_READINESS.md` — first-run local/Worker D1 migration, seed, refresh, and inspection checklist.
 - `docs/BACKLOG.md` — ordered implementation backlog.
 - `docs/decisions/` — architecture decision records as the design matures.
 - `docs/research/` — source-specific research and evidence.
@@ -46,6 +47,7 @@ The project is intended to aggregate candidate vehicles from multiple sources, d
 ```sh
 npm run db:migrate:local
 npm run db:seed:local
+npm run db:inspect:local
 npm run dev
 ```
 
@@ -78,6 +80,9 @@ Protected endpoints use `Authorization: Bearer <ADMIN_TOKEN>`:
 - `POST /api/admin/searches/:id/refresh`
 - `GET /api/admin/mcp/tools`
 - `POST /api/admin/mcp/tools/:name/call`
+- `POST /api/admin/vin-decodes`
+- `POST /api/admin/searches/:id/vin-decodes`
+- `POST /api/admin/recalls`
 
 ## Fixture scoring
 
@@ -91,11 +96,17 @@ family search defaults.
 ## Seeded live collection
 
 ```sh
-npm run collect:carsforsale
+npm run collect:dealer-car-search
 ```
 
-This fetches first-page inventory from the explicit Cypress-area
-Carsforsale.com-powered dealer seeds and prints normalized listing candidates.
+This fetches first-page inventory from the explicit Cypress-area Dealer Car
+Search seed and prints normalized listing candidates.
+
+## First DB population
+
+Use `docs/DATA_READINESS.md` before populating local or Worker D1 with live
+data. It keeps the first migration/seed/refresh loop repeatable and gives a
+small inspection query set for row counts and relationship checks.
 
 ## Status
 
