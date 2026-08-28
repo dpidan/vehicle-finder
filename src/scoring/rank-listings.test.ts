@@ -170,4 +170,65 @@ describe('rankListingsForSearch', () => {
       ['2014 Honda Odyssey']
     );
   });
+
+  it('scores exterior color as a soft preference when known', () => {
+    const ranked = rankListingsForSearch(familySearchDefaults, [
+      {
+        source: { name: 'test', access: 'manual-import' },
+        url: 'https://example.test/silver',
+        title: '2014 Honda Odyssey',
+        vehicle: { year: 2014, make: 'Honda', model: 'Odyssey', vin: '12345678901234567' },
+        price: { amount: 9_000, currency: 'USD' },
+        exteriorColor: 'Silver',
+        capturedAt: '2026-08-27T00:00:00.000Z'
+      },
+      {
+        source: { name: 'test', access: 'manual-import' },
+        url: 'https://example.test/black',
+        title: '2014 Honda Odyssey',
+        vehicle: { year: 2014, make: 'Honda', model: 'Odyssey', vin: '12345678901234568' },
+        price: { amount: 9_000, currency: 'USD' },
+        exteriorColor: 'Black',
+        capturedAt: '2026-08-27T00:00:00.000Z'
+      }
+    ]);
+
+    assert.equal(ranked[0]?.listing.exteriorColor, 'Silver');
+    assert.equal(ranked[0]?.factors.find((factor) => factor.key === 'exterior-color-preference')?.scoreImpact, 3);
+    assert.equal(ranked[1]?.factors.find((factor) => factor.key === 'exterior-color-preference')?.scoreImpact, -4);
+  });
+
+  it('can exclude exterior colors only when source data is available', () => {
+    const search = {
+      ...familySearchDefaults,
+      filters: {
+        ...familySearchDefaults.filters,
+        excludedExteriorColors: ['black']
+      }
+    };
+    const ranked = rankListingsForSearch(search, [
+      {
+        source: { name: 'test', access: 'manual-import' },
+        url: 'https://example.test/no-color',
+        title: '2014 Honda Odyssey',
+        vehicle: { year: 2014, make: 'Honda', model: 'Odyssey', vin: '12345678901234567' },
+        price: { amount: 9_000, currency: 'USD' },
+        capturedAt: '2026-08-27T00:00:00.000Z'
+      },
+      {
+        source: { name: 'test', access: 'manual-import' },
+        url: 'https://example.test/black',
+        title: '2014 Honda Odyssey',
+        vehicle: { year: 2014, make: 'Honda', model: 'Odyssey', vin: '12345678901234568' },
+        price: { amount: 9_000, currency: 'USD' },
+        exteriorColor: 'Black',
+        capturedAt: '2026-08-27T00:00:00.000Z'
+      }
+    ]);
+
+    assert.deepEqual(
+      ranked.map((listing) => listing.listing.url),
+      ['https://example.test/no-color']
+    );
+  });
 });

@@ -57,6 +57,7 @@ interface SavedSearchConfig {
     minYear?: number;
     maxYear?: number;
     maxMileage?: number;
+    excludedExteriorColors?: string[];
     minSeats?: number;
     titleStatuses?: TitleStatus[];
     sellerTypes?: Array<'dealer' | 'private'>;
@@ -69,6 +70,11 @@ interface SavedSearchConfig {
     vehicleTypeWeights: Partial<Record<VehicleType, number>>;
     modelPreferences: ModelPreference[];
     mileageTargets?: MileageTargets;
+    colorPreferences?: {
+      preferredExteriorColors?: string[];
+      avoidExteriorColors?: string[];
+      reason?: string;
+    };
     featurePreferences?: FeaturePreference[];
     preferredInspectionProviderId?: string;
     immediateMaintenanceBudget?: number;
@@ -106,7 +112,7 @@ version so future migrations can update old configuration records deliberately.
 
 ## Extensible attributes
 
-The core schema should keep stable first-class columns for facts needed for identity, filtering, indexing, and scoring, such as VIN, year, make, model, trim, mileage, price, seller, title status, location, and source URL.
+The core schema should keep stable first-class columns for facts needed for identity, filtering, indexing, and scoring, such as VIN, year, make, model, trim, mileage, price, seller, title status, exterior color, location, and source URL.
 
 Less universal facts can be represented as typed attributes attached to vehicles, listings, sellers, or evaluations. Attribute definitions should be portable and versioned enough to allow new facts without schema churn.
 
@@ -127,6 +133,11 @@ Examples:
 Attribute values should include source/evidence metadata where applicable. Avoid using generic attributes for fields that must be queried constantly or participate in canonical identity.
 
 ## Hard filters vs preferences
+
+Exterior color supports both modes:
+
+- Soft preference: `preferences.colorPreferences` adjusts ranking when a known exterior color is preferred or avoided, such as avoiding black or other dark colors for heat.
+- Hard when known: `filters.excludedExteriorColors` excludes listings only when the source provides a matching known exterior color. Listings with missing color remain eligible.
 
 Use hard filters sparingly. Hard filters remove the listing entirely; preferences influence score.
 

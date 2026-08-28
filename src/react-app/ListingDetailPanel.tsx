@@ -63,6 +63,7 @@ export function ListingDetailPanel({
             <DetailItem label="VIN" value={listing.vehicle.vin ?? 'Missing'} />
             <DetailItem label="Price" value={formatMoney(listing.price)} />
             <DetailItem label="Mileage" value={listing.mileage ? `${listing.mileage.toLocaleString()} mi` : 'Unknown'} />
+            <DetailItem label="Exterior" value={listing.exteriorColor ?? 'Unknown'} />
             <DetailItem label="Title" value={listing.titleStatus ?? 'Unknown'} />
             <DetailItem label="Status" value={listing.status ?? 'Unknown'} />
             <DetailItem label="Seller" value={listing.seller?.name ?? 'Unknown'} />
@@ -229,6 +230,7 @@ function factorLabel(factor: ScoreFactor): string {
     'budget-fit': 'Budget fit',
     'clean-title': 'Clean title',
     'effective-purchase-cost': 'Effective purchase cost',
+    'exterior-color-preference': 'Exterior color preference',
     'immediate-maintenance-over-reserve': 'Immediate maintenance over reserve',
     'maintenance-evidence': 'Maintenance evidence',
     'mileage-fit': 'Mileage fit',

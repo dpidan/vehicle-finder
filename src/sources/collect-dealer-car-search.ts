@@ -15,6 +15,7 @@ console.log(
         title: listing.title,
         price: listing.price,
         mileage: listing.mileage,
+        exteriorColor: listing.exteriorColor,
         vin: listing.vehicle.vin,
         seller: listing.seller?.name,
         url: listing.url

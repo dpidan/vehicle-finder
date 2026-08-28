@@ -72,6 +72,14 @@ function matchesSearchFilters(search: SavedSearchConfig, listing: ListingCandida
     return false;
   }
 
+  if (
+    filters.excludedExteriorColors?.length &&
+    listing.exteriorColor &&
+    matchesAnyColor(filters.excludedExteriorColors, listing.exteriorColor)
+  ) {
+    return false;
+  }
+
   if (filters.sellerTypes?.length && listing.seller?.type && !filters.sellerTypes.includes(listing.seller.type)) {
     return false;
   }
@@ -144,6 +152,13 @@ function scoreListing(search: SavedSearchConfig, listing: ListingCandidate): Ran
   const priceImpact = priceScoreImpact(search, listing);
   dealScore += priceImpact;
   factors.push(factor('budget-fit', 'score.budgetFit', priceImpact));
+
+  const colorImpact = colorScoreImpact(search, listing);
+  if (colorImpact !== 0) {
+    dealScore += colorImpact;
+    factors.push(factor('exterior-color-preference', 'score.exteriorColorPreference', colorImpact));
+  }
+
   if (hasSuspiciouslyLowPrice(search, listing)) {
     flags.push('suspiciously-low-price');
   }
@@ -228,6 +243,34 @@ function priceScoreImpact(search: SavedSearchConfig, listing: ListingCandidate):
   }
 
   return -20;
+}
+
+function colorScoreImpact(search: SavedSearchConfig, listing: ListingCandidate): number {
+  const color = listing.exteriorColor;
+  const preferences = search.preferences.colorPreferences;
+
+  if (!color || !preferences) {
+    return 0;
+  }
+
+  if (preferences.avoidExteriorColors?.length && matchesAnyColor(preferences.avoidExteriorColors, color)) {
+    return -4;
+  }
+
+  if (preferences.preferredExteriorColors?.length && matchesAnyColor(preferences.preferredExteriorColors, color)) {
+    return 3;
+  }
+
+  return 0;
+}
+
+function matchesAnyColor(colors: string[], color: string): boolean {
+  const normalized = normalizeColor(color);
+  return colors.some((candidate) => normalized.includes(normalizeColor(candidate)));
+}
+
+function normalizeColor(color: string): string {
+  return color.toLowerCase().replace(/[^a-z]/g, '');
 }
 
 function hasSuspiciouslyLowPrice(search: SavedSearchConfig, listing: ListingCandidate): boolean {

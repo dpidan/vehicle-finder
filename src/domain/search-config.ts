@@ -66,6 +66,7 @@ export interface SearchFilters {
   minYear?: number;
   maxYear?: number;
   maxMileage?: number;
+  excludedExteriorColors?: string[];
   minSeats?: number;
   titleStatuses?: TitleStatus[];
   sellerTypes?: SellerType[];
@@ -77,7 +78,14 @@ export interface SearchPreferences {
   vehicleTypeWeights: Partial<Record<VehicleType, number>>;
   modelPreferences: ModelPreference[];
   mileageTargets?: MileageTargets;
+  colorPreferences?: ColorPreferences;
   featurePreferences?: FeaturePreference[];
+}
+
+export interface ColorPreferences {
+  preferredExteriorColors?: string[];
+  avoidExteriorColors?: string[];
+  reason?: string;
 }
 
 export interface ModelPreference {
@@ -202,6 +210,11 @@ export const familySearchDefaults: SavedSearchConfig = {
       cashSoftMax: 140000,
       stretchIdealMax: 100000,
       stretchSoftMax: 120000
+    },
+    colorPreferences: {
+      preferredExteriorColors: ['white', 'silver', 'light gray'],
+      avoidExteriorColors: ['black', 'dark blue', 'dark gray'],
+      reason: 'reduce cabin heat'
     }
   },
   scoring: {
@@ -273,6 +286,9 @@ export function validateSavedSearchConfig(config: SavedSearchConfig): Validation
   requireOptionalPositiveInteger(config.filters.maxMileage, 'filters.maxMileage', issues);
   requireOptionalPositiveInteger(config.filters.minSeats, 'filters.minSeats', issues);
   requireOrderedRange(config.filters.minYear, config.filters.maxYear, 'filters.minYear', 'filters.maxYear', issues);
+  config.filters.excludedExteriorColors?.forEach((color, index) => {
+    requireNonBlank(color, `filters.excludedExteriorColors.${index}`, issues);
+  });
 
   requireWeightMap(config.preferences.vehicleTypeWeights, 'preferences.vehicleTypeWeights', issues);
   config.preferences.modelPreferences.forEach((preference, index) => {
@@ -316,6 +332,12 @@ export function validateSavedSearchConfig(config: SavedSearchConfig): Validation
   config.preferences.featurePreferences?.forEach((preference, index) => {
     requireNonBlank(preference.name, `preferences.featurePreferences.${index}.name`, issues);
     requireOptionalWeight(preference.weight, `preferences.featurePreferences.${index}.weight`, issues);
+  });
+  config.preferences.colorPreferences?.preferredExteriorColors?.forEach((color, index) => {
+    requireNonBlank(color, `preferences.colorPreferences.preferredExteriorColors.${index}`, issues);
+  });
+  config.preferences.colorPreferences?.avoidExteriorColors?.forEach((color, index) => {
+    requireNonBlank(color, `preferences.colorPreferences.avoidExteriorColors.${index}`, issues);
   });
 
   requireWeightTotal(config.scoring.vehicleWeights, 'scoring.vehicleWeights', issues);

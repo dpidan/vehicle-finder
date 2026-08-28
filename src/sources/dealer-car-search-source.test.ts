@@ -13,6 +13,7 @@ describe('parseDealerCarSearchInventory', () => {
           <span>Mileage:</span><span>109,421</span>
           <span>Drivetrain: FWD</span>
           <span>Transmission: Automatic</span>
+          <span>Color: Silver</span>
           <span>VIN: 5TDYZ3DC1HS000001</span>
         </div>
       `,
@@ -32,6 +33,7 @@ describe('parseDealerCarSearchInventory', () => {
     assert.equal(listings[0]?.vehicle.vin, '5TDYZ3DC1HS000001');
     assert.equal(listings[0]?.price?.amount, 15995);
     assert.equal(listings[0]?.mileage, 109421);
+    assert.equal(listings[0]?.exteriorColor, 'Silver');
     assert.equal(listings[0]?.url, 'https://www.tradelanemotors.com/vdp/12345/Used-2017-Toyota-Sienna-XLE-for-sale-in-Houston-TX');
     assert.equal(listings[0]?.evidence?.[0]?.url, listings[0]?.url);
   });

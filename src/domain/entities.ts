@@ -79,6 +79,7 @@ export interface Listing {
   status: ListingStatus;
   price?: MoneyAmount;
   mileage?: number;
+  exteriorColor?: string;
   photoUrls?: string[];
   titleStatus?: TitleStatus;
   location?: GeoPoint;
@@ -94,6 +95,7 @@ export interface ListingSnapshot {
   capturedAt: IsoDateTime;
   price?: MoneyAmount;
   mileage?: number;
+  exteriorColor?: string;
   photoUrls?: string[];
   status: ListingStatus;
   rawTitle?: string;
@@ -145,6 +147,7 @@ export interface ListingCandidate {
   seller?: SellerCandidate;
   price?: MoneyAmount;
   mileage?: number;
+  exteriorColor?: string;
   photoUrls?: string[];
   risks?: ModelYearRisk[];
   titleStatus?: TitleStatus;

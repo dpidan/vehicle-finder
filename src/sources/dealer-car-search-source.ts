@@ -38,6 +38,7 @@ export function parseDealerCarSearchInventory(
     const detail = lines.join('\n');
     const price = parsePrice(detail);
     const mileage = parseMileage(detail);
+    const exteriorColor = parseExteriorColor(detail);
     const vin = parseVin(detail);
     const vehicle = parseVehicleTitle(title);
     const url = titleLink?.url ?? fallbackUrl;
@@ -52,6 +53,7 @@ export function parseDealerCarSearchInventory(
       seller: seed,
       ...(price > 0 ? { price: { amount: price, currency: 'USD' } } : {}),
       ...(mileage > 0 ? { mileage } : {}),
+      ...(exteriorColor ? { exteriorColor } : {}),
       ...(seed.location ? { location: seed.location } : {}),
       capturedAt,
       evidence: [{ label: `${seed.name} vehicle listing`, url, confidence: titleLink ? 0.75 : 0.65 }]
@@ -125,6 +127,16 @@ function parseMileage(text: string): number {
 
 function parseVin(text: string): string | undefined {
   return text.match(/\b([A-HJ-NPR-Z0-9]{17})\b/i)?.[1]?.toUpperCase();
+}
+
+function parseExteriorColor(text: string): string | undefined {
+  const color =
+    text.match(/Exterior Color:?\s*\n?([^\n]+)/i)?.[1]?.trim() ?? text.match(/(?:^|\n)Color:?\s*\n?([^\n]+)/i)?.[1]?.trim();
+  return color && /^(black|blue|brown|gold|gray|green|orange|red|silver|tan|white)$/i.test(color) ? titleCase(color) : undefined;
+}
+
+function titleCase(value: string): string {
+  return value.slice(0, 1).toUpperCase() + value.slice(1).toLowerCase();
 }
 
 function parseInteger(value: string | undefined): number {

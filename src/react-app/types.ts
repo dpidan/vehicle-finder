@@ -90,6 +90,7 @@ export interface ListingCandidate {
     currency: 'USD';
   };
   mileage?: number;
+  exteriorColor?: string;
   photoUrls?: string[];
   titleStatus?: string;
   seller?: {
@@ -106,6 +107,7 @@ export interface ListingDetail {
     capturedAt: string;
     price?: ListingCandidate['price'];
     mileage?: number;
+    exteriorColor?: string;
     photoUrls?: string[];
   }>;
 }

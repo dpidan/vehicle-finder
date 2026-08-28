@@ -9,7 +9,13 @@ describe('data readiness', () => {
       readdirSync('migrations')
         .filter((file) => file.endsWith('.sql'))
         .sort(),
-      ['0001_initial.sql', '0002_listing_photos.sql', '0003_vin_decodes.sql', '0004_vehicle_recalls.sql']
+      [
+        '0001_initial.sql',
+        '0002_listing_photos.sql',
+        '0003_vin_decodes.sql',
+        '0004_vehicle_recalls.sql',
+        '0005_listing_exterior_color.sql'
+      ]
     );
   });
 

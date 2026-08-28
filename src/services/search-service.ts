@@ -25,6 +25,7 @@ interface PersistedListingRow {
   price_amount: number | null;
   price_currency: 'USD' | null;
   mileage: number | null;
+  exterior_color: string | null;
   photo_urls_json: string | null;
   title_status: ListingCandidate['titleStatus'] | null;
   listing_latitude: number | null;
@@ -58,6 +59,7 @@ interface SnapshotRow {
   price_amount: number | null;
   price_currency: 'USD' | null;
   mileage: number | null;
+  exterior_color: string | null;
   photo_urls_json: string | null;
   status: ListingCandidate['status'];
   raw_title: string | null;
@@ -473,6 +475,7 @@ export async function getListingDetail(db: D1Database, id: string): Promise<List
          listings.price_amount,
          listings.price_currency,
          listings.mileage,
+         listings.exterior_color,
          listings.photo_urls_json,
          listings.title_status,
          listings.latitude AS listing_latitude,
@@ -505,7 +508,7 @@ export async function getListingDetail(db: D1Database, id: string): Promise<List
 
   const { results } = await db
     .prepare(
-      `SELECT id, captured_at, price_amount, price_currency, mileage, photo_urls_json, status, raw_title, raw_description
+      `SELECT id, captured_at, price_amount, price_currency, mileage, exterior_color, photo_urls_json, status, raw_title, raw_description
        FROM listing_snapshots
        WHERE listing_id = ?
        ORDER BY captured_at DESC
@@ -626,6 +629,7 @@ async function listPersistedListingCandidates(db: D1Database, savedSearchId: str
          listings.price_amount,
          listings.price_currency,
          listings.mileage,
+         listings.exterior_color,
          listings.photo_urls_json,
          listings.title_status,
          listings.latitude AS listing_latitude,
@@ -710,6 +714,7 @@ function toListingCandidate(row: PersistedListingRow): ListingCandidate & { list
       : {}),
     ...(row.price_amount && row.price_currency ? { price: { amount: row.price_amount, currency: row.price_currency } } : {}),
     ...(row.mileage ? { mileage: row.mileage } : {}),
+    ...(row.exterior_color ? { exteriorColor: row.exterior_color } : {}),
     ...(row.photo_urls_json ? { photoUrls: JSON.parse(row.photo_urls_json) as string[] } : {}),
     ...(row.title_status ? { titleStatus: row.title_status } : {}),
     ...(row.listing_latitude && row.listing_longitude
@@ -733,6 +738,7 @@ function toSnapshot(row: SnapshotRow): ListingDetail['snapshots'][number] {
     capturedAt: row.captured_at,
     ...(row.price_amount && row.price_currency ? { price: { amount: row.price_amount, currency: row.price_currency } } : {}),
     ...(row.mileage ? { mileage: row.mileage } : {}),
+    ...(row.exterior_color ? { exteriorColor: row.exterior_color } : {}),
     ...(row.photo_urls_json ? { photoUrls: JSON.parse(row.photo_urls_json) as string[] } : {}),
     status: row.status,
     ...(row.raw_title ? { rawTitle: row.raw_title } : {}),
