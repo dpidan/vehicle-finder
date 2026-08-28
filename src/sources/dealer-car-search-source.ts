@@ -24,7 +24,19 @@ export function parseDealerCarSearchInventory(
   capturedAt: CollectionContext['collectedAt']
 ): ListingCandidate[] {
   const fallbackUrl = seed.inventoryUrl ?? seed.websiteUrl ?? '';
-  const cards = html.match(/<div class="[^"]*\bi17r-vehicle\b[\s\S]*?(?=<div class="[^"]*\bi17r-vehicle\b|$)/g) ?? [html];
+  const cards = html.match(/<div class="[^"]*\bi17r-vehicle\b[\s\S]*?(?=<div class="[^"]*\bi17r-vehicle\b|$)/g);
+
+  if (!cards) {
+    const titleLinks = parseTitleLinks(html, fallbackUrl);
+
+    if (titleLinks.length > 1) {
+      return titleLinks.flatMap(({ title, url, detail }, index) =>
+        buildListingCandidate({ seed, capturedAt, title, url, detail, index, confidence: 0.75 })
+      );
+    }
+
+    return parseTextInventory(htmlToText(html).split('\n'), seed, capturedAt, fallbackUrl);
+  }
 
   return cards.flatMap((card, index) => {
     const titleLink = parseTitleLink(card, fallbackUrl);
@@ -36,28 +48,44 @@ export function parseDealerCarSearchInventory(
     }
 
     const detail = lines.join('\n');
-    const price = parsePrice(detail);
-    const mileage = parseMileage(detail);
-    const exteriorColor = parseExteriorColor(detail);
-    const vin = parseVin(detail);
-    const vehicle = parseVehicleTitle(title);
-    const url = titleLink?.url ?? fallbackUrl;
-
-    return {
-      source,
-      sourceListingId: vin ?? `${seed.name}:${index}:${title}`,
-      url,
-      title,
-      status: 'active',
-      vehicle: { ...vehicle, ...(vin ? { vin } : {}) },
-      seller: seed,
-      ...(price > 0 ? { price: { amount: price, currency: 'USD' } } : {}),
-      ...(mileage > 0 ? { mileage } : {}),
-      ...(exteriorColor ? { exteriorColor } : {}),
-      ...(seed.location ? { location: seed.location } : {}),
+    return buildListingCandidate({
+      seed,
       capturedAt,
-      evidence: [{ label: `${seed.name} vehicle listing`, url, confidence: titleLink ? 0.75 : 0.65 }]
-    };
+      title,
+      url: titleLink?.url ?? fallbackUrl,
+      detail,
+      index,
+      confidence: titleLink ? 0.75 : 0.65
+    });
+  });
+}
+
+function parseTextInventory(
+  lines: string[],
+  seed: SellerSeed,
+  capturedAt: CollectionContext['collectedAt'],
+  fallbackUrl: string
+): ListingCandidate[] {
+  const titleIndexes = lines.flatMap((line, index) => (parseTitleLine(line) ? [index] : []));
+
+  return titleIndexes.flatMap((lineIndex, index) => {
+    const title = parseTitleLine(lines[lineIndex] ?? '');
+    const nextTitleIndex = titleIndexes[index + 1] ?? lines.length;
+    const priceContext = lines.slice(Math.max(0, lineIndex - 4), lineIndex).filter((line) => /\$|Retail|Internet/i.test(line));
+
+    if (!title) {
+      return [];
+    }
+
+    return buildListingCandidate({
+      seed,
+      capturedAt,
+      title,
+      url: fallbackUrl,
+      detail: [...priceContext, ...lines.slice(lineIndex, nextTitleIndex)].join('\n'),
+      index,
+      confidence: 0.6
+    });
   });
 }
 
@@ -103,6 +131,74 @@ function parseTitleLink(html: string, baseUrl: string): { title: string; url: st
   const title = htmlToText(label ?? '').split('\n').map(parseTitleLine).find(Boolean);
 
   return href && title ? { title, url: new URL(href, baseUrl).toString() } : undefined;
+}
+
+function parseTitleLinks(html: string, baseUrl: string): Array<{ title: string; url: string; detail: string }> {
+  return Array.from(html.matchAll(/<a\b[^>]*href="([^"]+)"[^>]*>\s*((?:19|20)\d{2}[\s\S]*?)<\/a>/gi)).flatMap(
+    (match) => {
+      const href = match[1];
+      const title = htmlToText(match[2] ?? '').split('\n').map(parseTitleLine).find(Boolean);
+
+      if (!href || !title) {
+        return [];
+      }
+
+      return [
+        {
+          title,
+          url: new URL(href, baseUrl).toString(),
+          detail: htmlToText(html.slice(Math.max(0, match.index - 500), match.index + 1200))
+        }
+      ];
+    }
+  );
+}
+
+function buildListingCandidate({
+  seed,
+  capturedAt,
+  title,
+  url,
+  detail,
+  index,
+  confidence
+}: {
+  seed: SellerSeed;
+  capturedAt: CollectionContext['collectedAt'];
+  title: string;
+  url: string;
+  detail: string;
+  index: number;
+  confidence: number;
+}): ListingCandidate[] {
+  const price = parsePrice(detail);
+  const mileage = parseMileage(detail);
+  const exteriorColor = parseExteriorColor(detail);
+  const vin = parseVin(detail);
+
+  if (price === 0 && mileage === 0 && !vin) {
+    return [];
+  }
+
+  const vehicle = parseVehicleTitle(title);
+
+  return [
+    {
+      source,
+      sourceListingId: vin ?? `${seed.name}:${url || `${index}:${title}`}`,
+      url,
+      title,
+      status: 'active',
+      vehicle: { ...vehicle, ...(vin ? { vin } : {}) },
+      seller: seed,
+      ...(price > 0 ? { price: { amount: price, currency: 'USD' } } : {}),
+      ...(mileage > 0 ? { mileage } : {}),
+      ...(exteriorColor ? { exteriorColor } : {}),
+      ...(seed.location ? { location: seed.location } : {}),
+      capturedAt,
+      evidence: [{ label: `${seed.name} vehicle listing`, url, confidence }]
+    }
+  ];
 }
 
 function parseVehicleTitle(title: string): ListingCandidate['vehicle'] {

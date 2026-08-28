@@ -13,6 +13,17 @@ export const cypressDealerCarSearchSeeds: SellerSeed[] = [
     }
   },
   {
+    name: 'Mr. King and Mrs. Queens Auto Finance LLC',
+    type: 'dealer',
+    websiteUrl: 'https://www.kingqueenauto.com',
+    inventoryUrl: 'https://www.kingqueenauto.com/newandusedcars?clearall=1',
+    location: {
+      label: '11830 Jones Road, Houston, TX 77070',
+      latitude: 29.9476,
+      longitude: -95.5843
+    }
+  },
+  {
     name: 'Future Cars',
     type: 'dealer',
     websiteUrl: 'https://www.futurecarus.com',

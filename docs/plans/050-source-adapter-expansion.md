@@ -6,15 +6,16 @@ Expand source coverage without changing the canonical import path.
 
 ## Current Chunk
 
-- Upgrade existing Carsforsale parsing to prefer individual vehicle detail URLs when listing cards expose them.
-- Keep inventory-page URLs only as a fallback.
-- Preserve source attribution on the same URL the buyer should open.
+- Find nearby Kathy Ln / Cypress dealer-owned inventory pages and only add them to automated collection if the existing plain-fetch collector can reach them.
+- Keep DealerCenter and aggregator sources as follow-up adapter candidates until their plain-fetch shape is proven.
 
 ## Next Candidate Chunks
 
 1. Done — find more healthy Dealer Car Search seeds near the saved-search radius.
-2. Choose one additional structured dealer platform from existing research and add the smallest parser that can extract title, detail URL, price, mileage, VIN when visible, and seller.
-3. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
+2. Done — reviewed VSA MotorCars and Auto Land Of Texas near Kathy Ln; both are useful manual-review leads but returned HTTP 403 to the current collector.
+3. Done — added Mr. King and Mrs. Queens Auto Finance LLC after a collector-style fetch returned HTTP 200.
+4. Choose one additional structured dealer platform from the Kathy Ln source research and add the smallest parser that can extract title, detail URL, price, mileage, VIN when visible, and seller.
+5. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
 
 ## Guardrails
 
@@ -26,3 +27,7 @@ Expand source coverage without changing the canonical import path.
 ## Result
 
 The Carsforsale adapter now preserves vehicle detail links when the inventory HTML exposes them. The Dealer Car Search seed list also now includes Future Cars, Texaz Motors, CarCafe LLC, and C.P. Auto Sales; `npm run collect:dealer-car-search` returned 49 normalized listings after the expansion. This makes imported listings actionable from the dashboard and monitoring digest instead of sending the buyer back to a broad inventory page.
+
+VSA MotorCars and Auto Land Of Texas were reviewed as nearby dealer-owned inventory candidates after the Kathy Ln source review. Both are close Cypress independent dealers with useful visible inventory, but `npm run collect:dealer-car-search` returned HTTP 403 for their dealer-owned pages, so they were not added to the automated seed list.
+
+Mr. King and Mrs. Queens Auto Finance LLC was added to the automated Dealer Car Search seed list after a collector-style fetch returned HTTP 200. A small parser update handles Dealer Car Search pages that expose multiple linked title rows outside the old `i17r-vehicle` card shape. `npm run collect:dealer-car-search` now returns 72 listings total; this new source currently contributes individual vehicle detail URLs and prices, with VIN/mileage detail-page enrichment left for a later chunk.
