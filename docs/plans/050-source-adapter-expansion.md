@@ -7,15 +7,17 @@ Expand source coverage without changing the canonical import path.
 ## Current Chunk
 
 - Find nearby Kathy Ln / Cypress dealer-owned inventory pages and only add them to automated collection if the existing plain-fetch collector can reach them.
-- Keep DealerCenter and aggregator sources as follow-up adapter candidates until their plain-fetch shape is proven.
+- Add one standalone aggregator dealer-profile adapter so we can compare source quality and VIN dedupe before mixing it into scheduled refresh.
+- Keep DealerCenter sources as follow-up adapter candidates until their plain-fetch shape is proven.
 
 ## Next Candidate Chunks
 
 1. Done — find more healthy Dealer Car Search seeds near the saved-search radius.
 2. Done — reviewed VSA MotorCars and Auto Land Of Texas near Kathy Ln; both are useful manual-review leads but returned HTTP 403 to the current collector.
 3. Done — added Mr. King and Mrs. Queens Auto Finance LLC after a collector-style fetch returned HTTP 200.
-4. Choose one additional structured dealer platform from the Kathy Ln source research and add the smallest parser that can extract title, detail URL, price, mileage, VIN when visible, and seller.
-5. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
+4. Done — add a standalone CarGurus seeded dealer-profile adapter for nearby Cypress dealers.
+5. Choose one additional structured dealer platform from the Kathy Ln source research and add the smallest parser that can extract title, detail URL, price, mileage, VIN when visible, and seller.
+6. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
 
 ## Guardrails
 
@@ -31,3 +33,5 @@ The Carsforsale adapter now preserves vehicle detail links when the inventory HT
 VSA MotorCars and Auto Land Of Texas were reviewed as nearby dealer-owned inventory candidates after the Kathy Ln source review. Both are close Cypress independent dealers with useful visible inventory, but `npm run collect:dealer-car-search` returned HTTP 403 for their dealer-owned pages, so they were not added to the automated seed list.
 
 Mr. King and Mrs. Queens Auto Finance LLC was added to the automated Dealer Car Search seed list after a collector-style fetch returned HTTP 200. A small parser update handles Dealer Car Search pages that expose multiple linked title rows outside the old `i17r-vehicle` card shape. `npm run collect:dealer-car-search` now returns 72 listings total; this new source currently contributes individual vehicle detail URLs and prices, with VIN/mileage detail-page enrichment left for a later chunk.
+
+CarGurus dealer-profile collection was added as a standalone source type using explicit Cypress-area seeds for Toyo Financial Group and VSA Motorcars. `npm run collect:cargurus` returned 35 normalized listings with VIN, price, mileage, exterior color, seller, and CarGurus listing/profile URL. Keep it out of scheduled refresh until duplicate behavior, field quality, and source terms are reviewed.

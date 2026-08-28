@@ -33,6 +33,19 @@ These are useful candidates, but should not enter scheduled refresh until their 
 | Toyo Financial Group | 22226 Northwest Fwy, Cypress, TX 77429 | Independent dealer / aggregator profile | Aggregator/manual import | CarEdge showed inventory summary, but use dealer site or manual import before scraping aggregator profiles. |
 | Autotrader dealer pages | Nearby Cypress dealers | Aggregator | Alert/manual import first | Useful for discovery and manual review. Avoid automated scraping unless a permitted integration path is identified. |
 
+## Added as Standalone Adapter Targets
+
+These sources are intentionally collected with separate scripts first. They are useful for adapter development and dedupe testing, but should not be mixed into scheduled refresh until their duplicate behavior and field quality are reviewed.
+
+| Source | Address / Area | Source type | Adapter path | Notes |
+|---|---|---|---|---|
+| Toyo Financial Group on CarGurus | 22226 Northwest Fwy, Cypress, TX 77429 | Aggregator dealer profile | `cargurusSource` | Direct fetch returned HTTP 200 with visible VINs and listing IDs. Useful to test aggregator-profile parsing and VIN dedupe against dealer-owned sources. |
+| VSA Motorcars on CarGurus | 12212 Cypress N. Houston RD #1, Cypress, TX 77429 | Aggregator dealer profile | `cargurusSource` | Direct fetch path was added as a seed because the dealer-owned VSA page returned HTTP 403 to the current collector. |
+
+Verified command: `npm run collect:cargurus`
+
+Verified result: 35 normalized listings across Toyo Financial Group and VSA Motorcars, including VIN, price, mileage, exterior color, seller, and CarGurus listing/profile URL.
+
 ## Decision
 
 Prefer dealer-owned inventory pages over third-party profiles for scheduled collection, but only when the current collector can fetch them without bypass behavior. Add DealerCenter only after at least one DealerCenter site exposes stable vehicle details to plain fetch without browser automation.
