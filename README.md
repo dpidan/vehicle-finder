@@ -51,6 +51,14 @@ npm run db:inspect:local
 npm run dev
 ```
 
+Protected local routes read `ADMIN_TOKEN` from an ignored `.dev.vars` file:
+
+```sh
+cp .dev.vars.example .dev.vars
+```
+
+Use `wrangler secret put ADMIN_TOKEN` for deployed Workers.
+
 Use `npm run dev:worker` when you specifically want Wrangler without the Vite
 frontend pipeline.
 

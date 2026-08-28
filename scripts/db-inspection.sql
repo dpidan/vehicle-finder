@@ -1,14 +1,14 @@
-SELECT 'users' AS table_name, COUNT(*) AS row_count FROM users
-UNION ALL SELECT 'saved_searches', COUNT(*) FROM saved_searches
-UNION ALL SELECT 'vehicles', COUNT(*) FROM vehicles
-UNION ALL SELECT 'sellers', COUNT(*) FROM sellers
-UNION ALL SELECT 'listings', COUNT(*) FROM listings
-UNION ALL SELECT 'listing_snapshots', COUNT(*) FROM listing_snapshots
-UNION ALL SELECT 'search_evaluations', COUNT(*) FROM search_evaluations
-UNION ALL SELECT 'listing_dispositions', COUNT(*) FROM listing_dispositions
-UNION ALL SELECT 'model_year_risks', COUNT(*) FROM model_year_risks
-UNION ALL SELECT 'vin_decodes', COUNT(*) FROM vin_decodes
-UNION ALL SELECT 'vehicle_recalls', COUNT(*) FROM vehicle_recalls;
+SELECT COUNT(*) AS users FROM users;
+SELECT COUNT(*) AS saved_searches FROM saved_searches;
+SELECT COUNT(*) AS vehicles FROM vehicles;
+SELECT COUNT(*) AS sellers FROM sellers;
+SELECT COUNT(*) AS listings FROM listings;
+SELECT COUNT(*) AS listing_snapshots FROM listing_snapshots;
+SELECT COUNT(*) AS search_evaluations FROM search_evaluations;
+SELECT COUNT(*) AS listing_dispositions FROM listing_dispositions;
+SELECT COUNT(*) AS model_year_risks FROM model_year_risks;
+SELECT COUNT(*) AS vin_decodes FROM vin_decodes;
+SELECT COUNT(*) AS vehicle_recalls FROM vehicle_recalls;
 
 SELECT
   l.id AS listing_id,

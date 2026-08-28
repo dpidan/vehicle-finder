@@ -22,3 +22,7 @@ Make the first local and Worker D1 population repeatable and inspectable before 
 ## Result
 
 The project now has a small first-run checklist and inspection command set for validating local data before moving the same migration/seed flow to Worker D1.
+
+## Local Verification
+
+On 2026-08-28, local D1 migration, seed, inspection, and two protected saved-search refreshes completed. The first refresh inserted 25 live Dealer Car Search listings; the second refresh updated those listings and added another snapshot/evaluation set without duplicating VIN-backed vehicles.

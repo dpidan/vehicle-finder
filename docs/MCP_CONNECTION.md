@@ -23,13 +23,19 @@ Run the Worker with a local D1 database:
 ```sh
 npm run db:migrate:local
 npm run db:seed:local
-ADMIN_TOKEN=dev-secret npm run dev
+npm run dev
+```
+
+For local development, put the token in an ignored `.dev.vars` file:
+
+```sh
+cp .dev.vars.example .dev.vars
 ```
 
 The local MCP URL is:
 
 ```text
-http://localhost:8787/mcp
+http://localhost:5173/mcp
 ```
 
 Use this authorization header:
@@ -43,7 +49,7 @@ Authorization: Bearer dev-secret
 Initialize the endpoint:
 
 ```sh
-curl -s http://localhost:8787/mcp \
+curl -s http://localhost:5173/mcp \
   -H 'content-type: application/json' \
   -H 'authorization: Bearer dev-secret' \
   -d '{"jsonrpc":"2.0","id":"init","method":"initialize"}'
@@ -52,7 +58,7 @@ curl -s http://localhost:8787/mcp \
 List tools:
 
 ```sh
-curl -s http://localhost:8787/mcp \
+curl -s http://localhost:5173/mcp \
   -H 'content-type: application/json' \
   -H 'authorization: Bearer dev-secret' \
   -d '{"jsonrpc":"2.0","id":"tools","method":"tools/list"}'
@@ -62,7 +68,7 @@ Call a read tool. On a freshly seeded database this may return an empty list
 until listings have been collected or imported:
 
 ```sh
-curl -s http://localhost:8787/mcp \
+curl -s http://localhost:5173/mcp \
   -H 'content-type: application/json' \
   -H 'authorization: Bearer dev-secret' \
   -d '{"jsonrpc":"2.0","id":"ranked","method":"tools/call","params":{"name":"get_ranked_listings","arguments":{"searchId":"family-replacement-vehicle"}}}'
@@ -73,7 +79,7 @@ Call the workflow mutation tool after listings exist. Replace
 `get_ranked_listings`:
 
 ```sh
-curl -s http://localhost:8787/mcp \
+curl -s http://localhost:5173/mcp \
   -H 'content-type: application/json' \
   -H 'authorization: Bearer dev-secret' \
   -d '{"jsonrpc":"2.0","id":"workflow","method":"tools/call","params":{"name":"set_listing_disposition","arguments":{"searchId":"family-replacement-vehicle","listingId":"<listing-id-from-ranked-results>","state":"favorite","nextActionType":"ask-out-the-door-price"}}}'

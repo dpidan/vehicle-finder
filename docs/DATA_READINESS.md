@@ -31,6 +31,12 @@ Use this before the first local or Worker D1 population, and again after schema 
 
 3. Start the app.
 
+   Create a local-only `.dev.vars` file first:
+
+   ```sh
+   cp .dev.vars.example .dev.vars
+   ```
+
    ```sh
    npm run dev
    ```
@@ -46,6 +52,13 @@ Use this before the first local or Worker D1 population, and again after schema 
 
    ```sh
    npm run db:inspect:local
+   ```
+
+6. Smoke-test API reads.
+
+   ```sh
+   curl http://localhost:5173/api/searches/family-replacement-vehicle/ranked-listings
+   curl 'http://localhost:5173/api/searches/family-replacement-vehicle/monitoring-summary?since=2026-08-28T00%3A00%3A00.000Z&staleBefore=2026-08-01T00%3A00%3A00.000Z'
    ```
 
 ## Expected First-Run Shape
@@ -67,6 +80,7 @@ npm run db:inspect:remote
 ```
 
 Then deploy/run the Worker with `ADMIN_TOKEN` configured and trigger one protected refresh.
+Use `wrangler secret put ADMIN_TOKEN` for deployed Workers; do not rely on local `.dev.vars` for remote configuration.
 
 ## Data Integrity Smoke Test
 
@@ -77,3 +91,13 @@ For each live import run, spot-check:
 - Search evaluations exist for the saved search after refresh.
 - Monitoring summary shows real new listing, price-drop, threshold, or stale signals as the data ages.
 - VIN decode and recall caches remain optional enrichment caches; missing cache rows should not block ranking.
+
+## Verified Local Run
+
+On 2026-08-28, the local first-run path was verified with `ADMIN_TOKEN=secret` in `.dev.vars`.
+
+- Pre-refresh inspection: 1 user, 1 saved search, 3 model-year risk rows, and 0 listings.
+- First refresh: 25 collected, 25 inserted listings, 25 snapshots, and 25 evaluations.
+- Second refresh: 25 collected, 0 inserted listings, 25 updated listings, 25 more snapshots, and 25 more evaluations.
+- Final inspection: 25 vehicles, 1 seller, 25 listings, 50 snapshots, and 50 evaluations.
+- Ranked listings and monitoring summary API reads returned live local data.
