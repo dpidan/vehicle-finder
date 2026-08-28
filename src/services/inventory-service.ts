@@ -11,6 +11,11 @@ interface IdRow {
   id: string;
 }
 
+interface ListingIdentityRow {
+  id: string;
+  vehicle_id: string;
+}
+
 export async function importListingCandidates(
   db: D1Database,
   candidates: ListingCandidate[]
@@ -23,9 +28,9 @@ export async function importListingCandidates(
   };
 
   for (const candidate of candidates) {
-    const vehicleId = await upsertVehicle(db, candidate);
-    const sellerId = candidate.seller ? await upsertSeller(db, candidate) : undefined;
     const listing = await findListing(db, candidate);
+    const vehicleId = await upsertVehicle(db, candidate, listing?.vehicle_id);
+    const sellerId = candidate.seller ? await upsertSeller(db, candidate) : undefined;
     const listingId = listing?.id ?? crypto.randomUUID();
 
     if (listing) {
@@ -43,11 +48,12 @@ export async function importListingCandidates(
   return result;
 }
 
-async function upsertVehicle(db: D1Database, candidate: ListingCandidate): Promise<string> {
+async function upsertVehicle(db: D1Database, candidate: ListingCandidate, existingVehicleId?: string): Promise<string> {
   const vin = candidate.vehicle.vin?.toUpperCase();
   const existing = vin ? await db.prepare(`SELECT id FROM vehicles WHERE vin = ?`).bind(vin).first<IdRow>() : null;
+  const vehicleId = existing?.id ?? existingVehicleId;
 
-  if (existing) {
+  if (vehicleId) {
     await db
       .prepare(
         `UPDATE vehicles
@@ -61,10 +67,10 @@ async function upsertVehicle(db: D1Database, candidate: ListingCandidate): Promi
         candidate.vehicle.model ?? null,
         candidate.vehicle.trim ?? null,
         candidate.capturedAt,
-        existing.id
+        vehicleId
       )
       .run();
-    return existing.id;
+    return vehicleId;
   }
 
   const id = crypto.randomUUID();
@@ -146,15 +152,18 @@ async function upsertSeller(db: D1Database, candidate: ListingCandidate): Promis
   return id;
 }
 
-async function findListing(db: D1Database, candidate: ListingCandidate): Promise<IdRow | null> {
+async function findListing(db: D1Database, candidate: ListingCandidate): Promise<ListingIdentityRow | null> {
   if (candidate.sourceListingId) {
     return db
-      .prepare(`SELECT id FROM listings WHERE source_name = ? AND source_listing_id = ? LIMIT 1`)
+      .prepare(`SELECT id, vehicle_id FROM listings WHERE source_name = ? AND source_listing_id = ? LIMIT 1`)
       .bind(candidate.source.name, candidate.sourceListingId)
-      .first<IdRow>();
+      .first<ListingIdentityRow>();
   }
 
-  return db.prepare(`SELECT id FROM listings WHERE source_name = ? AND url = ? LIMIT 1`).bind(candidate.source.name, candidate.url).first<IdRow>();
+  return db
+    .prepare(`SELECT id, vehicle_id FROM listings WHERE source_name = ? AND url = ? LIMIT 1`)
+    .bind(candidate.source.name, candidate.url)
+    .first<ListingIdentityRow>();
 }
 
 async function insertListing(

@@ -58,6 +58,7 @@ export async function collectActiveSourceFeeds(db: D1Database, collectedAt: stri
       sellerSeeds: adapterFeeds.map(feedToSellerSeed),
       collectedAt
     });
+    await Promise.all(adapterFeeds.map((feed) => updateSourceFeedSuccess(db, feed.id, collectedAt)));
     candidates.push(...collected);
     collectedCountByAdapter[adapterKey] = collected.length;
   }
@@ -89,6 +90,17 @@ export async function listSourceFeeds(db: D1Database, status?: SourceFeedStatus)
 
     throw error;
   }
+}
+
+async function updateSourceFeedSuccess(db: D1Database, feedId: string, collectedAt: string): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE source_feeds
+       SET last_collected_at = ?, last_status = 'ok', last_error = NULL, updated_at = ?
+       WHERE id = ?`
+    )
+    .bind(collectedAt, collectedAt, feedId)
+    .run();
 }
 
 function groupFeedsByAdapter(feeds: SourceFeed[]): Array<[SourceAdapterKey, SourceFeed[]]> {

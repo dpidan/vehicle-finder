@@ -7,7 +7,7 @@ describe('importListingCandidates', () => {
   it('deduplicates vehicles by VIN and updates existing listings', async () => {
     const db = fakeInventoryDb({
       vehicleByVin: { id: 'vehicle-existing' },
-      listingBySource: { id: 'listing-existing' }
+      listingBySource: { id: 'listing-existing', vehicle_id: 'vehicle-existing' }
     });
 
     const result = await importListingCandidates(db, [
@@ -27,6 +27,25 @@ describe('importListingCandidates', () => {
     assert.equal(db.updatedVehicles.length, 1);
     assert.equal(db.updatedListings.length, 1);
     assert.equal(db.snapshots.length, 1);
+  });
+
+  it('reuses the existing vehicle for VIN-less listing updates', async () => {
+    const db = fakeInventoryDb({
+      listingBySource: { id: 'listing-existing', vehicle_id: 'vehicle-existing' }
+    });
+    const candidate = listingCandidate({
+      vehicle: { year: 2018, make: 'Ford', model: 'Expedition XLT' },
+      url: 'https://www.example.test/listing/ford-expedition'
+    });
+    delete candidate.sourceListingId;
+    delete candidate.mileage;
+
+    const result = await importListingCandidates(db, [candidate]);
+
+    assert.equal(result.updatedListings, 1);
+    assert.equal(db.insertedVehicles.length, 0);
+    assert.equal(db.updatedVehicles.length, 1);
+    assert.equal(db.updatedVehicles[0]?.at(-1), 'vehicle-existing');
   });
 
   it('inserts new vehicles, sellers, listings, and snapshots', async () => {
@@ -80,7 +99,9 @@ function listingCandidate(overrides: Partial<ListingCandidate> = {}): ListingCan
   };
 }
 
-function fakeInventoryDb(existing: { vehicleByVin?: { id: string }; seller?: { id: string }; listingBySource?: { id: string } } = {}) {
+function fakeInventoryDb(
+  existing: { vehicleByVin?: { id: string }; seller?: { id: string }; listingBySource?: { id: string; vehicle_id: string } } = {}
+) {
   const state = {
     insertedVehicles: [] as unknown[][],
     updatedVehicles: [] as unknown[][],
