@@ -150,3 +150,7 @@ Use the verified local live dataset to improve the dashboard monitoring digest f
 - Exact acquisition approach for each marketplace/aggregator.
 - How much historical vehicle-report data can be obtained legally and economically without paid services.
 - Monetization model and whether paid data sources become optional premium features.
+
+## Long-term enrichment
+
+- Add a search-informed, globally stored model-year risk refresh. Active saved searches should identify which make/model/year ranges need research first, but the resulting `model_year_risks` records should remain global knowledge with evidence, scope, and remediation fields so they can be reused across users and searches.

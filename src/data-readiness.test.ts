@@ -44,6 +44,13 @@ describe('data readiness', () => {
       'risk-honda-odyssey-2011-2013-vcm',
       'risk-honda-pilot-2012-2013-vcm',
       'risk-toyota-sienna-2015-2016-sliding-doors',
+      'risk-toyota-highlander-2008-2011-v6-oil-cooler-pipe',
+      'risk-toyota-highlander-2014-2015-power-back-door',
+      'risk-toyota-highlander-2015-eps-recall-check',
+      'risk-ford-edge-2015-2018-2-0-ecoboost-coolant-intrusion',
+      'risk-ford-edge-2015-2018-brake-hose-recall',
+      'risk-ford-explorer-2011-2017-exhaust-co-concern',
+      'risk-ford-explorer-2013-2017-rear-toe-link',
       'feed-dealer-car-search-trade-lane-motors',
       'feed-cargurus-toyo-financial-group',
       "'paused'"

@@ -64,9 +64,39 @@ The knowledge model must support trim/powertrain distinctions. A year-only verdi
 
 Sliding-door issues should be modeled as an inspectable/remediable subsystem risk rather than an automatic rejection.
 
+## Toyota Highlander
+
+| Years | Working rating | Investigation focus |
+|---|---|---|
+| 2008-2011 V6 | Caution | Verify 2GR-FE oil cooler pipe / VVT-i oil hose leak repairs and inspect for oil seepage |
+| 2014-2015 | Neutral/Caution | Power back door operation; certain 2015 vehicles also need EPS recall VIN check |
+| 2016-2017 | Good | Routine maintenance, suspension, tires, and service history |
+
+Highlander should generally remain a strong family-search candidate, but older V6 examples need proof that known oil-hose/cooler-pipe issues were handled.
+
 ## Honda CR-V
 
 Treat CR-V primarily as a different vehicle-role fit rather than a direct substitute for a minivan. Model/year research should be added if the family search begins surfacing enough CR-V candidates to justify deeper scoring rules.
+
+## Ford Edge
+
+| Years | Working rating | Investigation focus |
+|---|---|---|
+| 2015-2018 2.0L EcoBoost | Caution | Coolant loss, white smoke, rough start, misfire/overheat DTCs; engine replacement documentation if repaired |
+| 2015-2018 | Caution | Brake hose recall completion and current brake-hose condition |
+| 2019+ | Neutral | Verify powertrain and recall history; do not inherit older 2.0L coolant-intrusion rule without build/engine evidence |
+
+Edge is useful as a lower-cost two-row SUV, but the 2015-2018 2.0L EcoBoost and brake-hose history deserve explicit inspection before purchase.
+
+## Ford Explorer
+
+| Years | Working rating | Investigation focus |
+|---|---|---|
+| 2011-2017 | Caution | Exhaust odor / carbon monoxide program completion, liftgate/body sealing repairs, collision/upfit history |
+| 2013-2017 | Caution | Rear toe-link recall/program applicability, corrosion-region history, rear suspension movement/noise/alignment |
+| 2011-2016 3.5L V6 | Caution | Coolant loss, oil contamination, timing-chain/water-pump service history |
+
+Explorer can satisfy the three-row role, but model-year scoring should reward documented recall/program completion and strong mechanical inspection.
 
 ## Maintenance milestones
 
