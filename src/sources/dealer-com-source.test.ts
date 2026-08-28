@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseDealerComInventory } from './dealer-com-source.js';
+import { analyzeDealerComInventory, parseDealerComInventory } from './dealer-com-source.js';
 
 describe('parseDealerComInventory', () => {
   it('normalizes embedded Dealer.com WIS inventory records', () => {
@@ -54,11 +54,12 @@ describe('parseDealerComInventory', () => {
   });
 
   it('normalizes multiple embedded Dealer.com inventory pages', () => {
-    const listings = parseDealerComInventory(
-      `
+    const html = `
         <script>DDC.WS.state['ws-inv-data']['inventory-data-bus1'] = {"WIS":{"pageInfo":{"totalCount":2,"pageSize":1,"pageStart":0},"inventory":[{"vin":"5FNRL6H70JB005771","year":2018,"make":"Honda","model":"Odyssey","title":["2018 Honda Odyssey EX-L"],"link":"/used/Honda/Odyssey.htm","trackingPricing":{"salePrice":"17890"},"trackingAttributes":[{"name":"odometer","value":"110,842"}]}]}};</script>
         <script>DDC.WS.state['ws-inv-data']['inventory-data-bus1'] = {"WIS":{"pageInfo":{"totalCount":2,"pageSize":1,"pageStart":1},"inventory":[{"vin":"5TDJKRFH3FS206418","year":2015,"make":"Toyota","model":"Highlander","title":["2015 Toyota Highlander XLE V6"],"link":"/used/Toyota/Highlander.htm","trackingPricing":{"salePrice":"17990"},"trackingAttributes":[{"name":"odometer","value":"98,128"}]}]}};</script>
-      `,
+      `;
+    const listings = parseDealerComInventory(
+      html,
       {
         name: 'Autostrade',
         type: 'dealer',
@@ -71,5 +72,11 @@ describe('parseDealerComInventory', () => {
     assert.equal(listings.length, 2);
     assert.equal(listings[0]?.vehicle.model, 'Odyssey');
     assert.equal(listings[1]?.vehicle.model, 'Highlander');
+    assert.deepEqual(analyzeDealerComInventory(html), {
+      parsedListingCount: 2,
+      reportedTotalCount: 2,
+      pagesParsed: 2,
+      complete: true
+    });
   });
 });

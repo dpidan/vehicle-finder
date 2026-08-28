@@ -31,6 +31,13 @@ interface DealerComInventoryData {
   };
 }
 
+export interface DealerComInventoryAnalysis {
+  parsedListingCount: number;
+  reportedTotalCount?: number;
+  pagesParsed: number;
+  complete: boolean;
+}
+
 export const dealerComSource: ListingSource = {
   name: source.name,
   access: source.access,
@@ -105,6 +112,19 @@ export function parseDealerComInventory(
       }
     ];
   });
+}
+
+export function analyzeDealerComInventory(html: string): DealerComInventoryAnalysis {
+  const pages = extractInventoryPages(html);
+  const reportedTotalCount = pages[0]?.WIS?.pageInfo?.totalCount;
+  const parsedListingCount = pages.reduce((sum, page) => sum + (page.WIS?.inventory?.length ?? 0), 0);
+
+  return {
+    parsedListingCount,
+    ...(reportedTotalCount !== undefined ? { reportedTotalCount } : {}),
+    pagesParsed: pages.length,
+    complete: reportedTotalCount === undefined ? parsedListingCount > 0 : parsedListingCount >= reportedTotalCount
+  };
 }
 
 function extractVehicles(html: string): DealerComVehicle[] {
