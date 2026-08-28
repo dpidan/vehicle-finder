@@ -51,6 +51,12 @@ npm run db:inspect:local
 npm run dev
 ```
 
+To wipe and rebuild only the local D1 database:
+
+```sh
+npm run db:rebuild:local
+```
+
 Protected local routes read `ADMIN_TOKEN` from an ignored `.dev.vars` file:
 
 ```sh
@@ -109,6 +115,8 @@ npm run collect:dealer-car-search
 
 This fetches first-page inventory from the explicit Cypress-area Dealer Car
 Search seed and prints normalized listing candidates.
+The current broader Carsforsale seed list is documented but returns HTTP 403
+from plain fetch collection.
 
 ## First DB population
 

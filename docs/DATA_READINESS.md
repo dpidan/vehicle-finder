@@ -9,6 +9,17 @@ Use this before the first local or Worker D1 population, and again after schema 
 - Seed vehicle targets: Honda Odyssey, Honda Pilot, Toyota Sienna, and Honda CR-V.
 - Seed risk records: initial Honda Odyssey, Honda Pilot, and Toyota Sienna model-year notes.
 - Live source seed: Trade Lane Motors through the Dealer Car Search adapter.
+- Dealer seed review: Trade Lane Motors is currently the only healthy automated seed; see `docs/research/dealer-seed-review-2026-08-28.md`.
+
+## Local Reset
+
+This deletes local D1 data for this project. Do not use it for remote D1.
+
+```sh
+npm run db:rebuild:local
+```
+
+The rebuild script runs local reset, migrations, seed, and inspection.
 
 ## Local First-Run Checklist
 
@@ -81,6 +92,7 @@ npm run db:inspect:remote
 
 Then deploy/run the Worker with `ADMIN_TOKEN` configured and trigger one protected refresh.
 Use `wrangler secret put ADMIN_TOKEN` for deployed Workers; do not rely on local `.dev.vars` for remote configuration.
+There is intentionally no remote reset script.
 
 ## Data Integrity Smoke Test
 

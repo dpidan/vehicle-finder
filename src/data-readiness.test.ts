@@ -13,6 +13,11 @@ describe('data readiness', () => {
     );
   });
 
+  it('has local reset and inspection scripts', () => {
+    assert.match(readFileSync('scripts/db-reset-local.sql', 'utf8'), /DROP TABLE IF EXISTS users/);
+    assert.match(readFileSync('scripts/db-inspection.sql', 'utf8'), /SELECT COUNT\(\*\) AS listings FROM listings/);
+  });
+
   it('seeds the initial family search shape', () => {
     const seed = readFileSync('seeds/0001_family_search.sql', 'utf8');
 
@@ -39,7 +44,7 @@ describe('data readiness', () => {
   });
 
   it('has an inspectable live dealer seed', () => {
-    assert.ok(cypressDealerCarSearchSeeds.length > 0);
+    assert.equal(cypressDealerCarSearchSeeds.length, 1);
 
     for (const seed of cypressDealerCarSearchSeeds) {
       assert.equal(seed.type, 'dealer');

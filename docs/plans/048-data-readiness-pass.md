@@ -9,6 +9,7 @@ Make the first local and Worker D1 population repeatable and inspectable before 
 - Audit the seed data shape for the first family search.
 - Make the initial seed safe to re-run for its fixed rows.
 - Document local and remote migration, seed, refresh, and inspection flow.
+- Add a local-only D1 rebuild path.
 - Add simple DB inspection SQL for row counts and relationship spot checks.
 - Add focused tests for seed/source readiness and migration ordering.
 - Sync backlog and README notes for the current Dealer Car Search live source.
@@ -26,3 +27,5 @@ The project now has a small first-run checklist and inspection command set for v
 ## Local Verification
 
 On 2026-08-28, local D1 migration, seed, inspection, and two protected saved-search refreshes completed. The first refresh inserted 25 live Dealer Car Search listings; the second refresh updated those listings and added another snapshot/evaluation set without duplicating VIN-backed vehicles.
+
+The same review confirmed that Trade Lane Motors is currently the only healthy automated seed. The existing Carsforsale seeds are retained as research targets but are not part of the first automated refresh path because they return HTTP 403 to plain fetch.
