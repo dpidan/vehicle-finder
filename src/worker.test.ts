@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { familySearchDefaults } from './domain/search-config.js';
+import { cypressDealerCarSearchSeeds } from './sources/dealer-car-search-seeds.js';
 import { app, refreshEnabledSavedSearches, type Env } from './worker.js';
 
 const savedSearchRow = {
@@ -470,18 +471,9 @@ describe('worker routes', () => {
 
   it('collects and imports Dealer Car Search listings with the admin token', async () => {
     const originalFetch = globalThis.fetch;
+    let fetchCount = 0;
 
-    globalThis.fetch = async () =>
-      new Response(
-        `
-          <div>
-            <a>2013 Honda Odyssey</a>
-            <span>$7,890</span>
-            <span>Mileage:</span><span>163,707</span>
-            <span>VIN: 5FNRL5H95DB028656</span>
-          </div>
-        `
-      );
+    globalThis.fetch = async () => new Response(dealerCarSearchHtml(++fetchCount));
 
     try {
       const response = await app.request(
@@ -495,10 +487,10 @@ describe('worker routes', () => {
       };
 
       assert.equal(response.status, 200);
-      assert.equal(body.collectedCount, 1);
-      assert.equal(body.import.candidateCount, 1);
-      assert.equal(body.import.insertedListings, 1);
-      assert.equal(body.import.snapshotCount, 1);
+      assert.equal(body.collectedCount, cypressDealerCarSearchSeeds.length);
+      assert.equal(body.import.candidateCount, cypressDealerCarSearchSeeds.length);
+      assert.equal(body.import.insertedListings, cypressDealerCarSearchSeeds.length);
+      assert.equal(body.import.snapshotCount, cypressDealerCarSearchSeeds.length);
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -584,18 +576,9 @@ describe('worker routes', () => {
 
   it('refreshes a saved search by collecting, importing, and evaluating', async () => {
     const originalFetch = globalThis.fetch;
+    let fetchCount = 0;
 
-    globalThis.fetch = async () =>
-      new Response(
-        `
-          <div>
-            <a>2013 Honda Odyssey</a>
-            <span>$7,890</span>
-            <span>Mileage:</span><span>163,707</span>
-            <span>VIN: 5FNRL5H95DB028656</span>
-          </div>
-        `
-      );
+    globalThis.fetch = async () => new Response(dealerCarSearchHtml(++fetchCount));
 
     try {
       const db = env({ adminToken: 'secret', persistedListings: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
@@ -613,10 +596,10 @@ describe('worker routes', () => {
 
       assert.equal(response.status, 200);
       assert.equal(body.searchId, 'family-replacement-vehicle');
-      assert.equal(body.collectedCount, 1);
-      assert.equal(body.import.candidateCount, 1);
-      assert.equal(body.import.insertedListings, 1);
-      assert.equal(body.import.snapshotCount, 1);
+      assert.equal(body.collectedCount, cypressDealerCarSearchSeeds.length);
+      assert.equal(body.import.candidateCount, cypressDealerCarSearchSeeds.length);
+      assert.equal(body.import.insertedListings, cypressDealerCarSearchSeeds.length);
+      assert.equal(body.import.snapshotCount, cypressDealerCarSearchSeeds.length);
       assert.equal(body.evaluation.insertedEvaluations, 2);
       assert.ok(db.writes.some((write) => write.sql.startsWith('INSERT INTO listing_snapshots')));
       assert.equal(db.writes.filter((write) => write.sql.startsWith('INSERT INTO search_evaluations')).length, 2);
@@ -762,26 +745,17 @@ describe('worker routes', () => {
 
   it('refreshes enabled saved searches for scheduled collection', async () => {
     const originalFetch = globalThis.fetch;
+    let fetchCount = 0;
 
-    globalThis.fetch = async () =>
-      new Response(
-        `
-          <div>
-            <a>2013 Honda Odyssey</a>
-            <span>$7,890</span>
-            <span>Mileage:</span><span>163,707</span>
-            <span>VIN: 5FNRL5H95DB028656</span>
-          </div>
-        `
-      );
+    globalThis.fetch = async () => new Response(dealerCarSearchHtml(++fetchCount));
 
     try {
       const db = env({ persistedListings: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
       const result = await refreshEnabledSavedSearches(db, '2026-08-26T18:00:00.000Z');
 
-      assert.equal(result.collectedCount, 1);
-      assert.equal(result.imported.candidateCount, 1);
-      assert.equal(result.imported.snapshotCount, 1);
+      assert.equal(result.collectedCount, cypressDealerCarSearchSeeds.length);
+      assert.equal(result.imported.candidateCount, cypressDealerCarSearchSeeds.length);
+      assert.equal(result.imported.snapshotCount, cypressDealerCarSearchSeeds.length);
       assert.equal(result.evaluatedSearches, 1);
       assert.equal(result.insertedEvaluations, 2);
       assert.ok(db.writes.some((write) => write.sql.startsWith('INSERT INTO listing_snapshots')));
@@ -1122,6 +1096,17 @@ describe('worker routes', () => {
     assert.deepEqual(await response.json(), { error: 'not-found' });
   });
 });
+
+function dealerCarSearchHtml(index: number): string {
+  return `
+    <div>
+      <a>2013 Honda Odyssey</a>
+      <span>$7,890</span>
+      <span>Mileage:</span><span>163,707</span>
+      <span>VIN: 5FNRL5H95DB02865${index}</span>
+    </div>
+  `;
+}
 
 function env(
   options: {

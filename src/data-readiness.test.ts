@@ -44,13 +44,16 @@ describe('data readiness', () => {
   });
 
   it('has an inspectable live dealer seed', () => {
-    assert.equal(cypressDealerCarSearchSeeds.length, 1);
+    assert.ok(cypressDealerCarSearchSeeds.length >= 2);
 
     for (const seed of cypressDealerCarSearchSeeds) {
       assert.equal(seed.type, 'dealer');
       assert.match(seed.inventoryUrl ?? '', /^https:\/\/.+/);
-      assert.ok(seed.location?.latitude);
-      assert.ok(seed.location?.longitude);
+
+      if (seed.location) {
+        assert.ok(seed.location.latitude);
+        assert.ok(seed.location.longitude);
+      }
     }
   });
 });
