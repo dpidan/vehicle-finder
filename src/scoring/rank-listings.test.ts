@@ -133,4 +133,41 @@ describe('rankListingsForSearch', () => {
     );
     assert.ok(ranked?.flags.includes('immediate-maintenance-over-reserve'));
   });
+
+  it('filters ranked listings to saved search parameters', () => {
+    const ranked = rankListingsForSearch(familySearchDefaults, [
+      {
+        source: { name: 'test', access: 'manual-import' },
+        url: 'https://example.test/odyssey',
+        title: '2014 Honda Odyssey',
+        vehicle: { year: 2014, make: 'Honda', model: 'Odyssey', vin: '12345678901234567' },
+        price: { amount: 9_000, currency: 'USD' },
+        seller: { name: 'Test Dealer', type: 'dealer' },
+        capturedAt: '2026-08-27T00:00:00.000Z'
+      },
+      {
+        source: { name: 'test', access: 'manual-import' },
+        url: 'https://example.test/bmw',
+        title: '2015 BMW X5',
+        vehicle: { year: 2015, make: 'BMW', model: 'X5', vin: '12345678901234568' },
+        price: { amount: 9_000, currency: 'USD' },
+        seller: { name: 'Test Dealer', type: 'dealer' },
+        capturedAt: '2026-08-27T00:00:00.000Z'
+      },
+      {
+        source: { name: 'test', access: 'manual-import' },
+        url: 'https://example.test/high-price',
+        title: '2016 Toyota Sienna',
+        vehicle: { year: 2016, make: 'Toyota', model: 'Sienna', vin: '12345678901234569' },
+        price: { amount: 22_000, currency: 'USD' },
+        seller: { name: 'Test Dealer', type: 'dealer' },
+        capturedAt: '2026-08-27T00:00:00.000Z'
+      }
+    ]);
+
+    assert.deepEqual(
+      ranked.map((listing) => listing.listing.title),
+      ['2014 Honda Odyssey']
+    );
+  });
 });

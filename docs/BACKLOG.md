@@ -7,8 +7,9 @@
 3. Add notification delivery for monitoring digests after the dashboard digest shape is useful.
 4. Done — added admin/dashboard controls for explicit VIN and recall enrichment.
 5. Done — added data-readiness checklist, inspection SQL, and seed/source smoke tests before first DB population.
-6. Decide whether recall/model-year risk signals should affect scoring now or remain inspection-only.
-7. Add persisted inspection checklist state if the manual checklist starts carrying real workflow weight.
+6. Done — saved-search ranking and evaluation now filter broad inventory to known hard search parameters.
+7. Decide whether recall/model-year risk signals should affect scoring now or remain inspection-only.
+8. Add persisted inspection checklist state if the manual checklist starts carrying real workflow weight.
 
 ## Done — definitions
 

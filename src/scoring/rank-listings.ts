@@ -44,8 +44,47 @@ const maintenancePatterns: Array<{
 
 export function rankListingsForSearch(search: SavedSearchConfig, listings: ListingCandidate[]): RankedListing[] {
   return listings
+    .filter((listing) => matchesSearchFilters(search, listing))
     .map((listing) => scoreListing(search, listing))
     .sort((a, b) => b.dealScore - a.dealScore || b.vehicleScore - a.vehicleScore);
+}
+
+function matchesSearchFilters(search: SavedSearchConfig, listing: ListingCandidate): boolean {
+  const filters = search.filters;
+
+  if (filters.makes?.length && listing.vehicle.make && !includesName(filters.makes, listing.vehicle.make)) {
+    return false;
+  }
+
+  if (filters.models?.length && listing.vehicle.model && !includesName(filters.models, listing.vehicle.model)) {
+    return false;
+  }
+
+  if (filters.minYear && listing.vehicle.year && listing.vehicle.year < filters.minYear) {
+    return false;
+  }
+
+  if (filters.maxYear && listing.vehicle.year && listing.vehicle.year > filters.maxYear) {
+    return false;
+  }
+
+  if (filters.maxMileage && listing.mileage && listing.mileage > filters.maxMileage) {
+    return false;
+  }
+
+  if (filters.sellerTypes?.length && listing.seller?.type && !filters.sellerTypes.includes(listing.seller.type)) {
+    return false;
+  }
+
+  if (filters.titleStatuses?.length && listing.titleStatus && !filters.titleStatuses.includes(listing.titleStatus)) {
+    return false;
+  }
+
+  if (search.budgets.absoluteMax && listing.price?.amount && listing.price.amount > search.budgets.absoluteMax) {
+    return false;
+  }
+
+  return true;
 }
 
 function scoreListing(search: SavedSearchConfig, listing: ListingCandidate): RankedListing {
@@ -276,6 +315,10 @@ function factor(key: string, messageKey: string, scoreImpact: number): ScoreFact
 
 function equalName(a: string | undefined, b: string | undefined): boolean {
   return a?.toLowerCase() === b?.toLowerCase();
+}
+
+function includesName(values: string[], value: string): boolean {
+  return values.some((candidate) => equalName(candidate, value));
 }
 
 function clamp(value: number): number {
