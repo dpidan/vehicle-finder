@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { previewManualImport, saveManualImport } from './api.js';
-import { formatMoney, vehicleLabel } from './format.js';
-import styles from './App.module.css';
-import type { ManualImportInput, ManualImportPreview } from './types.js';
+import { previewManualImport, saveManualImport } from '../../api/client.js';
+import { formatMoney, vehicleLabel } from '../../utils/format.js';
+import styles from '../../App.module.css';
+import type { ManualImportInput, ManualImportPreview } from '../../api/types.js';
 
 export function ManualImportPanel({ searchId, onSaved }: { searchId: string; onSaved: () => void }) {
   const [preview, setPreview] = useState<ManualImportPreview | null>(null);

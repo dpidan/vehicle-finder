@@ -1,4 +1,4 @@
-import type { ListingCandidate, ListingDispositionState, RankedListingSummary, SortMode } from './types.js';
+import type { ListingCandidate, ListingDispositionState, RankedListingSummary, SortMode } from '../api/types.js';
 
 export function bestScore(listings: RankedListingSummary[], key: 'dealScore' | 'vehicleScore'): string {
   return listings.length ? Math.max(...listings.map((listing) => listing.rankedListing[key])).toString() : '0';

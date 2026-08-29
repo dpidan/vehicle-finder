@@ -14,17 +14,17 @@ import {
   saveListingDisposition,
   writeSearchEvaluations,
   type MonitoringWindow
-} from './api.js';
-import { bestScore, emptyMessage, emptyTitle, filterAndSortListings, statusLabel } from './format.js';
-import { ComparisonPanel } from './ComparisonPanel.js';
-import { EnrichmentPanel } from './EnrichmentPanel.js';
-import { ListingDetailPanel } from './ListingDetailPanel.js';
-import { ListingTable } from './ListingTable.js';
-import { ManualImportPanel } from './ManualImportPanel.js';
-import { Metric } from './Metric.js';
-import { MonitoringSummaryPanel } from './MonitoringSummaryPanel.js';
-import { PublicHome } from './PublicHome.js';
-import { SourceFeedsPanel } from './SourceFeedsPanel.js';
+} from './api/client.js';
+import { bestScore, emptyMessage, emptyTitle, filterAndSortListings, statusLabel } from './utils/format.js';
+import { Metric } from './components/Metric.js';
+import { ComparisonPanel } from './features/dashboard/ComparisonPanel.js';
+import { EnrichmentPanel } from './features/dashboard/EnrichmentPanel.js';
+import { ListingDetailPanel } from './features/dashboard/ListingDetailPanel.js';
+import { ListingTable } from './features/dashboard/ListingTable.js';
+import { ManualImportPanel } from './features/dashboard/ManualImportPanel.js';
+import { MonitoringSummaryPanel } from './features/dashboard/MonitoringSummaryPanel.js';
+import { SourceFeedsPanel } from './features/dashboard/SourceFeedsPanel.js';
+import { PublicHome } from './features/public/PublicHome.js';
 import styles from './App.module.css';
 import type {
   ListingDetail,
@@ -36,7 +36,7 @@ import type {
   SortMode,
   SourceFeedCollectResult,
   SourceFeedSummary
-} from './types.js';
+} from './api/types.js';
 
 export function App() {
   const isDashboard = window.location.pathname.startsWith('/app');

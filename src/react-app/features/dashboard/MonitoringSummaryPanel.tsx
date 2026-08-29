@@ -1,7 +1,7 @@
-import styles from './App.module.css';
-import type { MonitoringWindow } from './api.js';
-import { formatDate, formatMoney } from './format.js';
-import type { ListingChangeSummary, MonitoringSummary, SearchEvaluationSummary, StaleListingSummary } from './types.js';
+import styles from '../../App.module.css';
+import type { MonitoringWindow } from '../../api/client.js';
+import { formatDate, formatMoney } from '../../utils/format.js';
+import type { ListingChangeSummary, MonitoringSummary, SearchEvaluationSummary, StaleListingSummary } from '../../api/types.js';
 
 export function MonitoringSummaryPanel({
   summary,

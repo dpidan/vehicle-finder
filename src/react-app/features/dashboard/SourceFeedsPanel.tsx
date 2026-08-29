@@ -1,5 +1,5 @@
-import styles from './App.module.css';
-import type { SourceFeedCollectResult, SourceFeedSummary } from './types.js';
+import styles from '../../App.module.css';
+import type { SourceFeedCollectResult, SourceFeedSummary } from '../../api/types.js';
 
 type SourceFeedAction = 'preview' | 'import';
 
