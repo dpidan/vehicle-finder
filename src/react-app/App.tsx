@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  collectSourceFeed,
   decodeSavedSearchVins,
   defaultMonitoringWindow,
   fetchListingDetail,
@@ -10,6 +11,7 @@ import {
   lookupRecallsForVehicle,
   refreshSearch,
   saveListingDisposition,
+  writeSearchEvaluations,
   type MonitoringWindow
 } from './api.js';
 import { bestScore, emptyMessage, emptyTitle, filterAndSortListings, statusLabel } from './format.js';
@@ -31,6 +33,7 @@ import type {
   RankedListingSummary,
   SavedSearchSummary,
   SortMode,
+  SourceFeedCollectResult,
   SourceFeedSummary
 } from './types.js';
 
@@ -57,6 +60,8 @@ function DashboardShell() {
   const [enrichmentMessage, setEnrichmentMessage] = useState('');
   const [sourceFeeds, setSourceFeeds] = useState<SourceFeedSummary[]>([]);
   const [sourceFeedStatus, setSourceFeedStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [sourceFeedAction, setSourceFeedAction] = useState<{ feedId: string; action: 'preview' | 'import' } | null>(null);
+  const [sourceFeedActionResult, setSourceFeedActionResult] = useState<SourceFeedCollectResult | null>(null);
   const [stateFilter, setStateFilter] = useState<ListingDispositionState | 'all'>('all');
   const [sortMode, setSortMode] = useState<SortMode>('deal');
   const [compareListingIds, setCompareListingIds] = useState<string[]>([]);
@@ -199,7 +204,15 @@ function DashboardShell() {
         onDecodeVins={runVinDecode}
         onLookupRecalls={runRecallLookup}
       />
-      <SourceFeedsPanel feeds={sourceFeeds} status={sourceFeedStatus} onLoad={loadSourceFeeds} />
+      <SourceFeedsPanel
+        feeds={sourceFeeds}
+        status={sourceFeedStatus}
+        activeAction={sourceFeedAction}
+        lastResult={sourceFeedActionResult}
+        onLoad={loadSourceFeeds}
+        onPreview={(feedId) => runSourceFeedAction(feedId, false)}
+        onImport={(feedId) => runSourceFeedAction(feedId, true)}
+      />
       <ComparisonPanel
         listings={comparedListings}
         onRemove={(listingId) => setCompareListingIds((ids) => ids.filter((id) => id !== listingId))}
@@ -325,6 +338,42 @@ function DashboardShell() {
       setSourceFeedStatus('ready');
     } catch {
       setSourceFeedStatus('error');
+    }
+  }
+
+  async function runSourceFeedAction(feedId: string, shouldImport: boolean) {
+    const adminToken = window.prompt('Admin token')?.trim();
+
+    if (!adminToken) {
+      setSourceFeedStatus('error');
+      return;
+    }
+
+    const action = shouldImport ? 'import' : 'preview';
+    setSourceFeedAction({ feedId, action });
+    setWorkflowStatus(shouldImport ? 'Importing source feed.' : 'Previewing source feed.');
+
+    try {
+      const result = await collectSourceFeed(feedId, adminToken, shouldImport);
+      setSourceFeedActionResult(result);
+      await loadSourceFeedsWithToken(adminToken);
+
+      if (shouldImport && selectedSearchId) {
+        await writeSearchEvaluations(selectedSearchId, adminToken);
+        await refreshListings(selectedSearchId);
+        await refreshMonitoring(selectedSearchId, monitoringWindow);
+      }
+
+      setWorkflowStatus(
+        shouldImport
+          ? `Source feed imported ${result.import?.insertedListings ?? 0} new and ${result.import?.updatedListings ?? 0} updated listings.`
+          : `Source feed preview found ${result.collectedCount} candidates.`
+      );
+    } catch {
+      setSourceFeedStatus('error');
+      setWorkflowStatus(shouldImport ? 'Could not import source feed.' : 'Could not preview source feed.');
+    } finally {
+      setSourceFeedAction(null);
     }
   }
 

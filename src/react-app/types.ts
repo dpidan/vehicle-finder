@@ -161,6 +161,25 @@ export interface SourceFeedSummary {
   lastCandidateCount?: number;
 }
 
+export interface SourceFeedCollectResult {
+  collectedAt: string;
+  feed: SourceFeedSummary;
+  collectedCount: number;
+  collectedCountByAdapter: Record<string, number>;
+  vinOverlap: {
+    withVin: number;
+    matchingExistingVehicles: number;
+    missingVin: number;
+  };
+  import?: ManualImportSaveResult['import'];
+}
+
+export interface SearchEvaluationWriteResult {
+  searchId: string;
+  evaluatedAt: string;
+  evaluation: ManualImportSaveResult['evaluation'];
+}
+
 export interface ModelYearRisk {
   id: string;
   make: string;

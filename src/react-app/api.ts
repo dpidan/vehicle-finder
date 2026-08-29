@@ -11,7 +11,9 @@ import type {
   RankedListingSummary,
   RecallLookupResult,
   SavedSearchSummary,
+  SearchEvaluationWriteResult,
   SearchRefreshResult,
+  SourceFeedCollectResult,
   SourceFeedSummary
 } from './types.js';
 
@@ -70,11 +72,26 @@ export function refreshSearch(searchId: string, adminToken: string): Promise<Sea
   });
 }
 
+export function writeSearchEvaluations(searchId: string, adminToken: string): Promise<SearchEvaluationWriteResult> {
+  return fetchJson<SearchEvaluationWriteResult>(`/api/admin/searches/${searchId}/evaluations`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${adminToken}` }
+  });
+}
+
 export async function fetchSourceFeeds(adminToken: string): Promise<SourceFeedSummary[]> {
   const { feeds } = await fetchJson<{ feeds: SourceFeedSummary[] }>('/api/admin/source-feeds', {
     headers: { authorization: `Bearer ${adminToken}` }
   });
   return feeds;
+}
+
+export function collectSourceFeed(feedId: string, adminToken: string, shouldImport: boolean): Promise<SourceFeedCollectResult> {
+  return fetchJson<SourceFeedCollectResult>(`/api/admin/source-feeds/${feedId}/collect`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${adminToken}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ import: shouldImport })
+  });
 }
 
 export function decodeSavedSearchVins(searchId: string, adminToken: string): Promise<DecodeSearchVinsResult> {
