@@ -27,7 +27,8 @@ Expand source coverage without changing the canonical import path.
 12. Done — checked CARFAX dealer inventory pages for nearby dealers; direct fetch returned HTTP 403, so no CARFAX adapter was added.
 13. Done — add a paused MyNextRide source adapter for Auto Land of Texas with bounded ordinary pagination and individual vehicle detail URLs.
 14. Done — add paused Spring/Tomball source candidates for Dealer Car Search and Carsforsale-powered dealers.
-15. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
+15. Done — checked Group 1 Chevrolet Spring `/llm/inventory` as a potential high-value text inventory source; direct fetch is Cloudflare-blocked.
+16. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
 
 ## Guardrails
 
@@ -65,3 +66,5 @@ MyNextRide collection was added as a standalone source type using Auto Land of T
 Detail enrichment now lives in the source-feed service instead of in a source-specific route. Adapters can optionally implement `enrichDetail`, and the service calls it only for shallow candidates that match at least one supplied enabled saved search. This keeps detail-page fetching bounded for multiple users: one global source pass, targeted enrichment for candidates relevant to current searches, then normal global import and per-search evaluation.
 
 Spring/Tomball source coverage now includes paused source feeds for Texans Auto Group, Lone Star Auto Center, Spring Motors, Essence Autos, and Bay Motors. Texans Auto Group and Lone Star Auto Center previewed cleanly through the Worker with 25 VIN-backed Dealer Car Search candidates each. Spring Motors returned zero candidates with the current URL/parser, and Essence Autos plus Bay Motors returned Datadome/challenge pages to plain fetch, so those three stay paused as adapter/source follow-ups rather than scheduled feeds.
+
+Group 1 Chevrolet Spring's `/llm/inventory/?type=used` page remains a strong data-shape candidate because search results expose VIN, price, mileage, and detail links, but direct Worker-style fetches returned Cloudflare block pages even with ordinary browser request headers. Do not add a Group1 adapter until there is a permitted fetch path or an approved off-Worker/import workflow.
