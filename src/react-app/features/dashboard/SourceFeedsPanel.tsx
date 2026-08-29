@@ -88,7 +88,7 @@ export function SourceFeedsPanel({ feeds, status, activeAction, lastResult, onLo
       {lastResult ? (
         <p className={styles.panelNote}>
           Last source action: {lastResult.feed.name} collected {lastResult.collectedCount.toLocaleString()} candidates;
-          {` ${lastResult.vinOverlap.matchingExistingVehicles.toLocaleString()} matched existing VINs`}
+          {` ${(lastResult.vinOverlap?.existingVinCount ?? 0).toLocaleString()} matched existing VINs`}
           {lastResult.import
             ? `, imported ${lastResult.import.insertedListings.toLocaleString()} new and ${lastResult.import.updatedListings.toLocaleString()} updated listings.`
             : '.'}

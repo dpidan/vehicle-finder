@@ -180,9 +180,11 @@ export interface SourceFeedCollectResult {
   collectedCount: number;
   collectedCountByAdapter: Record<string, number>;
   vinOverlap: {
-    withVin: number;
-    matchingExistingVehicles: number;
-    missingVin: number;
+    candidatesWithVin: number;
+    existingVinCount: number;
+    newVinCount: number;
+    existingVins: string[];
+    newVins: string[];
   };
   import?: ManualImportSaveResult['import'];
 }
