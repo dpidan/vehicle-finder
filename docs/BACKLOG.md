@@ -4,8 +4,8 @@
 
 1. Done — add configurable monitoring windows instead of fixed dashboard defaults.
 2. Done — improved dashboard digest/report presentation using the verified local live dataset.
-3. Add notification delivery for monitoring digests after the dashboard digest shape is useful.
-4. Done — added admin/dashboard controls for explicit VIN and recall enrichment.
+3. Later — add notification delivery for monitoring digests after the dashboard digest shape is useful.
+4. Done — added admin/dashboard controls for explicit VIN, selected-listing recall, and saved-search recall enrichment.
 5. Done — added data-readiness checklist, inspection SQL, and seed/source smoke tests before first DB population.
 6. Done — saved-search ranking and evaluation now filter broad inventory to known hard search parameters.
 7. Decide whether recall/model-year risk signals should affect scoring now or remain inspection-only.
@@ -75,14 +75,15 @@
 
 49. Done — admin-token-protected saved-search refresh from the dashboard.
 50. Done — admin-triggered VIN and recall enrichment API and dashboard controls exist.
+51. Done — dashboard source-feed controls can load, preview, and import individual feeds with VIN overlap/import result feedback.
 
 ## Assistant access
 
-51. Done — define MCP tool surface for saved searches, ranked candidates, listing details, score explanations, and listing history.
-52. Done — implement a minimal Streamable-HTTP-shaped `/mcp` endpoint backed by the same domain services as the dashboard/API.
-53. Done — implement read-oriented MCP tools.
-54. Done — add admin-token-protected mutation tools for workflow state updates.
-55. Done — document ChatGPT connection/setup steps for family users.
+52. Done — define MCP tool surface for saved searches, ranked candidates, listing details, score explanations, and listing history.
+53. Done — implement a minimal Streamable-HTTP-shaped `/mcp` endpoint backed by the same domain services as the dashboard/API.
+54. Done — implement read-oriented MCP tools.
+55. Done — add admin-token-protected mutation tools for workflow state updates.
+56. Done — document ChatGPT connection/setup steps for family users.
 
 ## Later research
 
@@ -90,6 +91,7 @@
 - Facebook Marketplace compliant integration/import options.
 - Autotrader/Cars.com/CarGurus permitted alert/API/feed options.
 - Dealer-platform adapter reuse opportunities.
+- Source-feed admin editing for status, priority, URLs, and adapter metadata.
 - Business-search APIs for automatic dealer discovery within a saved-search radius, after at least one more manual/seeded source path is useful.
 - Optional paid vehicle-history data and whether it provides enough incremental value.
 - Richer repair-cost catalog for immediate-maintenance estimates.

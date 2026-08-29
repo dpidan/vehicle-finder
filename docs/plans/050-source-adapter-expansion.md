@@ -9,6 +9,7 @@ Expand source coverage without changing the canonical import path.
 - Decide whether paginated Dealer.com belongs in Worker refresh or should stay as an off-Worker/manual source.
 - Import paused source feeds only after they pass source-quality and runtime checks.
 - Add more source types before more seeds of the same blocked runtime shape.
+- Use dashboard source-feed Preview and Import controls for single-feed trials before enabling feeds in scheduled refresh.
 
 ## Next Candidate Chunks
 
@@ -54,3 +55,5 @@ DealerCenter review found that Ride Motors LLC and Xpress Auto Motors dealer-own
 The iSeeCars feed passed a local Worker-runtime trial. `POST /api/admin/source-feeds/feed-iseecars-ride-motors/collect` previewed 15 VIN-backed candidates, then `{"import": true}` inserted 15 listings and 15 snapshots with 0 updates. A follow-up saved-search evaluation still wrote 5 matches because the imported Ride Motors inventory did not match the current family search make/model filters. This makes iSeeCars healthier than Dealer.com for Worker collection, but it should remain paused until source terms and usefulness are reviewed.
 
 Source feed health now stores and displays the last candidate count, which makes zero-result success/failure and small-feed trials easier to inspect from the dashboard. CARFAX dealer inventory pages were also checked for Ride Motors LLC, VSA MotorCars, and Toyo Financial Group, but all returned HTTP 403 to direct fetches, so CARFAX stays out of the adapter set for now.
+
+Dashboard source-feed controls now let an operator load feeds, preview a single feed, inspect VIN overlap, and import a selected active feed without running every source. Imported feed data rewrites the selected saved search's evaluations afterward, so the dashboard can show matching candidates immediately while still keeping notification delivery and feed metadata editing out of scope.

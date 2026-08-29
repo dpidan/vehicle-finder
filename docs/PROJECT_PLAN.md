@@ -114,7 +114,7 @@ Each source is implemented behind an adapter and classified by access type, such
 ### Phase 2 — enrichment and history
 
 - Partial: cached VIN decoding and admin-triggered saved-search enrichment; automatic scheduled enrichment still pending.
-- Partial: cached recall lookup by model year/make/model, shown in listing detail; scoring integration still pending.
+- Partial: cached recall lookup by model year/make/model, admin-triggered saved-search recall enrichment, and listing-detail display; scoring integration still pending.
 - Done: listing snapshots and price history.
 - Partial: maintenance/risk knowledge surfaced in listing detail and used in scoring through seeded model-year risk records; evidence weighting still pending.
 - Done: effective purchase-cost calculation using asking price, saved-search maintenance reserve, and explicit maintenance items.
@@ -123,17 +123,17 @@ Each source is implemented behind an adapter and classified by access type, such
 
 ### Phase 3 — interactive dashboard
 
-- Done: search selector, ranked result list, filtering/sorting, listing detail view, photos, score-factor explanations, favorite/interested/contacted/inspection/rejected workflow with rejection reasons, next-action tracking, candidate comparison, manual-import preview/save, and admin refresh.
+- Done: search selector, ranked result list, filtering/sorting, listing detail view, photos, score-factor explanations, favorite/interested/contacted/inspection/rejected workflow with rejection reasons, next-action tracking, candidate comparison, manual-import preview/save, admin refresh, source-feed preview/import controls, and enrichment controls.
 - Remaining: richer photo acquisition from source detail pages.
 
 ### Phase 4 — monitoring
 
 - Done: scheduled collection, new-listing and price-drop detection, stale-listing detection, score-threshold matching, a plain text digest, and dashboard summary counts.
-- Remaining: richer digest/report presentation and actual notification delivery.
+- Remaining: actual notification delivery.
 
 ### Near-term execution focus
 
-Use the verified local live dataset to improve the dashboard monitoring digest first. Then expand source coverage through the `source_feeds` registry with another permitted collector/adapter or more healthy seeded dealers. After the dashboard can explain real monitoring signals and the source path is stable, populate Worker D1 and run one protected remote refresh.
+Next, improve source coverage through the `source_feeds` registry with another permitted collector/adapter or more healthy seeded dealers, using the dashboard feed controls for preview/import trials. After source quality is stable enough for the first family workflow, populate Worker D1 and run one protected remote refresh. Notification delivery remains deferred until the monitoring digest has been used against real listings.
 
 ### Phase 5 — assistant access
 
