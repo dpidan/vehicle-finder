@@ -22,6 +22,7 @@ This log records source/feed trials separately from implementation plans so adap
 | Ride Motors LLC JSON-LD comparison | `json-ld` | Paused | Generic schema.org parser overlaps the iSeeCars-specific source. | Use for adapter comparison, not scheduled refresh. |
 | Auto Land of Texas via MyNextRide | `mynextride` | Paused | Static cards and detail URLs work; detail enrichment can add missing facts for matching listings. | Keep paused until terms and value are reviewed. |
 | Uptown Imports | `gotgoodcars` | Paused | Plain fetch returned 74 paginated candidates with detail URLs, price, mileage, exterior color, and photos. | Preview through Worker/dashboard before import or promotion. |
+| CROWN AUTO | `gotgoodcars` | Paused | Plain fetch returned 29 under-$20k candidates, including family-search-relevant models. | Preview through Worker/dashboard before import or promotion. |
 | Listing JSON/CSV imports | `listing-json`, `listing-csv` | Manual/import only | Good for exports or browser-assisted workflows that already produce structured data. | Use on demand. |
 
 ## Blocked Or Deferred Feeds

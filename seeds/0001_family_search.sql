@@ -216,6 +216,18 @@ VALUES
     '1208 Spring Cypress Rd, Spring, TX 77373',
     '2026-08-29T00:00:00.000Z',
     '2026-08-29T00:00:00.000Z'
+  ),
+  (
+    'seller-crown-auto',
+    'dealer',
+    'CROWN AUTO',
+    '832-422-2600',
+    'https://www.mycrownauto.com',
+    30.0551,
+    -95.5053,
+    '5514 Louetta Rd, Spring, TX 77379',
+    '2026-08-29T00:00:00.000Z',
+    '2026-08-29T00:00:00.000Z'
   )
 ON CONFLICT(id) DO UPDATE SET
   type = excluded.type,
@@ -653,6 +665,20 @@ VALUES
     'https://uptownimports.gotgoodcars.com',
     165,
     'Standalone GotGoodCars adapter-development feed; plain fetch exposes cards, pagination, detail URLs, price, mileage, color, and photos.',
+    '2026-08-29T00:00:00.000Z',
+    '2026-08-29T00:00:00.000Z'
+  ),
+  (
+    'feed-gotgoodcars-crown-auto',
+    'seller-crown-auto',
+    'CROWN AUTO GotGoodCars',
+    'gotgoodcars',
+    'structured-web',
+    'paused',
+    'https://crownautoinc.gotgoodcars.com/all-inventory/?price%5B%5D=0&price%5B%5D=20000',
+    'https://www.mycrownauto.com',
+    170,
+    'GotGoodCars under-$20k feed for a Spring dealer; standalone validation returned 29 candidates with price, mileage, color, and detail URLs.',
     '2026-08-29T00:00:00.000Z',
     '2026-08-29T00:00:00.000Z'
   )

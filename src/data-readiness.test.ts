@@ -25,7 +25,8 @@ describe('data readiness', () => {
         '0013_source_feeds_json_ld.sql',
         '0014_source_feeds_listing_imports.sql',
         '0015_promote_healthy_source_feeds.sql',
-        '0016_source_feeds_gotgoodcars.sql'
+        '0016_source_feeds_gotgoodcars.sql',
+        '0017_source_feed_crown_auto_gotgoodcars.sql'
       ]
     );
   });
@@ -72,6 +73,7 @@ describe('data readiness', () => {
       'feed-carsforsale-essence-autos',
       'feed-carsforsale-bay-motors',
       'feed-gotgoodcars-uptown-imports',
+      'feed-gotgoodcars-crown-auto',
       'Promoted after Worker preview returned 25 VIN-backed Dealer Car Search candidates.',
       "'paused'"
     ]) {
