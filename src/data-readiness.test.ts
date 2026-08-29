@@ -23,7 +23,8 @@ describe('data readiness', () => {
         '0011_more_spring_tomball_source_feeds.sql',
         '0012_source_feeds_dealer_sitemap.sql',
         '0013_source_feeds_json_ld.sql',
-        '0014_source_feeds_listing_imports.sql'
+        '0014_source_feeds_listing_imports.sql',
+        '0015_promote_healthy_source_feeds.sql'
       ]
     );
   });
@@ -69,6 +70,7 @@ describe('data readiness', () => {
       'feed-dealer-car-search-texans-auto-group',
       'feed-carsforsale-essence-autos',
       'feed-carsforsale-bay-motors',
+      'Promoted after Worker preview returned 25 VIN-backed Dealer Car Search candidates.',
       "'paused'"
     ]) {
       assert.match(seed, new RegExp(escapeRegExp(expected)));

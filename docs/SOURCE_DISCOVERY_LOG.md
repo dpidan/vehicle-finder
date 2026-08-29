@@ -16,8 +16,8 @@ This log records source/feed trials separately from implementation plans so adap
 | --- | --- | --- | --- | --- |
 | Trade Lane Motors | `dealer-car-search` | Active | Seeded early Dealer Car Search source; contributes normalized detail URLs and listing facts. | Keep active. |
 | Mr. King and Mrs. Queens Auto Finance LLC | `dealer-car-search` | Active | Direct fetch works after parser handled linked title rows outside the first card shape. | Keep active and watch field quality. |
-| Texans Auto Group | `dealer-car-search` | Paused | Worker preview returned 25 VIN-backed candidates. | Promote after one more import/dedupe review. |
-| Lone Star Auto Center | `dealer-car-search` | Paused | Worker preview returned 25 VIN-backed candidates. | Promote after one more import/dedupe review. |
+| Texans Auto Group | `dealer-car-search` | Active | Worker preview returned 25 VIN-backed candidates. | Watch import/dedupe health in scheduled refresh. |
+| Lone Star Auto Center | `dealer-car-search` | Active | Worker preview returned 25 VIN-backed candidates. | Watch import/dedupe health in scheduled refresh. |
 | Ride Motors LLC via iSeeCars | `iseecars` | Paused | Worker preview/import returned 15 VIN-backed candidates, but none matched the current family search. | Keep paused until source terms and usefulness are reviewed. |
 | Ride Motors LLC JSON-LD comparison | `json-ld` | Paused | Generic schema.org parser overlaps the iSeeCars-specific source. | Use for adapter comparison, not scheduled refresh. |
 | Auto Land of Texas via MyNextRide | `mynextride` | Paused | Static cards and detail URLs work; detail enrichment can add missing facts for matching listings. | Keep paused until terms and value are reviewed. |
