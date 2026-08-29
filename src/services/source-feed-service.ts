@@ -1,4 +1,5 @@
-import type { ListingCandidate, ListingSource, SellerSeed, SourceAdapterKey, SourceFeed, SourceFeedStatus } from '../domain/entities.js';
+import type { ListingCandidate, ListingSource, SavedSearch, SellerSeed, SourceAdapterKey, SourceFeed, SourceFeedStatus } from '../domain/entities.js';
+import { matchesSearchFilters } from '../scoring/rank-listings.js';
 import { cargurusSource } from '../sources/cargurus-source.js';
 import { dealerComSource } from '../sources/dealer-com-source.js';
 import { dealerCarSearchSource } from '../sources/dealer-car-search-source.js';
@@ -46,19 +47,28 @@ export interface CollectionRunResult {
   feeds: SourceFeed[];
   candidates: ListingCandidate[];
   collectedCountByAdapter: Partial<Record<SourceAdapterKey, number>>;
+  enrichment: EnrichmentRunSummary;
 }
 
-export async function collectActiveSourceFeeds(db: D1Database, collectedAt: string): Promise<CollectionRunResult> {
+export interface EnrichmentRunSummary {
+  eligible: number;
+  attempted: number;
+  succeeded: number;
+  failed: number;
+}
+
+export async function collectActiveSourceFeeds(db: D1Database, collectedAt: string, searches: SavedSearch[] = []): Promise<CollectionRunResult> {
   const feeds = await listSourceFeeds(db, 'active');
   const activeFeeds = feeds.length ? feeds : fallbackDealerCarSearchFeeds(collectedAt);
-  return collectSourceFeeds(db, activeFeeds, collectedAt, true);
+  return collectSourceFeeds(db, activeFeeds, collectedAt, true, searches);
 }
 
 export async function collectSourceFeed(
   db: D1Database,
   feedId: string,
   collectedAt: string,
-  updateHealth = false
+  updateHealth = false,
+  searches: SavedSearch[] = []
 ): Promise<CollectionRunResult | null> {
   const feed = (await listSourceFeeds(db)).find((sourceFeed) => sourceFeed.id === feedId);
 
@@ -66,17 +76,19 @@ export async function collectSourceFeed(
     return null;
   }
 
-  return collectSourceFeeds(db, [feed], collectedAt, updateHealth);
+  return collectSourceFeeds(db, [feed], collectedAt, updateHealth, searches);
 }
 
 async function collectSourceFeeds(
   db: D1Database,
   feeds: SourceFeed[],
   collectedAt: string,
-  updateHealth: boolean
+  updateHealth: boolean,
+  searches: SavedSearch[]
 ): Promise<CollectionRunResult> {
   const candidates: ListingCandidate[] = [];
   const collectedCountByAdapter: Partial<Record<SourceAdapterKey, number>> = {};
+  const enrichment: EnrichmentRunSummary = { eligible: 0, attempted: 0, succeeded: 0, failed: 0 };
 
   for (const [adapterKey, adapterFeeds] of groupFeedsByAdapter(feeds)) {
     const adapter = sourceAdapters[adapterKey];
@@ -93,7 +105,8 @@ async function collectSourceFeeds(
       if (updateHealth) {
         await Promise.all(adapterFeeds.map((feed) => updateSourceFeedSuccess(db, feed.id, collectedAt, collected.length)));
       }
-      candidates.push(...collected);
+      const enriched = await enrichMatchingCandidates(adapter, collected, searches, collectedAt, enrichment);
+      candidates.push(...enriched);
       collectedCountByAdapter[adapterKey] = collected.length;
     } catch (error) {
       if (updateHealth) {
@@ -103,7 +116,43 @@ async function collectSourceFeeds(
     }
   }
 
-  return { feeds, candidates, collectedCountByAdapter };
+  return { feeds, candidates, collectedCountByAdapter, enrichment };
+}
+
+async function enrichMatchingCandidates(
+  adapter: ListingSource,
+  candidates: ListingCandidate[],
+  searches: SavedSearch[],
+  collectedAt: string,
+  summary: EnrichmentRunSummary
+): Promise<ListingCandidate[]> {
+  const enrichDetail = adapter.enrichDetail;
+
+  if (!enrichDetail || searches.length === 0) {
+    return candidates;
+  }
+
+  return Promise.all(
+    candidates.map(async (candidate) => {
+      const matchedSearches = searches.filter((search) => search.enabled && matchesSearchFilters(search.config, candidate));
+
+      if (matchedSearches.length === 0) {
+        return candidate;
+      }
+
+      summary.eligible += 1;
+      summary.attempted += 1;
+
+      try {
+        const enriched = await enrichDetail(candidate, { matchedSearches, collectedAt });
+        summary.succeeded += 1;
+        return enriched;
+      } catch {
+        summary.failed += 1;
+        return candidate;
+      }
+    })
+  );
 }
 
 export async function listSourceFeeds(db: D1Database, status?: SourceFeedStatus): Promise<SourceFeed[]> {

@@ -49,7 +49,7 @@ export function rankListingsForSearch(search: SavedSearchConfig, listings: Listi
     .sort((a, b) => b.dealScore - a.dealScore || b.vehicleScore - a.vehicleScore);
 }
 
-function matchesSearchFilters(search: SavedSearchConfig, listing: ListingCandidate): boolean {
+export function matchesSearchFilters(search: SavedSearchConfig, listing: ListingCandidate): boolean {
   const filters = search.filters;
 
   if (filters.makes?.length && listing.vehicle.make && !includesName(filters.makes, listing.vehicle.make)) {

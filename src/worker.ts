@@ -300,8 +300,15 @@ app.post('/api/admin/source-feeds/:id/collect', async (c) => {
 
   const body = await c.req.json().catch(() => ({}));
   const shouldImport = isRecord(body) && body.import === true;
+  const searchId = isRecord(body) && typeof body.searchId === 'string' ? body.searchId : undefined;
+  const search = searchId ? await getSavedSearch(c.env.DB, searchId) : null;
+
+  if (searchId && !search) {
+    return c.json({ error: 'search-not-found' }, 404);
+  }
+
   const collectedAt = new Date().toISOString();
-  const sourceRun = await collectSourceFeed(c.env.DB, c.req.param('id'), collectedAt, shouldImport);
+  const sourceRun = await collectSourceFeed(c.env.DB, c.req.param('id'), collectedAt, shouldImport, search ? [search] : []);
 
   if (!sourceRun) {
     return c.json({ error: 'not-found' }, 404);
@@ -315,6 +322,7 @@ app.post('/api/admin/source-feeds/:id/collect', async (c) => {
     feed: sourceRun.feeds[0],
     collectedCount: sourceRun.candidates.length,
     collectedCountByAdapter: sourceRun.collectedCountByAdapter,
+    enrichment: sourceRun.enrichment,
     vinOverlap,
     ...(importResult ? { import: importResult } : {})
   });
@@ -357,7 +365,7 @@ app.post('/api/admin/searches/:id/refresh', async (c) => {
   }
 
   const refreshedAt = new Date().toISOString();
-  const sourceRun = await collectActiveSourceFeeds(c.env.DB, refreshedAt);
+  const sourceRun = await collectActiveSourceFeeds(c.env.DB, refreshedAt, [search]);
   const candidates = sourceRun.candidates;
   const importResult = await importListingCandidates(c.env.DB, candidates);
   const rankedListings = await rankPersistedListingsForSavedSearch(c.env.DB, search);
@@ -369,6 +377,7 @@ app.post('/api/admin/searches/:id/refresh', async (c) => {
     source: Object.keys(sourceRun.collectedCountByAdapter).join(', ') || dealerCarSearchSource.name,
     feeds: sourceRun.feeds.map((feed) => ({ id: feed.id, name: feed.name, adapterKey: feed.adapterKey })),
     collectedCountByAdapter: sourceRun.collectedCountByAdapter,
+    enrichment: sourceRun.enrichment,
     collectedCount: candidates.length,
     import: importResult,
     evaluation: evaluationResult
@@ -630,17 +639,14 @@ export async function refreshEnabledSavedSearches(db: D1Database, refreshedAt: s
   evaluatedSearches: number;
   insertedEvaluations: number;
 }> {
-  const sourceRun = await collectActiveSourceFeeds(db, refreshedAt);
+  const searches = (await listSavedSearches(db)).filter((search) => search.enabled);
+  const sourceRun = await collectActiveSourceFeeds(db, refreshedAt, searches);
   const candidates = sourceRun.candidates;
   const imported = await importListingCandidates(db, candidates);
   let evaluatedSearches = 0;
   let insertedEvaluations = 0;
 
-  for (const search of await listSavedSearches(db)) {
-    if (!search.enabled) {
-      continue;
-    }
-
+  for (const search of searches) {
     const rankedListings = await rankPersistedListingsForSavedSearch(db, search);
     const evaluation = await writeSearchEvaluations(db, search.id, rankedListings, refreshedAt);
     evaluatedSearches += 1;

@@ -25,6 +25,10 @@ export const mynextrideSource: ListingSource = {
           return true;
         });
     });
+  },
+  enrichDetail: async (candidate) => {
+    const html = await fetchInventoryHtml(candidate.url);
+    return enrichMynextrideListing(candidate, html);
   }
 };
 
@@ -66,6 +70,33 @@ export function parseMynextrideInventory(
 export function maxVisibleMynextridePage(html: string): number {
   const pages = Array.from(html.matchAll(/wire:click="gotoPage\((\d+)\)"/g), (match) => Number(match[1] ?? 0));
   return Math.max(1, ...pages.filter((page) => Number.isFinite(page)));
+}
+
+export function enrichMynextrideListing(candidate: ListingCandidate, html: string): ListingCandidate {
+  const facts = parseDetailFacts(html);
+  const title = cleanText(stripTags(html.match(/<h3 class="vdp-title">([\s\S]*?)<\/h3>/)?.[1] ?? '')) ?? candidate.title;
+  const year = parseInteger(facts.Year);
+  const mileage = parseInteger(facts.Mileage);
+  const price = parsePrice(html);
+  const vin = facts.VIN?.replace(/\s+/g, '').toUpperCase();
+  const exteriorColor = cleanText(facts['Exterior Color']);
+
+  return {
+    ...candidate,
+    title,
+    vehicle: {
+      ...candidate.vehicle,
+      ...(year > 0 ? { year } : {}),
+      ...(facts.Make ? { make: facts.Make } : {}),
+      ...(facts.Model ? { model: facts.Model } : {}),
+      ...(facts.Trim ? { trim: facts.Trim } : {}),
+      ...(vin ? { vin } : {})
+    },
+    ...(price > 0 ? { price: { amount: price, currency: 'USD' } } : {}),
+    ...(mileage > 0 ? { mileage } : {}),
+    ...(exteriorColor ? { exteriorColor } : {}),
+    rawDescription: compactText(facts)
+  };
 }
 
 async function fetchInventoryPages(seed: SellerSeed): Promise<{ seed: SellerSeed; htmlPages: string[] }> {
@@ -142,12 +173,36 @@ function parseMileage(html: string): number {
   return parseInteger(stripTags(html).match(/\b(\d[\d,]+)\s*mi\b/i)?.[1]);
 }
 
+function parseDetailFacts(html: string): Record<string, string> {
+  const facts: Record<string, string> = {};
+  const rows = html.matchAll(
+    /<p class="py-1 px-2 font-weight-bold m-1 d-flex align-items-center">[\s\S]*?<span class="pr-4 mr-auto">([\s\S]*?)<\/span>[\s\S]*?<span class="text-right text-white font-weight-normal">([\s\S]*?)<\/span>[\s\S]*?<\/p>/g
+  );
+
+  for (const row of rows) {
+    const label = cleanText(stripTags(row[1] ?? ''));
+    const value = cleanText(stripTags(row[2] ?? ''));
+
+    if (label && value) {
+      facts[label] = value;
+    }
+  }
+
+  return facts;
+}
+
 function stripTags(html: string): string {
   return html.replace(/<[^>]+>/g, ' ');
 }
 
 function cleanText(value: string | undefined): string | undefined {
   return value?.replace(/\s+/g, ' ').trim();
+}
+
+function compactText(facts: Record<string, string>): string {
+  return Object.entries(facts)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join('\n');
 }
 
 function decodeHtml(value: string): string {

@@ -148,6 +148,7 @@ export interface ListingSource {
   name: string;
   access: SourceAccess;
   collect(context: CollectionContext): Promise<ListingCandidate[]>;
+  enrichDetail?(candidate: ListingCandidate, context: EnrichmentContext): Promise<ListingCandidate>;
 }
 
 export interface CollectionContext {
@@ -155,6 +156,11 @@ export interface CollectionContext {
   center?: GeoPoint;
   radiusMiles?: number;
   sellerSeeds?: SellerSeed[];
+  collectedAt: IsoDateTime;
+}
+
+export interface EnrichmentContext {
+  matchedSearches: SavedSearch[];
   collectedAt: IsoDateTime;
 }
 

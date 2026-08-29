@@ -1,5 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { familySearchDefaults } from '../domain/search-config.js';
 import { collectSourceFeed, listSourceFeeds } from './source-feed-service.js';
 
 describe('source feed service', () => {
@@ -65,6 +66,70 @@ describe('source feed service', () => {
       globalThis.fetch = originalFetch;
     }
   });
+
+  it('enriches only candidates matching supplied saved searches', async () => {
+    const originalFetch = globalThis.fetch;
+    const db = fakeDb([feedRow({ adapter_key: 'mynextride' })]);
+    const urls: string[] = [];
+
+    globalThis.fetch = async (input) => {
+      urls.push(String(input));
+      if (urls.length === 1) {
+        return new Response(`
+          <div class="m-3" wire:key="edge">
+            <div class="card search-car-card" onclick="linkClick('https://www.mynextride.com/cars-for-sale/edge/2019-ford-edge-cypress-tx', event)">
+              <p class="p-3 m-0 font-weight-bold title-md">2019 Ford Edge SEL</p>
+              <span class="float-right">68,558 mi</span>
+            </div>
+          </div>
+          <div class="m-3" wire:key="camry">
+            <div class="card search-car-card" onclick="linkClick('https://www.mynextride.com/cars-for-sale/camry/2025-toyota-camry-cypress-tx', event)">
+              <p class="p-3 m-0 font-weight-bold title-md">2025 Toyota Camry XSE</p>
+              <span class="float-right">36,188 mi</span>
+            </div>
+          </div>
+        `);
+      }
+
+      return new Response(`
+        <p class="py-1 px-2 font-weight-bold m-1 d-flex align-items-center">
+          <span class="pr-4 mr-auto">VIN</span>
+          <span class="text-right text-white font-weight-normal">2FMPK4J91KBB60883</span>
+        </p>
+      `);
+    };
+
+    try {
+      const run = await collectSourceFeed(
+        db as unknown as D1Database,
+        'feed-cargurus-vsa-motorcars',
+        '2026-08-28T12:00:00.000Z',
+        false,
+        [
+          {
+            id: 'search-ford-edge',
+            userId: 'user-1',
+            name: 'Ford Edge',
+            enabled: true,
+            config: {
+              ...familySearchDefaults,
+              filters: { ...familySearchDefaults.filters, makes: ['Ford'], models: ['Edge'] }
+            },
+            createdAt: '2026-08-28T00:00:00.000Z',
+            updatedAt: '2026-08-28T00:00:00.000Z'
+          }
+        ]
+      );
+
+      assert.equal(run?.candidates.length, 2);
+      assert.equal(run?.enrichment.eligible, 1);
+      assert.equal(run?.enrichment.succeeded, 1);
+      assert.equal(run?.candidates[0]?.vehicle.vin, '2FMPK4J91KBB60883');
+      assert.equal(urls.length, 2);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
 });
 
 function fakeDb(rows: unknown[], error?: Error) {
@@ -105,7 +170,7 @@ function fakeDb(rows: unknown[], error?: Error) {
   };
 }
 
-function feedRow() {
+function feedRow(overrides: Record<string, unknown> = {}) {
   return {
     id: 'feed-cargurus-vsa-motorcars',
     seller_id: 'seller-vsa-motorcars',
@@ -129,6 +194,7 @@ function feedRow() {
     seller_website_url: 'https://www.vsamotorcars.com',
     seller_latitude: 29.9809,
     seller_longitude: -95.655,
-    seller_location_label: '12212 Cypress N. Houston RD #1, Cypress, TX 77429'
+    seller_location_label: '12212 Cypress N. Houston RD #1, Cypress, TX 77429',
+    ...overrides
   };
 }
