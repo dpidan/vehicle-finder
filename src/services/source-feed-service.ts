@@ -193,6 +193,24 @@ export async function listSourceFeeds(db: D1Database, status?: SourceFeedStatus)
   }
 }
 
+export async function updateSourceFeedStatus(
+  db: D1Database,
+  feedId: string,
+  status: SourceFeedStatus,
+  updatedAt: string
+): Promise<SourceFeed | null> {
+  await db
+    .prepare(
+      `UPDATE source_feeds
+       SET status = ?, updated_at = ?
+       WHERE id = ?`
+    )
+    .bind(status, updatedAt, feedId)
+    .run();
+
+  return (await listSourceFeeds(db)).find((feed) => feed.id === feedId) ?? null;
+}
+
 async function updateSourceFeedSuccess(db: D1Database, feedId: string, collectedAt: string, candidateCount: number): Promise<void> {
   await db
     .prepare(

@@ -17,6 +17,7 @@ import type {
   SearchEvaluationWriteResult,
   SearchRefreshResult,
   SourceFeedCollectResult,
+  SourceFeedStatus,
   SourceFeedSummary
 } from './types.js';
 
@@ -116,6 +117,15 @@ export function collectSourceFeed(feedId: string, adminToken: string, shouldImpo
     headers: { authorization: `Bearer ${adminToken}`, 'content-type': 'application/json' },
     body: JSON.stringify({ import: shouldImport })
   });
+}
+
+export async function updateSourceFeedStatus(feedId: string, status: SourceFeedStatus, adminToken: string): Promise<SourceFeedSummary> {
+  const { feed } = await fetchJson<{ feed: SourceFeedSummary }>(`/api/admin/source-feeds/${feedId}/status`, {
+    method: 'PUT',
+    headers: { authorization: `Bearer ${adminToken}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ status })
+  });
+  return feed;
 }
 
 export function decodeSavedSearchVins(searchId: string, adminToken: string): Promise<DecodeSearchVinsResult> {

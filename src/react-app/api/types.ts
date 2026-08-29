@@ -175,6 +175,8 @@ export interface SourceFeedSummary {
   notes?: string;
 }
 
+export type SourceFeedStatus = SourceFeedSummary['status'];
+
 export interface SourceFeedCollectResult {
   collectedAt: string;
   feed: SourceFeedSummary;

@@ -505,6 +505,41 @@ describe('worker routes', () => {
     }
   });
 
+  it('updates source feed status with the admin token', async () => {
+    const db = env({ adminToken: 'secret', sourceFeeds: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+    const response = await app.request(
+      '/api/admin/source-feeds/feed-gotgoodcars-crown-auto/status',
+      {
+        method: 'PUT',
+        headers: { authorization: 'Bearer secret', 'content-type': 'application/json' },
+        body: JSON.stringify({ status: 'active' })
+      },
+      { DB: db, ADMIN_TOKEN: 'secret' }
+    );
+    const body = (await response.json()) as { feed: { id: string; status: string } };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.feed.id, 'feed-gotgoodcars-crown-auto');
+    assert.equal(body.feed.status, 'active');
+    assert.match(db.writes[0]?.sql ?? '', /^UPDATE source_feeds/);
+    assert.equal(db.writes[0]?.values[0], 'active');
+  });
+
+  it('validates source feed status updates', async () => {
+    const response = await app.request(
+      '/api/admin/source-feeds/feed-gotgoodcars-crown-auto/status',
+      {
+        method: 'PUT',
+        headers: { authorization: 'Bearer secret', 'content-type': 'application/json' },
+        body: JSON.stringify({ status: 'maybe' })
+      },
+      env({ adminToken: 'secret', sourceFeeds: true })
+    );
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), { error: 'invalid-status' });
+  });
+
   it('requires the admin token for persisted search evaluation writes', async () => {
     const missingToken = await app.request('/api/admin/searches/family-replacement-vehicle/evaluations', { method: 'POST' }, env());
     const wrongToken = await app.request(
@@ -1216,6 +1251,7 @@ function env(
     recallSearchRows?: boolean;
     recallLookup?: boolean;
     assetRequests?: string[];
+    sourceFeeds?: boolean;
   } = {}
 ): Env {
   const writes: Array<{ sql: string; values: unknown[] }> = [];
@@ -1253,7 +1289,9 @@ function env(
             },
             all: async () => ({
               results:
-                options.persistedListings && id === savedSearchRow.id && sql.includes('FROM listings') && sql.includes('LEFT JOIN listing_dispositions')
+                options.sourceFeeds && sql.includes('FROM source_feeds')
+                  ? [{ ...sourceFeedRow, status: writes[0]?.values[0] ?? sourceFeedRow.status }]
+                  : options.persistedListings && id === savedSearchRow.id && sql.includes('FROM listings') && sql.includes('LEFT JOIN listing_dispositions')
                   ? [persistedListingRow, betterPersistedListingRow]
                   : options.evaluations && id === savedSearchRow.id && sql.includes('MAX(latest.evaluated_at)') && sql.includes('ORDER BY search_evaluations.deal_score DESC')
                     ? evaluationRows
@@ -1280,7 +1318,9 @@ function env(
           };
         },
         all: async () => ({
-          results: sql.includes('FROM saved_searches')
+          results: options.sourceFeeds && sql.includes('FROM source_feeds')
+            ? [{ ...sourceFeedRow, status: writes[0]?.values[0] ?? sourceFeedRow.status }]
+            : sql.includes('FROM saved_searches')
             ? [searchRow]
             : options.evaluations && sql.includes('MAX(latest.evaluated_at)') && sql.includes('ORDER BY search_evaluations.deal_score DESC')
               ? evaluationRows
@@ -1330,6 +1370,32 @@ const persistedListingRow = {
   disposition_rejection_reason: null,
   disposition_next_action_json: null,
   disposition_updated_at: null
+};
+
+const sourceFeedRow = {
+  id: 'feed-gotgoodcars-crown-auto',
+  seller_id: 'seller-crown-auto',
+  name: 'CROWN AUTO GotGoodCars',
+  adapter_key: 'gotgoodcars',
+  access: 'structured-web',
+  status: 'paused',
+  inventory_url: 'https://crownautoinc.gotgoodcars.com/all-inventory/?price%5B%5D=0&price%5B%5D=20000',
+  website_url: 'https://www.mycrownauto.com',
+  collection_priority: 170,
+  last_collected_at: null,
+  last_status: null,
+  last_error: null,
+  last_candidate_count: null,
+  notes: 'GotGoodCars under-$20k feed.',
+  created_at: '2026-08-29T00:00:00.000Z',
+  updated_at: '2026-08-29T00:00:00.000Z',
+  seller_name: 'CROWN AUTO',
+  seller_type: 'dealer',
+  seller_phone: '832-422-2600',
+  seller_website_url: 'https://www.mycrownauto.com',
+  seller_latitude: 30.0551,
+  seller_longitude: -95.5053,
+  seller_location_label: '5514 Louetta Rd, Spring, TX 77379'
 };
 
 const snapshotRows = [

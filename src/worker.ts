@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { importListingCandidates } from './services/inventory-service.js';
-import { collectActiveSourceFeeds, collectSourceFeed, listSourceFeeds } from './services/source-feed-service.js';
+import { collectActiveSourceFeeds, collectSourceFeed, listSourceFeeds, updateSourceFeedStatus } from './services/source-feed-service.js';
 import { filterThresholdMatches, formatMonitoringDigest, isIsoDateTime, type MonitoringSummary } from './services/monitoring-service.js';
 import { decodeSavedSearchVins, decodeVin } from './services/vin-decoder-service.js';
 import {
@@ -329,6 +329,29 @@ app.post('/api/admin/source-feeds/:id/collect', async (c) => {
   });
 });
 
+app.put('/api/admin/source-feeds/:id/status', async (c) => {
+  const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
+
+  if (unauthorized) {
+    return c.json({ error: unauthorized }, unauthorized === 'admin-token-not-configured' ? 503 : 401);
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const status = isRecord(body) && typeof body.status === 'string' ? body.status : '';
+
+  if (!isSourceFeedStatus(status)) {
+    return c.json({ error: 'invalid-status' }, 400);
+  }
+
+  const feed = await updateSourceFeedStatus(c.env.DB, c.req.param('id'), status, new Date().toISOString());
+
+  if (!feed) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  return c.json({ feed });
+});
+
 app.post('/api/admin/searches/:id/evaluations', async (c) => {
   const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
 
@@ -653,6 +676,10 @@ function isDispositionInput(value: Partial<ListingDispositionInput>): value is L
         (nextAction.dueAt === undefined || !Number.isNaN(Date.parse(nextAction.dueAt))) &&
         (nextAction.note === undefined || typeof nextAction.note === 'string')))
   );
+}
+
+function isSourceFeedStatus(value: string): value is 'active' | 'paused' | 'blocked' | 'retired' {
+  return ['active', 'paused', 'blocked', 'retired'].includes(value);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

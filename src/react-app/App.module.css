@@ -216,6 +216,35 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+.sourcePreviewSummary {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.4fr) repeat(4, minmax(120px, 1fr));
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: #eef5ef;
+}
+
+.sourcePreviewSummary div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.sourcePreviewSummary span {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sourcePreviewSummary strong {
+  min-width: 0;
+  color: var(--color-text);
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
 .feedQualityGrid div {
   display: grid;
   gap: var(--space-1);

@@ -12,6 +12,7 @@ import {
   lookupRecallsForVehicle,
   refreshSearch,
   saveListingDisposition,
+  updateSourceFeedStatus,
   writeSearchEvaluations,
   type MonitoringWindow
 } from './api/client.js';
@@ -62,7 +63,7 @@ function DashboardShell() {
   const [enrichmentMessage, setEnrichmentMessage] = useState('');
   const [sourceFeeds, setSourceFeeds] = useState<SourceFeedSummary[]>([]);
   const [sourceFeedStatus, setSourceFeedStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
-  const [sourceFeedAction, setSourceFeedAction] = useState<{ feedId: string; action: 'preview' | 'import' } | null>(null);
+  const [sourceFeedAction, setSourceFeedAction] = useState<{ feedId: string; action: 'preview' | 'import' | 'activate' | 'pause' } | null>(null);
   const [sourceFeedActionResult, setSourceFeedActionResult] = useState<SourceFeedCollectResult | null>(null);
   const [stateFilter, setStateFilter] = useState<ListingDispositionState | 'all'>('all');
   const [sortMode, setSortMode] = useState<SortMode>('deal');
@@ -216,6 +217,8 @@ function DashboardShell() {
         onLoad={loadSourceFeeds}
         onPreview={(feedId) => runSourceFeedAction(feedId, false)}
         onImport={(feedId) => runSourceFeedAction(feedId, true)}
+        onActivate={(feedId) => changeSourceFeedStatus(feedId, 'active')}
+        onPause={(feedId) => changeSourceFeedStatus(feedId, 'paused')}
       />
       <ComparisonPanel
         listings={comparedListings}
@@ -377,6 +380,29 @@ function DashboardShell() {
     } catch {
       setSourceFeedStatus('error');
       setWorkflowStatus(shouldImport ? 'Could not import source feed.' : 'Could not preview source feed.');
+    } finally {
+      setSourceFeedAction(null);
+    }
+  }
+
+  async function changeSourceFeedStatus(feedId: string, nextStatus: 'active' | 'paused') {
+    const adminToken = window.prompt('Admin token')?.trim();
+
+    if (!adminToken) {
+      setSourceFeedStatus('error');
+      return;
+    }
+
+    setSourceFeedAction({ feedId, action: nextStatus === 'active' ? 'activate' : 'pause' });
+    setWorkflowStatus(nextStatus === 'active' ? 'Activating source feed.' : 'Pausing source feed.');
+
+    try {
+      await updateSourceFeedStatus(feedId, nextStatus, adminToken);
+      await loadSourceFeedsWithToken(adminToken);
+      setWorkflowStatus(nextStatus === 'active' ? 'Source feed activated.' : 'Source feed paused.');
+    } catch {
+      setSourceFeedStatus('error');
+      setWorkflowStatus(nextStatus === 'active' ? 'Could not activate source feed.' : 'Could not pause source feed.');
     } finally {
       setSourceFeedAction(null);
     }

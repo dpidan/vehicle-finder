@@ -1,7 +1,7 @@
 import styles from '../../App.module.css';
 import type { SourceFeedCollectResult, SourceFeedSummary } from '../../api/types.js';
 
-type SourceFeedAction = 'preview' | 'import';
+type SourceFeedAction = 'preview' | 'import' | 'activate' | 'pause';
 
 interface SourceFeedsPanelProps {
   feeds: SourceFeedSummary[];
@@ -11,9 +11,11 @@ interface SourceFeedsPanelProps {
   onLoad: () => void;
   onPreview: (feedId: string) => void;
   onImport: (feedId: string) => void;
+  onActivate: (feedId: string) => void;
+  onPause: (feedId: string) => void;
 }
 
-export function SourceFeedsPanel({ feeds, status, activeAction, lastResult, onLoad, onPreview, onImport }: SourceFeedsPanelProps) {
+export function SourceFeedsPanel({ feeds, status, activeAction, lastResult, onLoad, onPreview, onImport, onActivate, onPause }: SourceFeedsPanelProps) {
   const activeCount = feeds.filter((feed) => feed.status === 'active').length;
   const blockedCount = feeds.filter((feed) => feed.status === 'blocked').length;
   const healthyCount = feeds.filter((feed) => feed.lastStatus === 'ok').length;
@@ -51,6 +53,34 @@ export function SourceFeedsPanel({ feeds, status, activeAction, lastResult, onLo
           </div>
         </div>
       ) : null}
+      {lastResult ? (
+        <div className={styles.sourcePreviewSummary}>
+          <div>
+            <span>Last preview</span>
+            <strong>{lastResult.feed.name}</strong>
+          </div>
+          <div>
+            <span>Candidates</span>
+            <strong>{lastResult.collectedCount.toLocaleString()}</strong>
+          </div>
+          <div>
+            <span>VIN-backed</span>
+            <strong>{lastResult.vinOverlap.candidatesWithVin.toLocaleString()}</strong>
+          </div>
+          <div>
+            <span>New VINs</span>
+            <strong>{lastResult.vinOverlap.newVinCount.toLocaleString()}</strong>
+          </div>
+          {lastResult.import ? (
+            <div>
+              <span>Imported</span>
+              <strong>
+                {lastResult.import.insertedListings.toLocaleString()} new / {lastResult.import.updatedListings.toLocaleString()} updated
+              </strong>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {status === 'ready' && feeds.length > 0 ? (
         <div className={styles.tableWrap}>
           <table className={styles.sourceFeedsTable}>
@@ -68,6 +98,8 @@ export function SourceFeedsPanel({ feeds, status, activeAction, lastResult, onLo
               {feeds.map((feed) => {
                 const isPreviewing = activeAction?.feedId === feed.id && activeAction.action === 'preview';
                 const isImporting = activeAction?.feedId === feed.id && activeAction.action === 'import';
+                const isActivating = activeAction?.feedId === feed.id && activeAction.action === 'activate';
+                const isPausing = activeAction?.feedId === feed.id && activeAction.action === 'pause';
                 const isBusy = activeAction !== null;
 
                 return (
@@ -101,6 +133,15 @@ export function SourceFeedsPanel({ feeds, status, activeAction, lastResult, onLo
                         >
                           {isImporting ? 'Importing' : 'Import'}
                         </button>
+                        {feed.status === 'active' ? (
+                          <button className={styles.secondaryButton} type="button" onClick={() => onPause(feed.id)} disabled={isBusy}>
+                            {isPausing ? 'Pausing' : 'Pause'}
+                          </button>
+                        ) : (
+                          <button className={styles.secondaryButton} type="button" onClick={() => onActivate(feed.id)} disabled={isBusy}>
+                            {isActivating ? 'Activating' : 'Activate'}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -115,15 +156,6 @@ export function SourceFeedsPanel({ feeds, status, activeAction, lastResult, onLo
           <p>Use the admin token to inspect collector status.</p>
         </div>
       )}
-      {lastResult ? (
-        <p className={styles.panelNote}>
-          Last source action: {lastResult.feed.name} collected {lastResult.collectedCount.toLocaleString()} candidates;
-          {` ${(lastResult.vinOverlap?.existingVinCount ?? 0).toLocaleString()} matched existing VINs`}
-          {lastResult.import
-            ? `, imported ${lastResult.import.insertedListings.toLocaleString()} new and ${lastResult.import.updatedListings.toLocaleString()} updated listings.`
-            : '.'}
-        </p>
-      ) : null}
     </section>
   );
 }
