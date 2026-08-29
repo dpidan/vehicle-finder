@@ -14,6 +14,11 @@ interface SourceFeedsPanelProps {
 }
 
 export function SourceFeedsPanel({ feeds, status, activeAction, lastResult, onLoad, onPreview, onImport }: SourceFeedsPanelProps) {
+  const activeCount = feeds.filter((feed) => feed.status === 'active').length;
+  const blockedCount = feeds.filter((feed) => feed.status === 'blocked').length;
+  const healthyCount = feeds.filter((feed) => feed.lastStatus === 'ok').length;
+  const adapterCount = new Set(feeds.map((feed) => feed.adapterKey)).size;
+
   return (
     <section className={styles.sourceFeedsPanel}>
       <div className={styles.panelHeader}>
@@ -22,6 +27,30 @@ export function SourceFeedsPanel({ feeds, status, activeAction, lastResult, onLo
           {status === 'loading' ? 'Loading' : 'Load'}
         </button>
       </div>
+      {feeds.length > 0 ? (
+        <div className={styles.feedQualityGrid}>
+          <div>
+            <span>Total</span>
+            <strong>{feeds.length.toLocaleString()}</strong>
+          </div>
+          <div>
+            <span>Active</span>
+            <strong>{activeCount.toLocaleString()}</strong>
+          </div>
+          <div>
+            <span>Healthy last run</span>
+            <strong>{healthyCount.toLocaleString()}</strong>
+          </div>
+          <div>
+            <span>Blocked</span>
+            <strong>{blockedCount.toLocaleString()}</strong>
+          </div>
+          <div>
+            <span>Adapters</span>
+            <strong>{adapterCount.toLocaleString()}</strong>
+          </div>
+        </div>
+      ) : null}
       {status === 'ready' && feeds.length > 0 ? (
         <div className={styles.tableWrap}>
           <table className={styles.sourceFeedsTable}>
@@ -47,6 +76,7 @@ export function SourceFeedsPanel({ feeds, status, activeAction, lastResult, onLo
                       <a className={styles.listingTitle} href={feed.inventoryUrl} target="_blank" rel="noreferrer">
                         {feed.name}
                       </a>
+                      {feed.notes ? <span className={styles.feedNote}>{feed.notes}</span> : null}
                       {feed.lastError ? <span className={styles.feedError}>{feed.lastError}</span> : null}
                     </td>
                     <td>{feed.adapterKey}</td>

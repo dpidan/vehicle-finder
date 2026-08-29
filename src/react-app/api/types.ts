@@ -172,6 +172,7 @@ export interface SourceFeedSummary {
   lastStatus?: string;
   lastError?: string;
   lastCandidateCount?: number;
+  notes?: string;
 }
 
 export interface SourceFeedCollectResult {
