@@ -22,6 +22,14 @@ export interface RecallLookupResult {
   lookup: RecallLookup;
 }
 
+export interface RecallSearchLookupResult {
+  searchId: string;
+  candidateCount: number;
+  liveCount: number;
+  cachedCount: number;
+  failed: Array<{ modelYear: number; make: string; model: string; error: string }>;
+}
+
 interface RecallLookupRow {
   lookup_key: string;
   model_year: number;
@@ -29,6 +37,12 @@ interface RecallLookupRow {
   model: string;
   recalls_json: string;
   checked_at: string;
+}
+
+interface SearchRecallRow {
+  year: number;
+  make: string;
+  model: string;
 }
 
 interface NhtsaRecallResponse {
@@ -67,6 +81,56 @@ export async function lookupRecalls(
 
   await putCachedRecallLookup(db, lookup);
   return { source: 'live', lookup };
+}
+
+export async function lookupRecallsForSavedSearch(
+  db: D1Database,
+  searchId: string,
+  checkedAt: string,
+  fetcher: typeof fetch = fetch
+): Promise<RecallSearchLookupResult> {
+  const { results } = await db
+    .prepare(
+      `SELECT DISTINCT vehicles.year, vehicles.make, vehicles.model
+       FROM search_evaluations
+       JOIN listings ON listings.id = search_evaluations.listing_id
+       JOIN vehicles ON vehicles.id = listings.vehicle_id
+       WHERE search_evaluations.saved_search_id = ?
+         AND search_evaluations.evaluated_at = (
+           SELECT MAX(evaluated_at)
+           FROM search_evaluations
+           WHERE saved_search_id = ?
+         )
+         AND vehicles.year IS NOT NULL
+         AND vehicles.make IS NOT NULL
+         AND vehicles.model IS NOT NULL
+       ORDER BY vehicles.year, vehicles.make, vehicles.model
+       LIMIT 50`
+    )
+    .bind(searchId, searchId)
+    .all<SearchRecallRow>();
+  const result: RecallSearchLookupResult = {
+    searchId,
+    candidateCount: results.length,
+    liveCount: 0,
+    cachedCount: 0,
+    failed: []
+  };
+
+  for (const row of results) {
+    try {
+      const lookup = await lookupRecalls(db, row.year, row.make, row.model, checkedAt, fetcher);
+      if (lookup.source === 'cache') {
+        result.cachedCount += 1;
+      } else {
+        result.liveCount += 1;
+      }
+    } catch (error) {
+      result.failed.push({ modelYear: row.year, make: row.make, model: row.model, error: errorMessage(error) });
+    }
+  }
+
+  return result;
 }
 
 export function recallLookupKey(modelYear: number, make: string, model: string): string {
@@ -126,6 +190,10 @@ function toRecallRecord(raw: Record<string, unknown>): RecallRecord {
 function stringField<T extends string>(raw: Record<string, unknown>, sourceKey: string, targetKey: T): Partial<Record<T, string>> {
   const value = raw[sourceKey];
   return typeof value === 'string' && value.trim() ? { [targetKey]: value.trim() } as Partial<Record<T, string>> : {};
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unknown error.';
 }
 
 function rowToLookup(row: RecallLookupRow): RecallLookup {

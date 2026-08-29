@@ -11,6 +11,7 @@ import type {
   RankedListingSummary,
   RecallLookupResult,
   SavedSearchSummary,
+  SavedSearchRecallLookupResult,
   SearchEvaluationWriteResult,
   SearchRefreshResult,
   SourceFeedCollectResult,
@@ -96,6 +97,13 @@ export function collectSourceFeed(feedId: string, adminToken: string, shouldImpo
 
 export function decodeSavedSearchVins(searchId: string, adminToken: string): Promise<DecodeSearchVinsResult> {
   return fetchJson<DecodeSearchVinsResult>(`/api/admin/searches/${searchId}/vin-decodes`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${adminToken}` }
+  });
+}
+
+export function lookupRecallsForSavedSearch(searchId: string, adminToken: string): Promise<SavedSearchRecallLookupResult> {
+  return fetchJson<SavedSearchRecallLookupResult>(`/api/admin/searches/${searchId}/recalls`, {
     method: 'POST',
     headers: { authorization: `Bearer ${adminToken}` }
   });

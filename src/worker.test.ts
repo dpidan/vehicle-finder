@@ -743,6 +743,31 @@ describe('worker routes', () => {
     }
   });
 
+  it('looks up recalls for a saved search with the admin token', async () => {
+    const db = env({ adminToken: 'secret', recallSearchRows: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      Response.json({ results: [{ NHTSACampaignNumber: '16V858000', Component: 'STRUCTURE' }] })) as typeof fetch;
+
+    try {
+      const response = await app.request(
+        '/api/admin/searches/family-replacement-vehicle/recalls',
+        { method: 'POST', headers: { authorization: 'Bearer secret' } },
+        { DB: db, ADMIN_TOKEN: 'secret' }
+      );
+      const body = (await response.json()) as { candidateCount: number; liveCount: number; cachedCount: number; failed: unknown[] };
+
+      assert.equal(response.status, 200);
+      assert.equal(body.candidateCount, 1);
+      assert.equal(body.liveCount, 1);
+      assert.equal(body.cachedCount, 0);
+      assert.deepEqual(body.failed, []);
+      assert.ok(db.writes.some((write) => write.sql.startsWith('INSERT INTO vehicle_recalls')));
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('refreshes enabled saved searches for scheduled collection', async () => {
     const originalFetch = globalThis.fetch;
     let fetchCount = 0;
@@ -1120,6 +1145,7 @@ function env(
     evaluations?: boolean;
     modelYearRisks?: boolean;
     vinDecodeRows?: boolean;
+    recallSearchRows?: boolean;
     recallLookup?: boolean;
   } = {}
 ): Env {
@@ -1162,6 +1188,8 @@ function env(
                     ? [modelYearRiskRow]
                   : options.vinDecodeRows && sql.includes('SELECT DISTINCT vehicles.vin')
                     ? [{ vin: '5TDYK3DC0FS000001', year: 2015 }]
+                  : options.recallSearchRows && sql.includes('SELECT DISTINCT vehicles.year')
+                    ? [{ year: 2015, make: 'Toyota', model: 'Sienna' }]
                   : options.listingDetail && id === 'listing-sienna' && sql.includes('FROM listing_snapshots') && sql.includes('WHERE listing_id = ?')
                   ? snapshotRows
                   : []

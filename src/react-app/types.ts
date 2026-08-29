@@ -146,6 +146,19 @@ export interface RecallLookupResult {
   lookup: RecallLookup;
 }
 
+export interface SavedSearchRecallLookupResult {
+  searchId: string;
+  candidateCount: number;
+  liveCount: number;
+  cachedCount: number;
+  failed: Array<{
+    modelYear: number;
+    make: string;
+    model: string;
+    error: string;
+  }>;
+}
+
 export interface SourceFeedSummary {
   id: string;
   name: string;

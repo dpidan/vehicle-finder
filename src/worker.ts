@@ -22,7 +22,7 @@ import {
 import { manualImportToCandidate, type ManualImportInput } from './sources/manual-import.js';
 import { handleMcpHttpRequest, parseMcpJsonRequest } from './mcp/http.js';
 import { callMcpTool, mcpTools } from './mcp/tools.js';
-import { lookupRecalls } from './services/recall-service.js';
+import { lookupRecalls, lookupRecallsForSavedSearch } from './services/recall-service.js';
 import { cypressDealerCarSearchSeeds } from './sources/dealer-car-search-seeds.js';
 import { dealerCarSearchSource } from './sources/dealer-car-search-source.js';
 import { collectSampleListings } from './sources/sample-source.js';
@@ -405,6 +405,22 @@ app.post('/api/admin/searches/:id/vin-decodes', async (c) => {
   }
 
   return c.json(await decodeSavedSearchVins(c.env.DB, search.id, new Date().toISOString()));
+});
+
+app.post('/api/admin/searches/:id/recalls', async (c) => {
+  const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
+
+  if (unauthorized) {
+    return c.json({ error: unauthorized }, unauthorized === 'admin-token-not-configured' ? 503 : 401);
+  }
+
+  const search = await getSavedSearch(c.env.DB, c.req.param('id'));
+
+  if (!search) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  return c.json(await lookupRecallsForSavedSearch(c.env.DB, search.id, new Date().toISOString()));
 });
 
 app.post('/api/admin/recalls', async (c) => {

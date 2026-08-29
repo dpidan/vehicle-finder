@@ -3,16 +3,20 @@ import styles from './App.module.css';
 export function EnrichmentPanel({
   canDecodeVins,
   canLookupRecalls,
+  canLookupSearchRecalls,
   message,
   onDecodeVins,
   onLookupRecalls,
+  onLookupSearchRecalls,
   status
 }: {
   canDecodeVins: boolean;
   canLookupRecalls: boolean;
+  canLookupSearchRecalls: boolean;
   message: string;
   onDecodeVins: () => void;
   onLookupRecalls: () => void;
+  onLookupSearchRecalls: () => void;
   status: 'idle' | 'running' | 'ready' | 'error';
 }) {
   return (
@@ -26,8 +30,16 @@ export function EnrichmentPanel({
           <button className={styles.secondaryButton} type="button" disabled={!canDecodeVins || status === 'running'} onClick={onDecodeVins}>
             Decode VINs
           </button>
+          <button
+            className={styles.secondaryButton}
+            type="button"
+            disabled={!canLookupSearchRecalls || status === 'running'}
+            onClick={onLookupSearchRecalls}
+          >
+            Lookup search recalls
+          </button>
           <button className={styles.secondaryButton} type="button" disabled={!canLookupRecalls || status === 'running'} onClick={onLookupRecalls}>
-            Lookup recalls
+            Lookup selected recalls
           </button>
         </div>
         {message ? <p className={styles.subtle}>{message}</p> : null}

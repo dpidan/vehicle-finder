@@ -8,6 +8,7 @@ import {
   fetchRankedListings,
   fetchSavedSearches,
   fetchSourceFeeds,
+  lookupRecallsForSavedSearch,
   lookupRecallsForVehicle,
   refreshSearch,
   saveListingDisposition,
@@ -198,10 +199,12 @@ function DashboardShell() {
       />
       <EnrichmentPanel
         canDecodeVins={Boolean(selectedSearchId)}
+        canLookupSearchRecalls={Boolean(selectedSearchId)}
         canLookupRecalls={Boolean(selectedVehicle?.year && selectedVehicle.make && selectedVehicle.model)}
         message={enrichmentMessage}
         status={enrichmentStatus}
         onDecodeVins={runVinDecode}
+        onLookupSearchRecalls={runSearchRecallLookup}
         onLookupRecalls={runRecallLookup}
       />
       <SourceFeedsPanel
@@ -439,6 +442,36 @@ function DashboardShell() {
       setEnrichmentStatus('error');
       setEnrichmentMessage('Could not lookup recalls.');
       setWorkflowStatus('Could not lookup recalls.');
+    }
+  }
+
+  async function runSearchRecallLookup() {
+    const adminToken = window.prompt('Admin token')?.trim();
+
+    if (!adminToken) {
+      setEnrichmentStatus('error');
+      return;
+    }
+
+    setEnrichmentStatus('running');
+    setEnrichmentMessage('');
+    setWorkflowStatus('Looking up search recalls.');
+
+    try {
+      const result = await lookupRecallsForSavedSearch(selectedSearchId, adminToken);
+      setEnrichmentStatus('ready');
+      setEnrichmentMessage(
+        `${result.liveCount.toLocaleString()} live, ${result.cachedCount.toLocaleString()} cached, ${result.failed.length.toLocaleString()} failed recall lookups.`
+      );
+      if (selectedListingId) {
+        setListingDetail(await fetchListingDetail(selectedListingId));
+        setDetailStatus('ready');
+      }
+      setWorkflowStatus('Search recall enrichment complete.');
+    } catch {
+      setEnrichmentStatus('error');
+      setEnrichmentMessage('Could not lookup search recalls.');
+      setWorkflowStatus('Could not lookup search recalls.');
     }
   }
 
