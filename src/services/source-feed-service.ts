@@ -6,6 +6,7 @@ import { dealerComSource } from '../sources/dealer-com-source.js';
 import { dealerCarSearchSource } from '../sources/dealer-car-search-source.js';
 import { cypressDealerCarSearchSeeds } from '../sources/dealer-car-search-seeds.js';
 import { dealerSitemapSource } from '../sources/dealer-sitemap-source.js';
+import { gotGoodCarsSource } from '../sources/gotgoodcars-source.js';
 import { iseecarsSource } from '../sources/iseecars-source.js';
 import { jsonLdSource } from '../sources/json-ld-source.js';
 import { listingCsvSource, listingJsonSource } from '../sources/listing-import-source.js';
@@ -19,6 +20,7 @@ const sourceAdapters: SourceAdapterMap = {
   'dealer-sitemap': dealerSitemapSource,
   carsforsale: carsforsaleSource,
   cargurus: cargurusSource,
+  gotgoodcars: gotGoodCarsSource,
   iseecars: iseecarsSource,
   'json-ld': jsonLdSource,
   'listing-csv': listingCsvSource,

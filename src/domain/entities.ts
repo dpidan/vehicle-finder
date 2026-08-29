@@ -15,6 +15,7 @@ export type SourceAdapterKey =
   | 'cargurus'
   | 'iseecars'
   | 'json-ld'
+  | 'gotgoodcars'
   | 'listing-csv'
   | 'listing-json'
   | 'mynextride'

@@ -19,6 +19,7 @@
     "collect:cargurus": "tsx src/sources/collect-cargurus.ts",
     "collect:dealer-com": "tsx src/sources/collect-dealer-com.ts",
     "collect:dealer-sitemap": "tsx src/sources/collect-dealer-sitemap.ts",
+    "collect:gotgoodcars": "tsx src/sources/collect-gotgoodcars.ts",
     "collect:iseecars": "tsx src/sources/collect-iseecars.ts",
     "collect:json-ld": "tsx src/sources/collect-json-ld.ts",
     "collect:listing-csv": "tsx src/sources/collect-listing-csv.ts",

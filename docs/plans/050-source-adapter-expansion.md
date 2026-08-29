@@ -31,7 +31,8 @@ Expand source coverage without changing the canonical import path.
 16. Done — add a sitemap-guided dealer source type that discovers search-relevant make/model pages before parsing vehicle cards.
 17. Done — add a generic JSON-LD vehicle source type for standards-shaped embedded vehicle data.
 18. Done — add generic listing JSON and CSV import adapters for dealer/export/browser-assisted listing data.
-19. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
+19. Done — add a GotGoodCars dealer inventory adapter after finding an accessible Spring-area source.
+20. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
 
 ## Guardrails
 
@@ -77,3 +78,5 @@ Dealer sitemap collection was added as a standalone source type using I 90 Motor
 Generic JSON-LD vehicle collection was added as another standalone source type. It reads schema.org-style `Vehicle`, `Car`, or `Product` records from supplied pages, normalizes title, VIN, year/make/model, price, mileage, exterior color, photo URLs, and evidence, and stays behind the same source-feed registry as the other adapters. Ride Motors LLC is seeded as a paused JSON-LD comparison feed because it overlaps the existing iSeeCars-specific adapter.
 
 Listing JSON and CSV import adapters were added for source data that already arrives as an export instead of a website scrape. They accept simple listing fields such as URL, title, year, make, model, VIN, price, mileage, exterior color, seller, and description, then route through the normal candidate/import path. No seed feeds were added because these adapters need a real export URL or temporary operator-provided file endpoint.
+
+GotGoodCars collection was added as another standalone source type using Uptown Imports in Spring as the first explicit feed. The adapter reads ordinary WordPress inventory cards, follows `?paged=N` pagination up to a bounded cap, and preserves detail URLs, stock IDs, prices, mileage, exterior colors, and photos. A standalone local run returned 74 candidates; the feed is seeded as `paused` until it passes Worker/dashboard preview and dedupe review.

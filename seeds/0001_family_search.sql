@@ -204,6 +204,18 @@ VALUES
     '30210 TX-249, Tomball, TX 77375',
     '2026-08-29T00:00:00.000Z',
     '2026-08-29T00:00:00.000Z'
+  ),
+  (
+    'seller-uptown-imports',
+    'dealer',
+    'Uptown Imports',
+    '281-528-9595',
+    'https://uptownimports.gotgoodcars.com',
+    30.0636,
+    -95.4246,
+    '1208 Spring Cypress Rd, Spring, TX 77373',
+    '2026-08-29T00:00:00.000Z',
+    '2026-08-29T00:00:00.000Z'
   )
 ON CONFLICT(id) DO UPDATE SET
   type = excluded.type,
@@ -627,6 +639,20 @@ VALUES
     'https://www.baymotorstx.com',
     150,
     'South Tomball Carsforsale-powered source candidate; small inventory useful for adapter validation.',
+    '2026-08-29T00:00:00.000Z',
+    '2026-08-29T00:00:00.000Z'
+  ),
+  (
+    'feed-gotgoodcars-uptown-imports',
+    'seller-uptown-imports',
+    'Uptown Imports GotGoodCars',
+    'gotgoodcars',
+    'structured-web',
+    'paused',
+    'https://uptownimports.gotgoodcars.com/active-inventory/',
+    'https://uptownimports.gotgoodcars.com',
+    165,
+    'Standalone GotGoodCars adapter-development feed; plain fetch exposes cards, pagination, detail URLs, price, mileage, color, and photos.',
     '2026-08-29T00:00:00.000Z',
     '2026-08-29T00:00:00.000Z'
   )
