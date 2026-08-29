@@ -88,7 +88,7 @@ Planned source categories include:
 - Nextdoor, subject to current API/access terms and available marketplace-search capabilities.
 - Manual import workflows for sources that are difficult to automate, including pasted URLs, VINs, listing text, or screenshots where supported.
 
-Each source is implemented behind an adapter and classified by access type, such as official API, structured web data, notification import, supplied seed list, or browser-assisted workflow. Collection inputs live in `source_feeds`, which stores the adapter key, inventory URL, status, priority, and source health fields while optionally linking to a canonical seller. Dealer discovery should be its own step from inventory collection: first identify candidate sellers within the search radius, then create or update source feeds for each seller when permitted.
+Each source is implemented behind an adapter and classified by access type, such as official API, structured web data, notification import, supplied seed list, or browser-assisted workflow. Collection inputs live in `source_feeds`, which stores the adapter key, inventory URL, status, priority, and source health fields while optionally linking to a canonical seller. Dealer discovery should be its own step from inventory collection: first identify candidate sellers within the search radius, then create or update source feeds for each seller when permitted. Detailed source trials, blocked access patterns, and feed promotion notes live in `docs/SOURCE_DISCOVERY_LOG.md`.
 
 ## Product phases
 

@@ -91,6 +91,7 @@
 - Facebook Marketplace compliant integration/import options.
 - Autotrader/Cars.com/CarGurus permitted alert/API/feed options.
 - Dealer-platform adapter reuse opportunities.
+- Continue maintaining `docs/SOURCE_DISCOVERY_LOG.md` as source feeds are promoted, blocked, or retired.
 - Source-feed admin editing for status, priority, URLs, and adapter metadata.
 - Business-search APIs for automatic dealer discovery within a saved-search radius, after at least one more manual/seeded source path is useful.
 - Optional paid vehicle-history data and whether it provides enough incremental value.
