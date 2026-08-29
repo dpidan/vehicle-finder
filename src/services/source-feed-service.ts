@@ -27,6 +27,7 @@ interface SourceFeedRow {
   last_collected_at: string | null;
   last_status: string | null;
   last_error: string | null;
+  last_candidate_count: number | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -88,7 +89,7 @@ async function collectSourceFeeds(
         collectedAt
       });
       if (updateHealth) {
-        await Promise.all(adapterFeeds.map((feed) => updateSourceFeedSuccess(db, feed.id, collectedAt)));
+        await Promise.all(adapterFeeds.map((feed) => updateSourceFeedSuccess(db, feed.id, collectedAt, collected.length)));
       }
       candidates.push(...collected);
       collectedCountByAdapter[adapterKey] = collected.length;
@@ -129,14 +130,14 @@ export async function listSourceFeeds(db: D1Database, status?: SourceFeedStatus)
   }
 }
 
-async function updateSourceFeedSuccess(db: D1Database, feedId: string, collectedAt: string): Promise<void> {
+async function updateSourceFeedSuccess(db: D1Database, feedId: string, collectedAt: string, candidateCount: number): Promise<void> {
   await db
     .prepare(
       `UPDATE source_feeds
-       SET last_collected_at = ?, last_status = 'ok', last_error = NULL, updated_at = ?
+       SET last_collected_at = ?, last_status = 'ok', last_error = NULL, last_candidate_count = ?, updated_at = ?
        WHERE id = ?`
     )
-    .bind(collectedAt, collectedAt, feedId)
+    .bind(collectedAt, candidateCount, collectedAt, feedId)
     .run();
 }
 
@@ -144,7 +145,7 @@ async function updateSourceFeedError(db: D1Database, feedId: string, collectedAt
   await db
     .prepare(
       `UPDATE source_feeds
-       SET last_collected_at = ?, last_status = 'error', last_error = ?, updated_at = ?
+       SET last_collected_at = ?, last_status = 'error', last_error = ?, last_candidate_count = 0, updated_at = ?
        WHERE id = ?`
     )
     .bind(collectedAt, error.slice(0, 500), collectedAt, feedId)
@@ -227,6 +228,10 @@ function rowToSourceFeed(row: SourceFeedRow): SourceFeed {
 
   if (row.last_error) {
     feed.lastError = row.last_error;
+  }
+
+  if (row.last_candidate_count !== null) {
+    feed.lastCandidateCount = row.last_candidate_count;
   }
 
   if (row.notes) {

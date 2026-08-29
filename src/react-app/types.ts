@@ -158,6 +158,7 @@ export interface SourceFeedSummary {
   lastCollectedAt?: string;
   lastStatus?: string;
   lastError?: string;
+  lastCandidateCount?: number;
 }
 
 export interface ModelYearRisk {

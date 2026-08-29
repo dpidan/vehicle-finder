@@ -18,6 +18,7 @@ describe('source feed service', () => {
         last_collected_at: null,
         last_status: null,
         last_error: null,
+        last_candidate_count: null,
         notes: 'Adapter-development feed.',
         created_at: '2026-08-28T00:00:00.000Z',
         updated_at: '2026-08-28T00:00:00.000Z',
@@ -58,6 +59,7 @@ describe('source feed service', () => {
       assert.equal(run?.candidates.length, 0);
       assert.equal(db.writes.length, 1);
       assert.match(db.writes[0]?.sql ?? '', /last_status = 'error'/);
+      assert.match(db.writes[0]?.sql ?? '', /last_candidate_count = 0/);
       assert.equal(db.writes[0]?.values[1], 'network unavailable');
     } finally {
       globalThis.fetch = originalFetch;
@@ -117,6 +119,7 @@ function feedRow() {
     last_collected_at: null,
     last_status: null,
     last_error: null,
+    last_candidate_count: null,
     notes: 'Adapter-development feed.',
     created_at: '2026-08-28T00:00:00.000Z',
     updated_at: '2026-08-28T00:00:00.000Z',

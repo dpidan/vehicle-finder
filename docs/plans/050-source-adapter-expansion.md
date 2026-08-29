@@ -19,11 +19,12 @@ Expand source coverage without changing the canonical import path.
 5. Done — added a paused Dealer.com source-feed adapter for Autostrade to extract embedded WIS inventory records.
 6. Done — investigated Dealer.com completeness; first-page WIS inventory can be partial when `pageInfo.totalCount` exceeds `pageInfo.pageSize`.
 7. Done — ran the paginated Dealer.com feed through the local Worker source-feed endpoint; Worker fetch returned HTTP 403, so no candidates were imported.
-8. Add source-quality metadata if we need to expose parsed count vs reported count in the dashboard.
+8. Done — added last candidate count to source-feed health and dashboard display.
 9. Explore Dealer.com source-side make/model/year filters only after pagination is proven and only when the site exposes stable ordinary filter URLs.
 10. Done — tested nearby DealerCenter sites; Ride Motors LLC and Xpress Auto Motors returned Cloudflare 403/challenge pages to plain fetch, so no DealerCenter adapter was added.
 11. Done — added a paused iSeeCars JSON-LD adapter-development feed for Ride Motors LLC.
-12. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
+12. Done — checked CARFAX dealer inventory pages for nearby dealers; direct fetch returned HTTP 403, so no CARFAX adapter was added.
+13. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
 
 ## Guardrails
 
@@ -51,3 +52,5 @@ Dealer.com Worker-readiness review found a runtime split: `npm run collect:deale
 DealerCenter review found that Ride Motors LLC and Xpress Auto Motors dealer-owned pages returned Cloudflare 403/challenge responses to direct low-frequency fetches, so a DealerCenter adapter was not added. iSeeCars was added instead as a different structured source type for Ride Motors LLC because the profile page exposes schema.org Vehicle JSON-LD with VIN, price, mileage, color, and listing redirect URLs. Keep the iSeeCars feed paused until field quality, duplicate behavior, and source terms are reviewed.
 
 The iSeeCars feed passed a local Worker-runtime trial. `POST /api/admin/source-feeds/feed-iseecars-ride-motors/collect` previewed 15 VIN-backed candidates, then `{"import": true}` inserted 15 listings and 15 snapshots with 0 updates. A follow-up saved-search evaluation still wrote 5 matches because the imported Ride Motors inventory did not match the current family search make/model filters. This makes iSeeCars healthier than Dealer.com for Worker collection, but it should remain paused until source terms and usefulness are reviewed.
+
+Source feed health now stores and displays the last candidate count, which makes zero-result success/failure and small-feed trials easier to inspect from the dashboard. CARFAX dealer inventory pages were also checked for Ride Motors LLC, VSA MotorCars, and Toyo Financial Group, but all returned HTTP 403 to direct fetches, so CARFAX stays out of the adapter set for now.

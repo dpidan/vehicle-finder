@@ -17,7 +17,8 @@ describe('data readiness', () => {
         '0005_listing_exterior_color.sql',
         '0006_source_feeds.sql',
         '0007_source_feeds_dealer_com.sql',
-        '0008_source_feeds_iseecars.sql'
+        '0008_source_feeds_iseecars.sql',
+        '0009_source_feed_candidate_count.sql'
       ]
     );
   });

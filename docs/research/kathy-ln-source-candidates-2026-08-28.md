@@ -43,6 +43,10 @@ These sources are intentionally collected with separate scripts first. They are 
 | VSA Motorcars on CarGurus | 12212 Cypress N. Houston RD #1, Cypress, TX 77429 | Aggregator dealer profile | `cargurusSource` | Direct fetch path was added as a seed because the dealer-owned VSA page returned HTTP 403 to the current collector. |
 | Ride Motors LLC on iSeeCars | 19005 FM 529 Rd STE 9G, Cypress, TX 77433 | Aggregator dealer profile | `iseecarsSource` | Direct fetch returned HTTP 200 and exposed schema.org Vehicle JSON-LD with VIN, price, mileage, color, and listing redirect URLs. Useful to test JSON-LD source parsing against a DealerCenter-backed dealer whose own site blocks plain fetch. |
 
+Blocked source-type checks:
+
+- CARFAX dealer review/inventory pages for Ride Motors LLC, VSA MotorCars, and Toyo Financial Group returned HTTP 403 to direct low-frequency fetches, so no CARFAX adapter was added.
+
 Verified command: `npm run collect:cargurus`
 
 Verified result: 35 normalized listings across Toyo Financial Group and VSA Motorcars, including VIN, price, mileage, exterior color, seller, and CarGurus listing/profile URL.

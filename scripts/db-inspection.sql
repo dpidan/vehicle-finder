@@ -18,7 +18,8 @@ SELECT
   status,
   collection_priority,
   last_collected_at,
-  last_status
+  last_status,
+  last_candidate_count
 FROM source_feeds
 ORDER BY collection_priority, name;
 

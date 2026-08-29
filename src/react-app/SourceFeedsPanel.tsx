@@ -24,6 +24,7 @@ export function SourceFeedsPanel({ feeds, status, onLoad }: SourceFeedsPanelProp
                 <th>Feed</th>
                 <th>Adapter</th>
                 <th>Status</th>
+                <th>Last count</th>
                 <th>Last run</th>
               </tr>
             </thead>
@@ -43,6 +44,7 @@ export function SourceFeedsPanel({ feeds, status, onLoad }: SourceFeedsPanelProp
                       {feed.lastStatus ? ` / ${feed.lastStatus}` : ''}
                     </span>
                   </td>
+                  <td>{feed.lastCandidateCount ?? '-'}</td>
                   <td>{feed.lastCollectedAt ? new Date(feed.lastCollectedAt).toLocaleString() : 'Never'}</td>
                 </tr>
               ))}

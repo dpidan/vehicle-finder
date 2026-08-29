@@ -84,6 +84,7 @@ export interface SourceFeed {
   lastCollectedAt?: IsoDateTime;
   lastStatus?: string;
   lastError?: string;
+  lastCandidateCount?: number;
   notes?: string;
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
