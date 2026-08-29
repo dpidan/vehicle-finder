@@ -20,7 +20,8 @@ describe('data readiness', () => {
         '0008_source_feeds_iseecars.sql',
         '0009_source_feed_candidate_count.sql',
         '0010_source_feeds_mynextride.sql',
-        '0011_more_spring_tomball_source_feeds.sql'
+        '0011_more_spring_tomball_source_feeds.sql',
+        '0012_source_feeds_dealer_sitemap.sql'
       ]
     );
   });
@@ -61,6 +62,7 @@ describe('data readiness', () => {
       'feed-dealer-com-autostrade',
       'feed-iseecars-ride-motors',
       'feed-mynextride-auto-land-of-texas',
+      'feed-dealer-sitemap-i90-motors',
       'feed-dealer-car-search-texans-auto-group',
       'feed-carsforsale-essence-autos',
       'feed-carsforsale-bay-motors',

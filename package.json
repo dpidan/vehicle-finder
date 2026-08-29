@@ -18,6 +18,7 @@
     "collect:carsforsale": "tsx src/sources/collect-carsforsale.ts",
     "collect:cargurus": "tsx src/sources/collect-cargurus.ts",
     "collect:dealer-com": "tsx src/sources/collect-dealer-com.ts",
+    "collect:dealer-sitemap": "tsx src/sources/collect-dealer-sitemap.ts",
     "collect:iseecars": "tsx src/sources/collect-iseecars.ts",
     "collect:mynextride": "tsx src/sources/collect-mynextride.ts",
     "collect:dealer-car-search": "tsx src/sources/collect-dealer-car-search.ts",

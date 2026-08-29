@@ -10,6 +10,7 @@ export type SourceAccess = 'official-api' | 'structured-web' | 'notification-imp
 export type SourceAdapterKey =
   | 'dealer-car-search'
   | 'dealer-com'
+  | 'dealer-sitemap'
   | 'carsforsale'
   | 'cargurus'
   | 'iseecars'
@@ -153,6 +154,7 @@ export interface ListingSource {
 
 export interface CollectionContext {
   search?: SavedSearchConfig;
+  searches?: SavedSearch[];
   center?: GeoPoint;
   radiusMiles?: number;
   sellerSeeds?: SellerSeed[];

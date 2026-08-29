@@ -5,6 +5,7 @@ import { carsforsaleSource } from '../sources/carsforsale-source.js';
 import { dealerComSource } from '../sources/dealer-com-source.js';
 import { dealerCarSearchSource } from '../sources/dealer-car-search-source.js';
 import { cypressDealerCarSearchSeeds } from '../sources/dealer-car-search-seeds.js';
+import { dealerSitemapSource } from '../sources/dealer-sitemap-source.js';
 import { iseecarsSource } from '../sources/iseecars-source.js';
 import { mynextrideSource } from '../sources/mynextride-source.js';
 
@@ -13,6 +14,7 @@ type SourceAdapterMap = Partial<Record<SourceAdapterKey, ListingSource>>;
 const sourceAdapters: SourceAdapterMap = {
   'dealer-car-search': dealerCarSearchSource,
   'dealer-com': dealerComSource,
+  'dealer-sitemap': dealerSitemapSource,
   carsforsale: carsforsaleSource,
   cargurus: cargurusSource,
   iseecars: iseecarsSource,
@@ -102,6 +104,7 @@ async function collectSourceFeeds(
     try {
       const collected = await adapter.collect({
         sellerSeeds: adapterFeeds.map(feedToSellerSeed),
+        searches,
         collectedAt
       });
       if (updateHealth) {

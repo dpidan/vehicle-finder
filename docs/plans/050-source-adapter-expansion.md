@@ -28,7 +28,8 @@ Expand source coverage without changing the canonical import path.
 13. Done — add a paused MyNextRide source adapter for Auto Land of Texas with bounded ordinary pagination and individual vehicle detail URLs.
 14. Done — add paused Spring/Tomball source candidates for Dealer Car Search and Carsforsale-powered dealers.
 15. Done — checked Group 1 Chevrolet Spring `/llm/inventory` as a potential high-value text inventory source; direct fetch is Cloudflare-blocked.
-16. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
+16. Done — add a sitemap-guided dealer source type that discovers search-relevant make/model pages before parsing vehicle cards.
+17. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
 
 ## Guardrails
 
@@ -68,3 +69,5 @@ Detail enrichment now lives in the source-feed service instead of in a source-sp
 Spring/Tomball source coverage now includes paused source feeds for Texans Auto Group, Lone Star Auto Center, Spring Motors, Essence Autos, and Bay Motors. Texans Auto Group and Lone Star Auto Center previewed cleanly through the Worker with 25 VIN-backed Dealer Car Search candidates each. Spring Motors returned zero candidates with the current URL/parser, and Essence Autos plus Bay Motors returned Datadome/challenge pages to plain fetch, so those three stay paused as adapter/source follow-ups rather than scheduled feeds.
 
 Group 1 Chevrolet Spring's `/llm/inventory/?type=used` page remains a strong data-shape candidate because search results expose VIN, price, mileage, and detail links, but direct Worker-style fetches returned Cloudflare block pages even with ordinary browser request headers. Do not add a Group1 adapter until there is a permitted fetch path or an approved off-Worker/import workflow.
+
+Dealer sitemap collection was added as a standalone source type using I 90 Motors as the first explicit feed. The adapter reads public XML sitemap URLs, selects make/model inventory pages that match enabled saved searches, and then reuses the Carsforsale card parser so detail URLs, prices, mileage, colors, and titles are handled consistently. This source shape is useful for larger dealers because it avoids fetching every broad inventory page when a search can narrow the page set up front. I 90 is seeded as `blocked` because its sitemap is visible but search-relevant pages returned Datadome HTTP 403 during the adapter trial.

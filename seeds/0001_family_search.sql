@@ -134,6 +134,18 @@ VALUES
     '2026-08-29T00:00:00.000Z'
   ),
   (
+    'seller-i90-motors',
+    'dealer',
+    'I 90 Motors',
+    '832-734-8937',
+    'https://www.i90motorstx.com',
+    29.8795,
+    -95.7039,
+    '19140 FM 529 Road, Cypress, TX 77433',
+    '2026-08-29T00:00:00.000Z',
+    '2026-08-29T00:00:00.000Z'
+  ),
+  (
     'seller-texans-auto-group',
     'dealer',
     'Texans Auto Group',
@@ -517,6 +529,20 @@ VALUES
     'https://www.autolandoftexas.com',
     125,
     'Standalone MyNextRide adapter-development feed; preserves detail URLs and bounded page coverage, review field quality and terms before scheduled refresh.',
+    '2026-08-29T00:00:00.000Z',
+    '2026-08-29T00:00:00.000Z'
+  ),
+  (
+    'feed-dealer-sitemap-i90-motors',
+    'seller-i90-motors',
+    'I 90 Motors sitemap',
+    'dealer-sitemap',
+    'structured-web',
+    'blocked',
+    'https://www.i90motorstx.com/sitemap.xml',
+    'https://www.i90motorstx.com',
+    155,
+    'Sitemap-guided source candidate; sitemap is visible but search-relevant pages returned Datadome HTTP 403 during adapter trial.',
     '2026-08-29T00:00:00.000Z',
     '2026-08-29T00:00:00.000Z'
   ),
