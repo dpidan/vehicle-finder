@@ -525,6 +525,35 @@ describe('worker routes', () => {
     assert.equal(db.writes[0]?.values[0], 'active');
   });
 
+  it('records source feed health on preview without importing listings', async () => {
+    const originalFetch = globalThis.fetch;
+    const db = env({ adminToken: 'secret', sourceFeeds: true }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+
+    globalThis.fetch = async () => new Response(gotGoodCarsHtml());
+
+    try {
+      const response = await app.request(
+        '/api/admin/source-feeds/feed-gotgoodcars-crown-auto/collect',
+        {
+          method: 'POST',
+          headers: { authorization: 'Bearer secret', 'content-type': 'application/json' },
+          body: JSON.stringify({ import: false })
+        },
+        { DB: db, ADMIN_TOKEN: 'secret' }
+      );
+      const body = (await response.json()) as { collectedCount: number; import?: unknown };
+
+      assert.equal(response.status, 200);
+      assert.equal(body.collectedCount, 1);
+      assert.equal(body.import, undefined);
+      assert.ok(db.writes.some((write) => write.sql.startsWith('UPDATE source_feeds SET last_collected_at')));
+      assert.equal(db.writes.some((write) => write.sql.startsWith('INSERT INTO listings')), false);
+      assert.equal(db.writes.some((write) => write.sql.startsWith('INSERT INTO listing_snapshots')), false);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('validates source feed status updates', async () => {
     const response = await app.request(
       '/api/admin/source-feeds/feed-gotgoodcars-crown-auto/status',
@@ -1232,6 +1261,18 @@ function dealerCarSearchHtml(index: number): string {
       <span>$7,890</span>
       <span>Mileage:</span><span>163,707</span>
       <span>VIN: 5FNRL5H95DB02865${index}</span>
+    </div>
+  `;
+}
+
+function gotGoodCarsHtml(): string {
+  return `
+    <div class="listing-vehicles-card inventory-card-1">
+      <a href="/vehicles/12148980-2022-Toyota-Highlander/"><div class="title-holder"><h4 class="vehicle-title">2022 Toyota Highlander XLE</h4></div></a>
+      <p class="vehicle-stock"><span>Stock ID :</span><span>CROWN-001</span></p>
+      <div class="price-holder"><p class="display-price">$28,000</p></div>
+      <li class="icon-info-item"><span>42,000 Mi</span></li>
+      <a href="/vehicles/12148980-2022-Toyota-Highlander/" class="skew-button v12-button listing-button">View Details</a>
     </div>
   `;
 }

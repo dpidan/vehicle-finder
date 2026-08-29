@@ -20,6 +20,7 @@ export function SourceFeedsPanel({ feeds, status, activeAction, lastResult, onLo
   const blockedCount = feeds.filter((feed) => feed.status === 'blocked').length;
   const healthyCount = feeds.filter((feed) => feed.lastStatus === 'ok').length;
   const adapterCount = new Set(feeds.map((feed) => feed.adapterKey)).size;
+  const activeFeed = activeAction ? feeds.find((feed) => feed.id === activeAction.feedId) : null;
 
   return (
     <section className={styles.sourceFeedsPanel}>
@@ -53,10 +54,21 @@ export function SourceFeedsPanel({ feeds, status, activeAction, lastResult, onLo
           </div>
         </div>
       ) : null}
-      {lastResult ? (
-        <div className={styles.sourcePreviewSummary}>
+      {activeAction ? (
+        <div className={styles.sourcePreviewSummary} role="status">
           <div>
-            <span>Last preview</span>
+            <span>Source action</span>
+            <strong>{activeFeed?.name ?? 'Source feed'}</strong>
+          </div>
+          <div>
+            <span>Status</span>
+            <strong>{actionLabel(activeAction.action)}</strong>
+          </div>
+        </div>
+      ) : lastResult ? (
+        <div className={styles.sourcePreviewSummary} role="status">
+          <div>
+            <span>{lastResult.import ? 'Last import' : 'Last preview'}</span>
             <strong>{lastResult.feed.name}</strong>
           </div>
           <div>
@@ -101,6 +113,7 @@ export function SourceFeedsPanel({ feeds, status, activeAction, lastResult, onLo
                 const isActivating = activeAction?.feedId === feed.id && activeAction.action === 'activate';
                 const isPausing = activeAction?.feedId === feed.id && activeAction.action === 'pause';
                 const isBusy = activeAction !== null;
+                const feedResult = lastResult?.feed.id === feed.id ? lastResult : null;
 
                 return (
                   <tr key={feed.id}>
@@ -109,6 +122,12 @@ export function SourceFeedsPanel({ feeds, status, activeAction, lastResult, onLo
                         {feed.name}
                       </a>
                       {feed.notes ? <span className={styles.feedNote}>{feed.notes}</span> : null}
+                      {feedResult ? (
+                        <span className={styles.feedResult}>
+                          {feedResult.import ? 'Last import' : 'Last preview'}: {feedResult.collectedCount.toLocaleString()} candidates,{' '}
+                          {feedResult.vinOverlap.candidatesWithVin.toLocaleString()} VIN-backed, {feedResult.vinOverlap.newVinCount.toLocaleString()} new VINs
+                        </span>
+                      ) : null}
                       {feed.lastError ? <span className={styles.feedError}>{feed.lastError}</span> : null}
                     </td>
                     <td>{feed.adapterKey}</td>
@@ -158,4 +177,11 @@ export function SourceFeedsPanel({ feeds, status, activeAction, lastResult, onLo
       )}
     </section>
   );
+}
+
+function actionLabel(action: SourceFeedAction): string {
+  if (action === 'preview') return 'Previewing';
+  if (action === 'import') return 'Importing';
+  if (action === 'activate') return 'Activating';
+  return 'Pausing';
 }

@@ -309,7 +309,7 @@ app.post('/api/admin/source-feeds/:id/collect', async (c) => {
   }
 
   const collectedAt = new Date().toISOString();
-  const sourceRun = await collectSourceFeed(c.env.DB, c.req.param('id'), collectedAt, shouldImport, search ? [search] : []);
+  const sourceRun = await collectSourceFeed(c.env.DB, c.req.param('id'), collectedAt, true, search ? [search] : []);
 
   if (!sourceRun) {
     return c.json({ error: 'not-found' }, 404);

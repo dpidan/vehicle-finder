@@ -542,6 +542,15 @@
   overflow-wrap: anywhere;
 }
 
+.feedResult {
+  display: block;
+  margin-top: var(--space-1);
+  color: #176432;
+  font-size: 0.82rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
 .feedActions {
   display: flex;
   flex-wrap: wrap;
