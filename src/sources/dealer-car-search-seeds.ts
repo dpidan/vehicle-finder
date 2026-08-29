@@ -46,5 +46,38 @@ export const cypressDealerCarSearchSeeds: SellerSeed[] = [
     type: 'dealer',
     websiteUrl: 'https://www.cpautosale.com',
     inventoryUrl: 'https://www.cpautosale.com/newandusedcars?clearall=1'
+  },
+  {
+    name: 'Texans Auto Group',
+    type: 'dealer',
+    websiteUrl: 'https://texansautogroup.com',
+    inventoryUrl: 'https://texansautogroup.com/inventory?clearall=1',
+    location: {
+      label: '4919 Farm to Market 2920, Spring, TX 77388',
+      latitude: 30.0703,
+      longitude: -95.4935
+    }
+  },
+  {
+    name: 'Lone Star Auto Center',
+    type: 'dealer',
+    websiteUrl: 'https://www.lonestarautocenter.com',
+    inventoryUrl: 'https://www.lonestarautocenter.com/inventory?clearall=1',
+    location: {
+      label: '21602 North Fwy, Spring, TX 77373',
+      latitude: 30.0771,
+      longitude: -95.4305
+    }
+  },
+  {
+    name: 'Spring Motors',
+    type: 'dealer',
+    websiteUrl: 'https://www.spring-motors.com',
+    inventoryUrl: 'https://www.spring-motors.com/inventory?clearall=1',
+    location: {
+      label: '20819 Sunshine Lane, Spring, TX 77388',
+      latitude: 30.0669,
+      longitude: -95.4407
+    }
   }
 ];

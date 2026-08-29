@@ -39,5 +39,27 @@ export const cypressCarsforsaleDealerSeeds: SellerSeed[] = [
     type: 'dealer',
     websiteUrl: 'https://www.i90motorstx.com',
     inventoryUrl: 'https://www.i90motorstx.com/suvs-for-sale-b100037'
+  },
+  {
+    name: 'Essence Autos',
+    type: 'dealer',
+    websiteUrl: 'https://www.essenceautostx.com',
+    inventoryUrl: 'https://www.essenceautostx.com/cars-for-sale',
+    location: {
+      label: '3102 Louetta Rd, Spring, TX 77388',
+      latitude: 30.0596,
+      longitude: -95.4616
+    }
+  },
+  {
+    name: 'Bay Motors',
+    type: 'dealer',
+    websiteUrl: 'https://www.baymotorstx.com',
+    inventoryUrl: 'https://www.baymotorstx.com/cars-for-sale',
+    location: {
+      label: '30210 TX-249, Tomball, TX 77375',
+      latitude: 30.1079,
+      longitude: -95.6374
+    }
   }
 ];

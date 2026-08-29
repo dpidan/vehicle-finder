@@ -1,6 +1,7 @@
 import type { ListingCandidate, ListingSource, SavedSearch, SellerSeed, SourceAdapterKey, SourceFeed, SourceFeedStatus } from '../domain/entities.js';
 import { matchesSearchFilters } from '../scoring/rank-listings.js';
 import { cargurusSource } from '../sources/cargurus-source.js';
+import { carsforsaleSource } from '../sources/carsforsale-source.js';
 import { dealerComSource } from '../sources/dealer-com-source.js';
 import { dealerCarSearchSource } from '../sources/dealer-car-search-source.js';
 import { cypressDealerCarSearchSeeds } from '../sources/dealer-car-search-seeds.js';
@@ -12,6 +13,7 @@ type SourceAdapterMap = Partial<Record<SourceAdapterKey, ListingSource>>;
 const sourceAdapters: SourceAdapterMap = {
   'dealer-car-search': dealerCarSearchSource,
   'dealer-com': dealerComSource,
+  carsforsale: carsforsaleSource,
   cargurus: cargurusSource,
   iseecars: iseecarsSource,
   mynextride: mynextrideSource
