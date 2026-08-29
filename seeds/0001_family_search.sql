@@ -547,6 +547,20 @@ VALUES
     '2026-08-29T00:00:00.000Z'
   ),
   (
+    'feed-json-ld-ride-motors',
+    'seller-ride-motors',
+    'Ride Motors LLC generic JSON-LD',
+    'json-ld',
+    'structured-web',
+    'paused',
+    'https://www.iseecars.com/dealer-3450550-ride-motors-llc-in-cypress-tx',
+    'https://www.ridemotorsllc.com',
+    160,
+    'Generic JSON-LD adapter-development feed; overlaps iSeeCars-specific feed and should stay paused unless used for parser comparison.',
+    '2026-08-29T00:00:00.000Z',
+    '2026-08-29T00:00:00.000Z'
+  ),
+  (
     'feed-dealer-car-search-texans-auto-group',
     'seller-texans-auto-group',
     'Texans Auto Group',

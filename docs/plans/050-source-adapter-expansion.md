@@ -29,7 +29,8 @@ Expand source coverage without changing the canonical import path.
 14. Done — add paused Spring/Tomball source candidates for Dealer Car Search and Carsforsale-powered dealers.
 15. Done — checked Group 1 Chevrolet Spring `/llm/inventory` as a potential high-value text inventory source; direct fetch is Cloudflare-blocked.
 16. Done — add a sitemap-guided dealer source type that discovers search-relevant make/model pages before parsing vehicle cards.
-17. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
+17. Done — add a generic JSON-LD vehicle source type for standards-shaped embedded vehicle data.
+18. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
 
 ## Guardrails
 
@@ -71,3 +72,5 @@ Spring/Tomball source coverage now includes paused source feeds for Texans Auto 
 Group 1 Chevrolet Spring's `/llm/inventory/?type=used` page remains a strong data-shape candidate because search results expose VIN, price, mileage, and detail links, but direct Worker-style fetches returned Cloudflare block pages even with ordinary browser request headers. Do not add a Group1 adapter until there is a permitted fetch path or an approved off-Worker/import workflow.
 
 Dealer sitemap collection was added as a standalone source type using I 90 Motors as the first explicit feed. The adapter reads public XML sitemap URLs, selects make/model inventory pages that match enabled saved searches, and then reuses the Carsforsale card parser so detail URLs, prices, mileage, colors, and titles are handled consistently. This source shape is useful for larger dealers because it avoids fetching every broad inventory page when a search can narrow the page set up front. I 90 is seeded as `blocked` because its sitemap is visible but search-relevant pages returned Datadome HTTP 403 during the adapter trial.
+
+Generic JSON-LD vehicle collection was added as another standalone source type. It reads schema.org-style `Vehicle`, `Car`, or `Product` records from supplied pages, normalizes title, VIN, year/make/model, price, mileage, exterior color, photo URLs, and evidence, and stays behind the same source-feed registry as the other adapters. Ride Motors LLC is seeded as a paused JSON-LD comparison feed because it overlaps the existing iSeeCars-specific adapter.

@@ -14,6 +14,7 @@ export type SourceAdapterKey =
   | 'carsforsale'
   | 'cargurus'
   | 'iseecars'
+  | 'json-ld'
   | 'mynextride'
   | 'manual-import';
 export type SourceFeedStatus = 'active' | 'paused' | 'blocked' | 'retired';

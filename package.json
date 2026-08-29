@@ -20,6 +20,7 @@
     "collect:dealer-com": "tsx src/sources/collect-dealer-com.ts",
     "collect:dealer-sitemap": "tsx src/sources/collect-dealer-sitemap.ts",
     "collect:iseecars": "tsx src/sources/collect-iseecars.ts",
+    "collect:json-ld": "tsx src/sources/collect-json-ld.ts",
     "collect:mynextride": "tsx src/sources/collect-mynextride.ts",
     "collect:dealer-car-search": "tsx src/sources/collect-dealer-car-search.ts",
     "score:fixtures": "tsx src/scoring/fixture-report.ts",

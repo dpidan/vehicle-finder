@@ -7,6 +7,7 @@ import { dealerCarSearchSource } from '../sources/dealer-car-search-source.js';
 import { cypressDealerCarSearchSeeds } from '../sources/dealer-car-search-seeds.js';
 import { dealerSitemapSource } from '../sources/dealer-sitemap-source.js';
 import { iseecarsSource } from '../sources/iseecars-source.js';
+import { jsonLdSource } from '../sources/json-ld-source.js';
 import { mynextrideSource } from '../sources/mynextride-source.js';
 
 type SourceAdapterMap = Partial<Record<SourceAdapterKey, ListingSource>>;
@@ -18,6 +19,7 @@ const sourceAdapters: SourceAdapterMap = {
   carsforsale: carsforsaleSource,
   cargurus: cargurusSource,
   iseecars: iseecarsSource,
+  'json-ld': jsonLdSource,
   mynextride: mynextrideSource
 };
 
