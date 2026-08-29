@@ -3,6 +3,8 @@ import type {
   ListingDisposition,
   ListingDispositionState,
   DecodeSearchVinsResult,
+  BulkListingImportPreview,
+  BulkListingImportSaveResult,
   ManualImportInput,
   ManualImportPreview,
   ManualImportSaveResult,
@@ -63,6 +65,27 @@ export function saveManualImport(searchId: string, input: ManualImportInput, adm
     method: 'POST',
     headers: { authorization: `Bearer ${adminToken}`, 'content-type': 'application/json' },
     body: JSON.stringify({ searchId, ...input })
+  });
+}
+
+export function previewBulkListingImport(searchId: string, format: 'json' | 'csv', text: string): Promise<BulkListingImportPreview> {
+  return fetchJson<BulkListingImportPreview>('/api/listing-imports/preview', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ searchId, format, text })
+  });
+}
+
+export function saveBulkListingImport(
+  searchId: string,
+  format: 'json' | 'csv',
+  text: string,
+  adminToken: string
+): Promise<BulkListingImportSaveResult> {
+  return fetchJson<BulkListingImportSaveResult>('/api/admin/listing-imports', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${adminToken}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ searchId, format, text })
   });
 }
 

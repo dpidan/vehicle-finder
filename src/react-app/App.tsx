@@ -18,6 +18,7 @@ import {
 import { bestScore, emptyMessage, emptyTitle, filterAndSortListings, statusLabel } from './utils/format.js';
 import { Metric } from './components/Metric.js';
 import { ComparisonPanel } from './features/dashboard/ComparisonPanel.js';
+import { BulkImportPanel } from './features/dashboard/BulkImportPanel.js';
 import { EnrichmentPanel } from './features/dashboard/EnrichmentPanel.js';
 import { ListingDetailPanel } from './features/dashboard/ListingDetailPanel.js';
 import { ListingTable } from './features/dashboard/ListingTable.js';
@@ -220,6 +221,7 @@ function DashboardShell() {
         listings={comparedListings}
         onRemove={(listingId) => setCompareListingIds((ids) => ids.filter((id) => id !== listingId))}
       />
+      <BulkImportPanel searchId={selectedSearchId} onSaved={() => refreshListings(selectedSearchId)} />
       <ManualImportPanel searchId={selectedSearchId} onSaved={() => refreshListings(selectedSearchId)} />
 
       <div className={styles.workspace}>

@@ -1123,6 +1123,65 @@ describe('worker routes', () => {
     assert.equal(response.status, 400);
   });
 
+  it('previews a bulk CSV listing import against a saved search', async () => {
+    const response = await app.request(
+      '/api/listing-imports/preview',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          searchId: 'family-replacement-vehicle',
+          format: 'csv',
+          text: [
+            'url,title,year,make,model,price,mileage,sellerName,sellerType',
+            'https://example.test/bulk-sienna,2015 Toyota Sienna XLE,2015,Toyota,Sienna,14900,93000,Bulk Dealer,dealer'
+          ].join('\n')
+        }),
+        headers: { 'content-type': 'application/json' }
+      },
+      env()
+    );
+    const body = (await response.json()) as { candidateCount: number; rankedListings: Array<{ dealScore: number }> };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.candidateCount, 1);
+    assert.ok(body.rankedListings[0]?.dealScore);
+  });
+
+  it('saves a bulk JSON listing import and refreshes evaluations', async () => {
+    const db = env({ adminToken: 'secret' }).DB as D1Database & { writes: Array<{ sql: string; values: unknown[] }> };
+    const response = await app.request(
+      '/api/admin/listing-imports',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          searchId: 'family-replacement-vehicle',
+          format: 'json',
+          text: JSON.stringify([
+            {
+              url: 'https://example.test/bulk-odyssey',
+              title: '2016 Honda Odyssey EX-L',
+              year: 2016,
+              make: 'Honda',
+              model: 'Odyssey',
+              price: 12900,
+              mileage: 104000,
+              sellerName: 'Bulk Dealer',
+              sellerType: 'dealer'
+            }
+          ])
+        }),
+        headers: { authorization: 'Bearer secret', 'content-type': 'application/json' }
+      },
+      { DB: db, ADMIN_TOKEN: 'secret' }
+    );
+    const body = (await response.json()) as { candidateCount: number; import: { insertedListings: number; snapshotCount: number } };
+
+    assert.equal(response.status, 200);
+    assert.equal(body.candidateCount, 1);
+    assert.equal(body.import.insertedListings, 1);
+    assert.equal(body.import.snapshotCount, 1);
+  });
+
   it('returns 404 for a missing saved search', async () => {
     const response = await app.request('/api/searches/missing', {}, env());
 

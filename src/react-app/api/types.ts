@@ -276,6 +276,16 @@ export interface ManualImportSaveResult {
   };
 }
 
+export interface BulkListingImportPreview {
+  candidateCount: number;
+  candidates: ListingCandidate[];
+  rankedListings: RankedListingSummary['rankedListing'][];
+}
+
+export interface BulkListingImportSaveResult extends ManualImportSaveResult {
+  candidateCount: number;
+}
+
 export interface SearchRefreshResult {
   searchId: string;
   refreshedAt: string;

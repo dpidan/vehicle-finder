@@ -20,6 +20,7 @@ import {
   writeSearchEvaluations
 } from './services/search-service.js';
 import { manualImportToCandidate, type ManualImportInput } from './sources/manual-import.js';
+import { parseListingCsvImport, parseListingJsonImport } from './sources/listing-import-source.js';
 import { handleMcpHttpRequest, parseMcpJsonRequest } from './mcp/http.js';
 import { callMcpTool, mcpTools } from './mcp/tools.js';
 import { lookupRecalls, lookupRecallsForSavedSearch } from './services/recall-service.js';
@@ -554,8 +555,75 @@ app.post('/api/admin/manual-imports', async (c) => {
   });
 });
 
+app.post('/api/listing-imports/preview', async (c) => {
+  const body = (await c.req.json()) as unknown;
+
+  if (!isBulkImportBody(body)) {
+    return c.json({ error: 'invalid-listing-import' }, 400);
+  }
+
+  const search = await getSavedSearch(c.env.DB, body.searchId);
+
+  if (!search) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  const importedAt = new Date().toISOString();
+  const candidates = parseBulkImportCandidates(body, importedAt);
+  const rankedListings = await Promise.all(
+    candidates.slice(0, 10).map(async (candidate) => {
+      const risks = await listModelYearRisksForVehicle(c.env.DB, candidate.vehicle.make, candidate.vehicle.model, candidate.vehicle.year);
+      return rankListingsForSearch(search.config, [{ ...candidate, risks }])[0];
+    })
+  );
+
+  return c.json({ candidateCount: candidates.length, candidates: candidates.slice(0, 10), rankedListings: rankedListings.filter(Boolean) });
+});
+
+app.post('/api/admin/listing-imports', async (c) => {
+  const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
+
+  if (unauthorized) {
+    return c.json({ error: unauthorized }, unauthorized === 'admin-token-not-configured' ? 503 : 401);
+  }
+
+  const body = (await c.req.json()) as unknown;
+
+  if (!isBulkImportBody(body)) {
+    return c.json({ error: 'invalid-listing-import' }, 400);
+  }
+
+  const search = await getSavedSearch(c.env.DB, body.searchId);
+
+  if (!search) {
+    return c.json({ error: 'not-found' }, 404);
+  }
+
+  const importedAt = new Date().toISOString();
+  const candidates = parseBulkImportCandidates(body, importedAt);
+  const importResult = await importListingCandidates(c.env.DB, candidates);
+  const rankedListings = await rankPersistedListingsForSavedSearch(c.env.DB, search);
+  const evaluation = await writeSearchEvaluations(c.env.DB, search.id, rankedListings, importedAt);
+
+  return c.json({ searchId: search.id, importedAt, candidateCount: candidates.length, import: importResult, evaluation });
+});
+
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Invalid manual import payload.';
+}
+
+function isBulkImportBody(value: unknown): value is { searchId: string; format: 'json' | 'csv'; text: string } {
+  return (
+    isRecord(value) &&
+    typeof value.searchId === 'string' &&
+    (value.format === 'json' || value.format === 'csv') &&
+    typeof value.text === 'string' &&
+    value.text.trim().length > 0
+  );
+}
+
+function parseBulkImportCandidates(body: { format: 'json' | 'csv'; text: string }, importedAt: string) {
+  return body.format === 'json' ? parseListingJsonImport(body.text, importedAt) : parseListingCsvImport(body.text, importedAt);
 }
 
 function requireAdminToken(request: Request, expected: string | undefined): 'admin-token-not-configured' | 'unauthorized' | undefined {
