@@ -18,7 +18,8 @@ describe('data readiness', () => {
         '0006_source_feeds.sql',
         '0007_source_feeds_dealer_com.sql',
         '0008_source_feeds_iseecars.sql',
-        '0009_source_feed_candidate_count.sql'
+        '0009_source_feed_candidate_count.sql',
+        '0010_source_feeds_mynextride.sql'
       ]
     );
   });
@@ -58,6 +59,7 @@ describe('data readiness', () => {
       'feed-cargurus-toyo-financial-group',
       'feed-dealer-com-autostrade',
       'feed-iseecars-ride-motors',
+      'feed-mynextride-auto-land-of-texas',
       "'paused'"
     ]) {
       assert.match(seed, new RegExp(escapeRegExp(expected)));

@@ -120,6 +120,18 @@ VALUES
     '19005 FM 529 Rd STE 9G, Cypress, TX 77433',
     '2026-08-28T00:00:00.000Z',
     '2026-08-28T00:00:00.000Z'
+  ),
+  (
+    'seller-auto-land-of-texas',
+    'dealer',
+    'Auto Land of Texas',
+    '(832) 869-4969',
+    'https://www.autolandoftexas.com',
+    29.9471,
+    -95.6128,
+    '12001 Cypress N Houston Rd, Cypress, TX 77429',
+    '2026-08-29T00:00:00.000Z',
+    '2026-08-29T00:00:00.000Z'
   )
 ON CONFLICT(id) DO UPDATE SET
   type = excluded.type,
@@ -433,6 +445,20 @@ VALUES
     'Standalone adapter-development feed using iSeeCars Vehicle JSON-LD; review terms and dedupe before scheduled refresh.',
     '2026-08-28T00:00:00.000Z',
     '2026-08-28T00:00:00.000Z'
+  ),
+  (
+    'feed-mynextride-auto-land-of-texas',
+    'seller-auto-land-of-texas',
+    'Auto Land of Texas on MyNextRide',
+    'mynextride',
+    'structured-web',
+    'paused',
+    'https://www.mynextride.com/dealers/42/auto-land-of-texas-cypress-tx/inventory',
+    'https://www.autolandoftexas.com',
+    125,
+    'Standalone MyNextRide adapter-development feed; preserves detail URLs and bounded page coverage, review field quality and terms before scheduled refresh.',
+    '2026-08-29T00:00:00.000Z',
+    '2026-08-29T00:00:00.000Z'
   )
 ON CONFLICT(id) DO UPDATE SET
   seller_id = excluded.seller_id,

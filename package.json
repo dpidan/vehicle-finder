@@ -19,6 +19,7 @@
     "collect:cargurus": "tsx src/sources/collect-cargurus.ts",
     "collect:dealer-com": "tsx src/sources/collect-dealer-com.ts",
     "collect:iseecars": "tsx src/sources/collect-iseecars.ts",
+    "collect:mynextride": "tsx src/sources/collect-mynextride.ts",
     "collect:dealer-car-search": "tsx src/sources/collect-dealer-car-search.ts",
     "score:fixtures": "tsx src/scoring/fixture-report.ts",
     "typecheck": "tsc --noEmit",

@@ -25,7 +25,8 @@ Expand source coverage without changing the canonical import path.
 10. Done — tested nearby DealerCenter sites; Ride Motors LLC and Xpress Auto Motors returned Cloudflare 403/challenge pages to plain fetch, so no DealerCenter adapter was added.
 11. Done — added a paused iSeeCars JSON-LD adapter-development feed for Ride Motors LLC.
 12. Done — checked CARFAX dealer inventory pages for nearby dealers; direct fetch returned HTTP 403, so no CARFAX adapter was added.
-13. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
+13. Done — add a paused MyNextRide source adapter for Auto Land of Texas with bounded ordinary pagination and individual vehicle detail URLs.
+14. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
 
 ## Guardrails
 
@@ -57,3 +58,5 @@ The iSeeCars feed passed a local Worker-runtime trial. `POST /api/admin/source-f
 Source feed health now stores and displays the last candidate count, which makes zero-result success/failure and small-feed trials easier to inspect from the dashboard. CARFAX dealer inventory pages were also checked for Ride Motors LLC, VSA MotorCars, and Toyo Financial Group, but all returned HTTP 403 to direct fetches, so CARFAX stays out of the adapter set for now.
 
 Dashboard source-feed controls now let an operator load feeds, preview a single feed, inspect VIN overlap, and import a selected active feed without running every source. Imported feed data rewrites the selected saved search's evaluations afterward, so the dashboard can show matching candidates immediately while still keeping notification delivery and feed metadata editing out of scope.
+
+MyNextRide collection was added as a standalone source type using Auto Land of Texas as the first explicit source feed. The adapter reads static inventory card HTML, preserves individual `/cars-for-sale/...` detail URLs, follows normal `?page=N` pagination up to a bounded cap, and dedupes repeated listing URLs across pages. The feed is seeded as `paused` because MyNextRide lists its content ownership/reuse language in the footer and because this source currently exposes title, mileage, and detail URLs more reliably than VIN/price.
