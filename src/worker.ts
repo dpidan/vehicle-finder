@@ -31,11 +31,15 @@ import { rankListingsForSearch } from './scoring/rank-listings.js';
 export interface Env {
   DB: D1Database;
   ADMIN_TOKEN?: string;
+  ASSETS?: { fetch: (request: Request) => Promise<Response> };
 }
 
 export const app = new Hono<{ Bindings: Env }>();
 
 app.get('/health', (c) => c.json({ ok: true }));
+
+app.get('/app', (c) => serveSpaAsset(c.req.raw, c.env));
+app.get('/app/*', (c) => serveSpaAsset(c.req.raw, c.env));
 
 app.post('/mcp', async (c) => {
   const unauthorized = requireAdminToken(c.req.raw, c.env.ADMIN_TOKEN);
@@ -607,6 +611,17 @@ async function summarizeVinOverlap(
 
 function isValidModelYear(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= 1981 && value <= 2100;
+}
+
+function serveSpaAsset(request: Request, env: Env): Promise<Response> | Response {
+  if (!env.ASSETS) {
+    return new Response('Not Found', { status: 404 });
+  }
+
+  const url = new URL(request.url);
+  url.pathname = '/';
+  url.search = '';
+  return env.ASSETS.fetch(new Request(url, request));
 }
 
 export async function refreshEnabledSavedSearches(db: D1Database, refreshedAt: string): Promise<{

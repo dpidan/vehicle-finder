@@ -22,6 +22,15 @@ describe('worker routes', () => {
     assert.deepEqual(await response.json(), { ok: true });
   });
 
+  it('serves the dashboard route from assets', async () => {
+    const assetRequests: string[] = [];
+    const response = await app.request('/app/listings', {}, env({ assetRequests }));
+
+    assert.equal(response.status, 200);
+    assert.equal(await response.text(), '<html>dashboard</html>');
+    assert.equal(new URL(assetRequests[0] ?? '').pathname, '/');
+  });
+
   it('lists saved searches', async () => {
     const response = await app.request('/api/searches', {}, env());
     const body = (await response.json()) as { searches: Array<{ id: string; enabled: boolean }> };
@@ -1147,6 +1156,7 @@ function env(
     vinDecodeRows?: boolean;
     recallSearchRows?: boolean;
     recallLookup?: boolean;
+    assetRequests?: string[];
   } = {}
 ): Env {
   const writes: Array<{ sql: string; values: unknown[] }> = [];
@@ -1156,6 +1166,16 @@ function env(
 
   return {
     ...(options.adminToken ? { ADMIN_TOKEN: options.adminToken } : {}),
+    ...(options.assetRequests
+      ? {
+          ASSETS: {
+            fetch: async (request: Request) => {
+              options.assetRequests?.push(request.url);
+              return new Response('<html>dashboard</html>', { headers: { 'content-type': 'text/html' } });
+            }
+          }
+        }
+      : {}),
     DB: {
       prepare: (sql: string) => ({
         bind: (...values: string[]) => {
