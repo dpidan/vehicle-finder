@@ -21,8 +21,9 @@ Expand source coverage without changing the canonical import path.
 7. Done — ran the paginated Dealer.com feed through the local Worker source-feed endpoint; Worker fetch returned HTTP 403, so no candidates were imported.
 8. Add source-quality metadata if we need to expose parsed count vs reported count in the dashboard.
 9. Explore Dealer.com source-side make/model/year filters only after pagination is proven and only when the site exposes stable ordinary filter URLs.
-10. Add another source type before adding more Dealer.com seeds, because the Dealer.com shape is currently Node-readable but Worker-blocked.
-11. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
+10. Done — tested nearby DealerCenter sites; Ride Motors LLC and Xpress Auto Motors returned Cloudflare 403/challenge pages to plain fetch, so no DealerCenter adapter was added.
+11. Done — added a paused iSeeCars JSON-LD adapter-development feed for Ride Motors LLC.
+12. Defer browser-assisted marketplace imports until the structured dealer path has enough reliable live dealer coverage.
 
 ## Guardrails
 
@@ -46,3 +47,7 @@ Dealer.com collection was added as a standalone source type using Autostrade as 
 Dealer.com completeness review found that Autostrade's initial inventory page exposed `pageInfo.totalCount: 137`, `pageInfo.pageSize: 24`, and `pageInfo.pageStart: 0`, so the original 24-listing adapter result was only the first page. The adapter now follows ordinary `?start=` pagination up to a bounded page limit and combines all embedded WIS inventory pages before normalization. For very large dealers, prefer source-side filters only when they are stable and visible in normal page/filter URLs; still apply our own saved-search filter after import because source filters are inconsistent across platforms.
 
 Dealer.com Worker-readiness review found a runtime split: `npm run collect:dealer-com` in Node collected 137 Autostrade listings, but `POST /api/admin/source-feeds/feed-dealer-com-autostrade/collect` through the local Worker returned HTTP 403 from the dealer site and inserted 0 candidates. The source health path correctly marked the paused feed as `error`, and a follow-up saved-search evaluation still wrote 5 current matches from existing active feeds. Keep Dealer.com paused/off-schedule until collection either runs through a permitted Worker-compatible path or is explicitly handled by an off-Worker job that posts normalized candidates back to the app.
+
+DealerCenter review found that Ride Motors LLC and Xpress Auto Motors dealer-owned pages returned Cloudflare 403/challenge responses to direct low-frequency fetches, so a DealerCenter adapter was not added. iSeeCars was added instead as a different structured source type for Ride Motors LLC because the profile page exposes schema.org Vehicle JSON-LD with VIN, price, mileage, color, and listing redirect URLs. Keep the iSeeCars feed paused until field quality, duplicate behavior, and source terms are reviewed.
+
+The iSeeCars feed passed a local Worker-runtime trial. `POST /api/admin/source-feeds/feed-iseecars-ride-motors/collect` previewed 15 VIN-backed candidates, then `{"import": true}` inserted 15 listings and 15 snapshots with 0 updates. A follow-up saved-search evaluation still wrote 5 matches because the imported Ride Motors inventory did not match the current family search make/model filters. This makes iSeeCars healthier than Dealer.com for Worker collection, but it should remain paused until source terms and usefulness are reviewed.

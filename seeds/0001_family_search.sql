@@ -108,6 +108,18 @@ VALUES
     '23539 State Highway 249, Tomball, TX 77375-8233',
     '2026-08-28T00:00:00.000Z',
     '2026-08-28T00:00:00.000Z'
+  ),
+  (
+    'seller-ride-motors',
+    'dealer',
+    'Ride Motors LLC',
+    '346-698-6226',
+    'https://www.ridemotorsllc.com',
+    NULL,
+    NULL,
+    '19005 FM 529 Rd STE 9G, Cypress, TX 77433',
+    '2026-08-28T00:00:00.000Z',
+    '2026-08-28T00:00:00.000Z'
   )
 ON CONFLICT(id) DO UPDATE SET
   type = excluded.type,
@@ -405,6 +417,20 @@ VALUES
     'https://www.vsamotorcars.com',
     110,
     'Standalone adapter-development feed because dealer-owned VSA pages returned HTTP 403 to plain fetch.',
+    '2026-08-28T00:00:00.000Z',
+    '2026-08-28T00:00:00.000Z'
+  ),
+  (
+    'feed-iseecars-ride-motors',
+    'seller-ride-motors',
+    'Ride Motors LLC on iSeeCars',
+    'iseecars',
+    'structured-web',
+    'paused',
+    'https://www.iseecars.com/dealer-3450550-ride-motors-llc-in-cypress-tx',
+    'https://www.ridemotorsllc.com',
+    120,
+    'Standalone adapter-development feed using iSeeCars Vehicle JSON-LD; review terms and dedupe before scheduled refresh.',
     '2026-08-28T00:00:00.000Z',
     '2026-08-28T00:00:00.000Z'
   )

@@ -16,7 +16,8 @@ describe('data readiness', () => {
         '0004_vehicle_recalls.sql',
         '0005_listing_exterior_color.sql',
         '0006_source_feeds.sql',
-        '0007_source_feeds_dealer_com.sql'
+        '0007_source_feeds_dealer_com.sql',
+        '0008_source_feeds_iseecars.sql'
       ]
     );
   });
@@ -55,6 +56,7 @@ describe('data readiness', () => {
       'feed-dealer-car-search-trade-lane-motors',
       'feed-cargurus-toyo-financial-group',
       'feed-dealer-com-autostrade',
+      'feed-iseecars-ride-motors',
       "'paused'"
     ]) {
       assert.match(seed, new RegExp(escapeRegExp(expected)));

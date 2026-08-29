@@ -41,10 +41,15 @@ These sources are intentionally collected with separate scripts first. They are 
 |---|---|---|---|---|
 | Toyo Financial Group on CarGurus | 22226 Northwest Fwy, Cypress, TX 77429 | Aggregator dealer profile | `cargurusSource` | Direct fetch returned HTTP 200 with visible VINs and listing IDs. Useful to test aggregator-profile parsing and VIN dedupe against dealer-owned sources. |
 | VSA Motorcars on CarGurus | 12212 Cypress N. Houston RD #1, Cypress, TX 77429 | Aggregator dealer profile | `cargurusSource` | Direct fetch path was added as a seed because the dealer-owned VSA page returned HTTP 403 to the current collector. |
+| Ride Motors LLC on iSeeCars | 19005 FM 529 Rd STE 9G, Cypress, TX 77433 | Aggregator dealer profile | `iseecarsSource` | Direct fetch returned HTTP 200 and exposed schema.org Vehicle JSON-LD with VIN, price, mileage, color, and listing redirect URLs. Useful to test JSON-LD source parsing against a DealerCenter-backed dealer whose own site blocks plain fetch. |
 
 Verified command: `npm run collect:cargurus`
 
 Verified result: 35 normalized listings across Toyo Financial Group and VSA Motorcars, including VIN, price, mileage, exterior color, seller, and CarGurus listing/profile URL.
+
+Verified command: `npm run collect:iseecars`
+
+Verified result: Ride Motors LLC returned normalized listings from iSeeCars Vehicle JSON-LD. Keep this feed paused until terms, duplicate behavior, and field quality are reviewed.
 
 ## Decision
 
