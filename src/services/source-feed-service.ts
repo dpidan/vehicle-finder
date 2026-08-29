@@ -113,7 +113,7 @@ async function collectSourceFeeds(
         collectedAt
       });
       if (updateHealth) {
-        await Promise.all(adapterFeeds.map((feed) => updateSourceFeedSuccess(db, feed.id, collectedAt, collected.length)));
+        await Promise.all(adapterFeeds.map((feed) => updateSourceFeedSuccess(db, feed.id, collectedAt, countCandidatesForFeed(collected, feed))));
       }
       const enriched = await enrichMatchingCandidates(adapter, collected, searches, collectedAt, enrichment);
       candidates.push(...enriched);
@@ -239,6 +239,12 @@ function feedToSellerSeed(feed: SourceFeed): SellerSeed {
   }
 
   return seed;
+}
+
+export function countCandidatesForFeed(candidates: ListingCandidate[], feed: SourceFeed): number {
+  const sellerName = feed.seller?.name ?? feed.name;
+
+  return candidates.filter((candidate) => candidate.seller?.name === sellerName).length;
 }
 
 function rowToSourceFeed(row: SourceFeedRow): SourceFeed {

@@ -1,7 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { familySearchDefaults } from '../domain/search-config.js';
-import { collectSourceFeed, listSourceFeeds } from './source-feed-service.js';
+import type { SourceFeed } from '../domain/entities.js';
+import { collectSourceFeed, countCandidatesForFeed, listSourceFeeds } from './source-feed-service.js';
 
 describe('source feed service', () => {
   it('maps source feed rows with joined seller details', async () => {
@@ -65,6 +66,17 @@ describe('source feed service', () => {
     } finally {
       globalThis.fetch = originalFetch;
     }
+  });
+
+  it('counts grouped source-feed candidates by seller', () => {
+    const candidates = [
+      { seller: { name: 'Dealer One' } },
+      { seller: { name: 'Dealer Two' } },
+      { seller: { name: 'Dealer Two' } }
+    ];
+
+    assert.equal(countCandidatesForFeed(candidates as never, sourceFeed({ name: 'Dealer One' })), 1);
+    assert.equal(countCandidatesForFeed(candidates as never, sourceFeed({ name: 'Dealer Two' })), 2);
   });
 
   it('enriches only candidates matching supplied saved searches', async () => {
@@ -178,7 +190,7 @@ function feedRow(overrides: Record<string, unknown> = {}) {
     adapter_key: 'cargurus',
     access: 'structured-web',
     status: 'paused',
-    inventory_url: 'https://www.cargurus.com/Cars/m-VSA-Motorcars-sp354407',
+    inventory_url: 'https://dealer-one.example/inventory',
     website_url: 'https://www.vsamotorcars.com',
     collection_priority: 110,
     last_collected_at: null,
@@ -195,6 +207,21 @@ function feedRow(overrides: Record<string, unknown> = {}) {
     seller_latitude: 29.9809,
     seller_longitude: -95.655,
     seller_location_label: '12212 Cypress N. Houston RD #1, Cypress, TX 77429',
+    ...overrides
+  };
+}
+
+function sourceFeed(overrides: Partial<SourceFeed> = {}): SourceFeed {
+  return {
+    id: 'feed',
+    name: 'Dealer One',
+    adapterKey: 'dealer-car-search',
+    access: 'structured-web',
+    status: 'active',
+    inventoryUrl: 'https://dealer-one.example/inventory',
+    collectionPriority: 1,
+    createdAt: '2026-08-29T00:00:00.000Z',
+    updatedAt: '2026-08-29T00:00:00.000Z',
     ...overrides
   };
 }
