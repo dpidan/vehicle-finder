@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { maxVisibleGotGoodCarsPage, parseGotGoodCarsInventory } from './gotgoodcars-source.js';
+import { enrichGotGoodCarsListing, maxVisibleGotGoodCarsPage, parseGotGoodCarsInventory } from './gotgoodcars-source.js';
 
 describe('parseGotGoodCarsInventory', () => {
   it('normalizes GotGoodCars inventory cards with detail URLs and photos', () => {
@@ -59,5 +59,37 @@ describe('parseGotGoodCarsInventory', () => {
     );
 
     assert.equal(listings[0]?.price?.amount, 42000);
+  });
+
+  it('enriches matching listings from detail-page facts', () => {
+    const [candidate] = parseGotGoodCarsInventory(
+      `
+        <div class="listing-vehicles-card inventory-card-1">
+          <a href="/vehicles/12148980-2022-Audi-Q7/"><div class="title-holder"><h4 class="vehicle-title">2022 Audi Q7 Premium Plus Quattro</h4></div></a>
+          <p class="vehicle-stock"><span>Stock ID :</span><span>D009971</span></p>
+          <div class="price-holder"><p class="display-price">$25,500</p></div>
+          <li class="icon-info-item"><span>84,000 Mi</span></li>
+          <a href="/vehicles/12148980-2022-Audi-Q7/" class="skew-button v12-button listing-button">View Details</a>
+        </div>
+      `,
+      { name: 'Uptown Imports', type: 'dealer', inventoryUrl: 'https://uptownimports.gotgoodcars.com/active-inventory/' },
+      '2026-08-29T12:00:00.000Z'
+    );
+
+    const enriched = enrichGotGoodCarsListing(
+      candidate!,
+      `
+        <h1 class="title-vhs">2022 Audi Q7 Premium Plus Quattro</h1>
+        <p class="display-price">$26,000</p>
+        <section class="sec-slide"><div class="swiper-container vdp auto-slide" data-vin="WA1LXBF7XND009971"></div></section>
+        <p class="title-data-vhs-info">Mileage</p><p class="subtitle-data-vhs-info">84,831 Mi</p>
+        <p class="title-data-vhs-info">Exterior Color</p><p class="subtitle-data-vhs-info">Mythos Black Metallic - Black</p>
+      `
+    );
+
+    assert.equal(enriched.vehicle.vin, 'WA1LXBF7XND009971');
+    assert.equal(enriched.price?.amount, 26000);
+    assert.equal(enriched.mileage, 84831);
+    assert.equal(enriched.exteriorColor, 'Mythos Black Metallic');
   });
 });

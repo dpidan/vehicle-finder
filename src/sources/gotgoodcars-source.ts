@@ -23,6 +23,10 @@ export const gotGoodCarsSource: ListingSource = {
           return true;
         });
     });
+  },
+  enrichDetail: async (candidate) => {
+    const html = await fetchInventoryHtml(candidate.url);
+    return enrichGotGoodCarsListing(candidate, html);
   }
 };
 
@@ -67,6 +71,28 @@ export function parseGotGoodCarsInventory(
 export function maxVisibleGotGoodCarsPage(html: string): number {
   const pages = Array.from(html.matchAll(/[?&]paged=(\d+)/g), (match) => Number(match[1] ?? 0));
   return Math.max(1, ...pages.filter((page) => Number.isFinite(page)));
+}
+
+export function enrichGotGoodCarsListing(candidate: ListingCandidate, html: string): ListingCandidate {
+  const facts = parseDetailFacts(html);
+  const title = cleanText(stripTags(html.match(/<h1 class="title-vhs">([\s\S]*?)<\/h1>/)?.[1] ?? '')) ?? candidate.title;
+  const price = parsePrice(html);
+  const mileage = parseInteger(facts.Mileage?.match(/\d[\d,]*/)?.[0]);
+  const vin = cleanText(html.match(/\bdata-vin="([^"]+)"/)?.[1] ?? facts.VIN)?.replace(/\s+/g, '').toUpperCase();
+  const exteriorColor = facts['Exterior Color']?.split(' - ')[0]?.trim();
+
+  return {
+    ...candidate,
+    title,
+    vehicle: {
+      ...candidate.vehicle,
+      ...parseVehicleTitle(title),
+      ...(vin ? { vin } : {})
+    },
+    ...(price > 0 ? { price: { amount: price, currency: 'USD' } } : {}),
+    ...(mileage > 0 ? { mileage } : {}),
+    ...(exteriorColor ? { exteriorColor } : {})
+  };
 }
 
 async function fetchInventoryPages(seed: SellerSeed): Promise<{ seed: SellerSeed; htmlPages: string[] }> {
@@ -135,6 +161,23 @@ function parsePhotoUrls(html: string): string[] {
   return Array.from(html.matchAll(/<img\b[^>]*class="[^"]*\binventory-image\b[^"]*"[^>]*src="([^"]+)"/g), (match) =>
     decodeHtml(match[1] ?? '')
   ).filter(Boolean);
+}
+
+function parseDetailFacts(html: string): Record<string, string> {
+  const facts: Record<string, string> = {};
+
+  for (const match of html.matchAll(
+    /<p class="title-data-vhs-info">([\s\S]*?)<\/p>\s*<p class="subtitle-data-vhs-info">([\s\S]*?)<\/p>/g
+  )) {
+    const label = cleanText(stripTags(match[1] ?? ''));
+    const value = cleanText(stripTags(match[2] ?? ''));
+
+    if (label && value) {
+      facts[label] = value;
+    }
+  }
+
+  return facts;
 }
 
 function urlWithPage(url: string, page: number): string {

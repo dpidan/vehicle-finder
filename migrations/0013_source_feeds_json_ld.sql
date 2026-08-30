@@ -65,6 +65,40 @@ CREATE INDEX source_feeds_adapter_status_idx ON source_feeds(adapter_key, status
 CREATE INDEX source_feeds_seller_idx ON source_feeds(seller_id);
 CREATE UNIQUE INDEX source_feeds_adapter_inventory_unique_idx ON source_feeds(adapter_key, inventory_url);
 
+INSERT INTO sellers (
+  id,
+  type,
+  name,
+  phone,
+  website_url,
+  latitude,
+  longitude,
+  location_label,
+  created_at,
+  updated_at
+)
+VALUES (
+  'seller-ride-motors',
+  'dealer',
+  'Ride Motors LLC',
+  '832-653-2843',
+  'https://www.ridemotorsllc.com',
+  29.9754,
+  -95.6785,
+  '12710 Telge Rd, Cypress, TX 77429',
+  '2026-08-29T00:00:00.000Z',
+  '2026-08-29T00:00:00.000Z'
+)
+ON CONFLICT(id) DO UPDATE SET
+  type = excluded.type,
+  name = excluded.name,
+  phone = excluded.phone,
+  website_url = excluded.website_url,
+  latitude = excluded.latitude,
+  longitude = excluded.longitude,
+  location_label = excluded.location_label,
+  updated_at = excluded.updated_at;
+
 INSERT INTO source_feeds (
   id,
   seller_id,
