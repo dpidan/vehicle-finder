@@ -18,11 +18,13 @@ This log records source/feed trials separately from implementation plans so adap
 | Mr. King and Mrs. Queens Auto Finance LLC | `dealer-car-search` | Active | Direct fetch works after parser handled linked title rows outside the first card shape. | Keep active and watch field quality. |
 | Texans Auto Group | `dealer-car-search` | Active | Worker preview returned 25 VIN-backed candidates. | Watch import/dedupe health in scheduled refresh. |
 | Lone Star Auto Center | `dealer-car-search` | Active | Worker preview returned 25 VIN-backed candidates. | Watch import/dedupe health in scheduled refresh. |
+| Toyo Financial Group on CarGurus | `cargurus` | Active | Standalone run returned VIN-backed candidates with price, mileage, exterior color, seller, and listing URL. | Watch saved-search match quality and dedupe health. |
+| VSA Motorcars on CarGurus | `cargurus` | Active | Standalone run returned VIN-backed candidates with price, mileage, exterior color, seller, and listing URL. | Watch saved-search match quality and dedupe health. |
 | Ride Motors LLC via iSeeCars | `iseecars` | Paused | Worker preview/import returned 15 VIN-backed candidates, but none matched the current family search. | Keep paused until source terms and usefulness are reviewed. |
 | Ride Motors LLC JSON-LD comparison | `json-ld` | Paused | Generic schema.org parser overlaps the iSeeCars-specific source. | Use for adapter comparison, not scheduled refresh. |
-| Auto Land of Texas via MyNextRide | `mynextride` | Paused | Static cards and detail URLs work; detail enrichment can add missing facts for matching listings. | Keep paused until terms and value are reviewed. |
-| Uptown Imports | `gotgoodcars` | Paused | Plain fetch returned 74 paginated candidates with detail URLs, price, mileage, exterior color, and photos. | Preview through Worker/dashboard before import or promotion. |
-| CROWN AUTO | `gotgoodcars` | Paused | Plain fetch returned 29 under-$20k candidates, including family-search-relevant models. | Preview through Worker/dashboard before import or promotion. |
+| Auto Land of Texas via MyNextRide | `mynextride` | Active | Standalone run returned 61 listings and included family-relevant models; price is often missing, so ranking evidence is weaker. | Watch saved-search match quality and price-field gaps. |
+| Uptown Imports | `gotgoodcars` | Active | Plain fetch returned 70 paginated candidates with detail URLs, price, mileage, exterior color, and photos. | Watch scheduled refresh health. |
+| CROWN AUTO | `gotgoodcars` | Active | Plain fetch returned 29 under-$20k candidates in earlier validation; now included in GotGoodCars smoke-test seeds. | Watch scheduled refresh health. |
 | Listing JSON/CSV imports | `listing-json`, `listing-csv` | Manual/import only | Good for exports or browser-assisted workflows that already produce structured data. | Use on demand. |
 
 ## Blocked Or Deferred Feeds

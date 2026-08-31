@@ -35,7 +35,7 @@
 
 21. Done — researched local dealer platforms around Cypress, TX enough to select a first structured source.
 22. Done — defined a minimal dealer-discovery input using explicit dealer seed lists.
-23. Partial — expanded Dealer Car Search coverage with more healthy seeded dealers and preserved vehicle detail URLs in Carsforsale parsing; next source step is another platform adapter or source-detail photo acquisition.
+23. Partial — expanded active source coverage with Dealer Car Search, CarGurus dealer profiles, MyNextRide, and GotGoodCars; next source step is import ergonomics for high-coverage marketplaces and source-quality inspection after refresh.
 24. Done — picked Dealer Car Search as the first structured dealer platform.
 25. Done — implemented a compliant Dealer Car Search adapter.
 26. Done — added canonicalization and VIN-based deduplication.
@@ -92,6 +92,7 @@
 - Autotrader/Cars.com/CarGurus permitted alert/API/feed options.
 - Dealer-platform adapter reuse opportunities.
 - Continue maintaining `docs/SOURCE_DISCOVERY_LOG.md` as source feeds are promoted, blocked, or retired.
+- Improve browser-assisted imports from AutoTrader and broad CarGurus model searches when active feeds do not produce enough ranked candidates.
 - Source-feed admin editing for status, priority, URLs, and adapter metadata.
 - Business-search APIs for automatic dealer discovery within a saved-search radius, after at least one more manual/seeded source path is useful.
 - Optional paid vehicle-history data and whether it provides enough incremental value.

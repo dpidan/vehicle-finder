@@ -26,7 +26,8 @@ describe('data readiness', () => {
         '0014_source_feeds_listing_imports.sql',
         '0015_promote_healthy_source_feeds.sql',
         '0016_source_feeds_gotgoodcars.sql',
-        '0017_source_feed_crown_auto_gotgoodcars.sql'
+        '0017_source_feed_crown_auto_gotgoodcars.sql',
+        '0018_promote_usable_source_feeds.sql'
       ]
     );
   });

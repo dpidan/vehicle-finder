@@ -133,7 +133,7 @@ Each source is implemented behind an adapter and classified by access type, such
 
 ### Near-term execution focus
 
-Next, improve source coverage through the `source_feeds` registry with another permitted collector/adapter or more healthy seeded dealers, using the dashboard feed controls for preview/import trials. After source quality is stable enough for the first family workflow, populate Worker D1 and run one protected remote refresh. Notification delivery remains deferred until the monitoring digest has been used against real listings.
+Next, inspect source quality after promoting the already-built CarGurus, MyNextRide, and GotGoodCars feeds. If active feeds still do not produce enough ranked candidates, use the Bulk import workflow for AutoTrader and broader CarGurus searches before adding another scraper. After source quality is stable enough for the first family workflow, populate Worker D1 and run one protected remote refresh. Notification delivery remains deferred until the monitoring digest has been used against real listings.
 
 ### Phase 5 — assistant access
 

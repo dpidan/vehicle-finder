@@ -8,8 +8,8 @@ Use this before the first local or Worker D1 population, and again after schema 
 - Seed geography: Happy Ln, Cypress, TX, 25-mile radius.
 - Seed vehicle targets: Honda Odyssey, Honda Pilot, Toyota Sienna, and Honda CR-V.
 - Seed risk records: initial Honda Odyssey, Honda Pilot, and Toyota Sienna model-year notes.
-- Live source seed: Trade Lane Motors through the Dealer Car Search adapter.
-- Dealer seed review: Trade Lane Motors is currently the only healthy automated seed; see `docs/research/dealer-seed-review-2026-08-28.md`.
+- Active source feeds: Dealer Car Search, CarGurus dealer profiles, MyNextRide, and GotGoodCars.
+- Source feed review: see `docs/SOURCE_DISCOVERY_LOG.md` before promoting, pausing, or retiring feeds.
 
 ## Local Reset
 

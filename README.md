@@ -35,6 +35,7 @@ The project is intended to aggregate candidate vehicles from multiple sources, d
 - `docs/FRONTEND_GUIDELINES.md` — initial dashboard design-system and styling guidance.
 - `docs/MCP_CONNECTION.md` — local and remote MCP connection notes.
 - `docs/DATA_READINESS.md` — first-run local/Worker D1 migration, seed, refresh, and inspection checklist.
+- `docs/OPERATOR_IMPORTS.md` — CSV/JSON import workflow for marketplace or browser-assisted listing data.
 - `docs/BACKLOG.md` — ordered implementation backlog.
 - `docs/decisions/` — architecture decision records as the design matures.
 - `docs/research/` — source-specific research and evidence.
