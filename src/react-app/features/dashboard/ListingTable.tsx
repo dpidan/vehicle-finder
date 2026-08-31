@@ -105,6 +105,7 @@ function ListingRow({
   onStateChange: (state: ListingDispositionState) => void;
 }) {
   const listing = item.rankedListing.listing;
+  const vehicle = vehicleLabel(listing.vehicle);
   const state = item.disposition?.state ?? 'new';
 
   return (
@@ -113,7 +114,7 @@ function ListingRow({
         <a className={styles.listingTitle} href={listing.url} target="_blank" rel="noreferrer">
           {listing.title}
         </a>
-        <div className={styles.subtle}>{vehicleLabel(listing.vehicle)}</div>
+        {vehicle !== listing.title ? <div className={styles.subtle}>{vehicle}</div> : null}
       </td>
       <td>
         <span className={styles.score}>{item.rankedListing.dealScore}</span>

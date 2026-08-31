@@ -31,26 +31,31 @@ export function ComparisonPanel({
             </tr>
           </thead>
           <tbody>
-            {listings.map((item) => (
-              <tr key={item.listingId}>
-                <td>
-                  <a className={styles.listingTitle} href={item.rankedListing.listing.url} target="_blank" rel="noreferrer">
-                    {item.rankedListing.listing.title}
-                  </a>
-                  <div className={styles.subtle}>{vehicleLabel(item.rankedListing.listing.vehicle)}</div>
-                </td>
-                <td>{item.rankedListing.dealScore}</td>
-                <td>{item.rankedListing.vehicleScore}</td>
-                <td>{formatMoney(item.rankedListing.listing.price)}</td>
-                <td>{item.rankedListing.listing.mileage ? `${item.rankedListing.listing.mileage.toLocaleString()} mi` : 'Unknown'}</td>
-                <td>{item.disposition?.state ?? 'new'}</td>
-                <td>
-                  <button className={styles.secondaryButton} type="button" onClick={() => onRemove(item.listingId)}>
-                    Remove
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {listings.map((item) => {
+              const listing = item.rankedListing.listing;
+              const vehicle = vehicleLabel(listing.vehicle);
+
+              return (
+                <tr key={item.listingId}>
+                  <td>
+                    <a className={styles.listingTitle} href={listing.url} target="_blank" rel="noreferrer">
+                      {listing.title}
+                    </a>
+                    {vehicle !== listing.title ? <div className={styles.subtle}>{vehicle}</div> : null}
+                  </td>
+                  <td>{item.rankedListing.dealScore}</td>
+                  <td>{item.rankedListing.vehicleScore}</td>
+                  <td>{formatMoney(listing.price)}</td>
+                  <td>{listing.mileage ? `${listing.mileage.toLocaleString()} mi` : 'Unknown'}</td>
+                  <td>{item.disposition?.state ?? 'new'}</td>
+                  <td>
+                    <button className={styles.secondaryButton} type="button" onClick={() => onRemove(item.listingId)}>
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
